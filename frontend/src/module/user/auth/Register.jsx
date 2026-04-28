@@ -41,7 +41,14 @@ const Register = () => {
     return (
         <div className="flex flex-col min-h-[600px] animate-in fade-in slide-in-from-bottom-6 duration-1000">
             {/* Header */}
-            <div className="text-center mb-10">
+            <div className="text-center mb-10 flex flex-col items-center">
+                <div className="flex items-center gap-2 mb-6 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
+                    <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/20">
+                        <svg className="w-6 h-6 text-white -rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.5-1 1.3-2.1c.42-.6.44-1.37.04-2.13L3 3l5.3 2.34c.76.4 1.53.38 2.13-.04C11.5 4.5 12.5 4 12.5 4L12 9z" /></svg>
+                    </div>
+                    <span className="text-xl font-black text-white tracking-tighter uppercase">Dromoney</span>
+                </div>
+
                 <div className="inline-flex items-center gap-2.5 bg-sky-500/10 border border-sky-500/20 px-4 py-1.5 rounded-full mb-6">
                     <Sparkles size={12} className="text-sky-400 rotate-12" />
                     <span className="text-[10px] font-black text-sky-400 tracking-[0.2em] uppercase">Start Earning Today</span>
