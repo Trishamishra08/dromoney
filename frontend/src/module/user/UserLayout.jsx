@@ -41,6 +41,14 @@ const UserLayout = () => {
                     </div>
                 </div>
 
+                {/* Center: Logo (New) */}
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
+                    <div className="w-7 h-7 bg-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-teal-100">
+                        <svg className="w-4 h-4 text-white -rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.5-1 1.3-2.1c.42-.6.44-1.37.04-2.13L3 3l5.3 2.34c.76.4 1.53.38 2.13-.04C11.5 4.5 12.5 4 12.5 4L12 9z" /></svg>
+                    </div>
+                    <span className="text-[14px] font-black text-slate-800 tracking-tighter uppercase">Dromoney</span>
+                </div>
+
                 {/* Right Side: Actions */}
                 <div className="flex items-center gap-2">
                     {/* Bell Icon */}
