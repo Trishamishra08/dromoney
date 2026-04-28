@@ -1,183 +1,250 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
-import { MOCK_USER, NOTIFICATIONS } from '../data/mockData';
+import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
+import api from '../../shared/services/api';
+import io from 'socket.io-client';
 
-const UserContext = createContext();
+const UserContext = React.createContext();
+const SOCKET_URL = 'http://localhost:5000'; // Match backend port
+
+// Initial empty state to prevent destructuring crashes
+const INITIAL_USER_STATE = {
+    name: '',
+    email: '',
+    id: '',
+    isPaid: false,
+    earnings: { today: 0, total: 0, referral: 0 },
+    coins: { total: 0, history: [] },
+    referrals: { count: 0, code: '', link: '' },
+    wallet: { balance: 0, transactions: [] },
+    kycStatus: 'Not Started',
+    profileImage: '',
+    futureFund: { progress: 0, criteria: [] },
+    isBoosterActive: false
+};
 
 export const UserProvider = ({ children }) => {
-    const [userData, setUserData] = useState(() => {
-        const saved = localStorage.getItem('dromoney_user_data');
-        if (saved) return JSON.parse(saved);
-        return MOCK_USER;
-    });
-    const [notifications, setNotifications] = useState(() => {
-        const saved = localStorage.getItem('dromoney_user_notifications');
-        if (saved) return JSON.parse(saved);
-        return NOTIFICATIONS;
-    });
+    const [userData, setUserData] = useState(INITIAL_USER_STATE);
+    const [notifications, setNotifications] = useState([]);
     const [joinedEvents, setJoinedEvents] = useState([]);
+    const [loading, setLoading] = useState(!!localStorage.getItem('dromoney_token'));
+    const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('dromoney_token'));
+    const [socket, setSocket] = useState(null);
 
-    // Persist notifications
-    React.useEffect(() => {
-        localStorage.setItem('dromoney_user_notifications', JSON.stringify(notifications));
-    }, [notifications]);
+    useEffect(() => {
+        if (isAuthenticated) {
+            refreshUserProfile();
+            fetchNotifications();
 
-    // Persist userData on every change
-    React.useEffect(() => {
-        localStorage.setItem('dromoney_user_data', JSON.stringify(userData));
-    }, [userData]);
+            // Setup Socket Connection
+            const newSocket = io(SOCKET_URL);
+            setSocket(newSocket);
 
-    // --- Actions ---
+            newSocket.on('new_broadcast', (notif) => {
+                addNotification(notif.title, notif.message, 'broadcast');
+            });
 
-    // 1. Platform Unlock Simulation
-    const unlockPlatform = () => {
-        setUserData(prev => ({ ...prev, isPaid: true }));
-        addNotification("Platform Unlocked!", "You have successfully unlocked full access. Start earning!", "success");
-    };
-
-    // 2. Add Coins (including booster logic and wallet deposit)
-    const addCoins = (baseAmount, source) => {
-        const factor = userData.isBoosterActive ? 3 : 1;
-        const totalAwardedCoins = baseAmount * factor;
-        
-        // Dynamic Conversion logic: assuming 1 Coin = ₹0.1 (can be adjusted by Admin)
-        const coinToRupeeConversion = 0.1; 
-        const earningsInRupee = parseFloat((totalAwardedCoins * coinToRupeeConversion).toFixed(2));
-
-        setUserData(prev => ({
-            ...prev,
-            earnings: {
-                ...prev.earnings,
-                total: prev.earnings.total + earningsInRupee,
-                today: prev.earnings.today + earningsInRupee
-            },
-            wallet: {
-                ...prev.wallet,
-                balance: prev.wallet.balance + earningsInRupee,
-                transactions: [
-                    { id: Date.now() + 1, type: 'credit', amount: earningsInRupee, title: `Task: ${source}`, status: 'Success', date: new Date().toLocaleDateString() },
-                    ...prev.wallet.transactions
-                ]
-            },
-            coins: {
-                ...prev.coins,
-                total: prev.coins.total + totalAwardedCoins,
-                history: [
-                    { id: Date.now(), type: 'credit', amount: totalAwardedCoins, source, date: new Date().toLocaleDateString() },
-                    ...prev.coins.history
-                ]
-            }
-        }));
-        addNotification("Coins Added!", `+${totalAwardedCoins} coins earned from ${source}.`, "info");
-    };
-
-    // 3. Deduct Coins (Event Entry etc.)
-    const deductCoins = (amount, source) => {
-        if (userData.coins.total < amount) return false;
-
-        setUserData(prev => ({
-            ...prev,
-            coins: {
-                ...prev.coins,
-                total: prev.coins.total - amount,
-                history: [
-                    { id: Date.now(), type: 'debit', amount, source, date: new Date().toLocaleDateString() },
-                    ...prev.coins.history
-                ]
-            }
-        }));
-        return true;
-    };
-
-    // 4. Global Join Event (Persistently)
-    const joinEvent = (eventId, fee, title) => {
-        if (joinedEvents.includes(eventId)) return;
-        
-        const success = deductCoins(fee, `Event Entry: ${title}`);
-        if (success) {
-            setJoinedEvents(prev => [...prev, eventId]);
-            addNotification("Event Joined!", `Registration successful for ${title}.`, "success");
-            return true;
+            return () => newSocket.close();
+        } else {
+            setUserData(INITIAL_USER_STATE);
+            setNotifications([]);
         }
-        return false;
-    };
+    }, [isAuthenticated]);
 
-    // 5. Upgrade/Buy Booster
-    const upgradeBooster = (type, cost) => {
-        setUserData(prev => ({
-            ...prev,
-            isBoosterActive: true,
-            boosterDaysLeft: type === 'monthly' ? 30 : prev.boosterDaysLeft
-        }));
-        addNotification("Booster Active!", "Your 3x coin multiplier is now running.", "success");
-    };
-
-    // 6. Simulate Affiliate Sale (Affects Future Fund & Wallet)
-    const simulateSale = () => {
-        setUserData(prev => {
-            const nextCriteria = prev.futureFund.criteria.map(c => 
-                c.id === 1 ? { ...c, current: Math.min(c.target, c.current + 1), completed: (c.current + 1 >= c.target) } : c
-            );
-            
-            // Calculate new progress based on cumulative criteria targets
-            const totalTarget = nextCriteria.reduce((sum, c) => sum + c.target, 0);
-            const currentTotal = nextCriteria.reduce((sum, c) => sum + c.current, 0);
-            const newProgress = Math.floor((currentTotal / totalTarget) * 100);
-
-            // Important: Sale adds to BOTH lifetime Total earnings AND current wallet balance
-            return {
-                ...prev,
-                earnings: { ...prev.earnings, total: prev.earnings.total + 200, today: prev.earnings.today + 200 },
-                wallet: { ...prev.wallet, balance: prev.wallet.balance + 200 },
-                futureFund: { ...prev.futureFund, progress: newProgress, criteria: nextCriteria }
-            };
-        });
-        addNotification("New Sale!", "₹200 added to your wallet successfully.", "success");
-    };
-
-    // 7. Withdrawal Request
-    const requestWithdrawal = (amount) => {
-        if (userData.wallet.balance < amount) return false;
-        setUserData(prev => ({
-            ...prev,
-            wallet: {
-                ...prev.wallet,
-                balance: prev.wallet.balance - amount,
-                transactions: [
-                    { id: Date.now(), type: 'withdrawal', amount, title: 'Bank Payout', status: 'Pending', date: new Date().toLocaleDateString() },
-                    ...prev.wallet.transactions
-                ]
+    const fetchNotifications = async () => {
+        try {
+            const res = await api.get('/public/notifications');
+            if (res.success && res.data) {
+                const readIds = JSON.parse(localStorage.getItem('dromoney_read_notifs') || '[]');
+                const mapped = res.data.map(n => ({
+                    id: n._id,
+                    title: n.title,
+                    message: n.message,
+                    time: new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    type: n.type || 'broadcast',
+                    isRead: readIds.includes(n._id)
+                }));
+                setNotifications(mapped);
             }
-        }));
-        addNotification("Withdrawal Pending", `Your payout of ₹${amount} is being reviewed.`, "warning");
-        return true;
+        } catch (err) {
+            console.error("Notifications Fetch Error:", err);
+        }
     };
 
-    // 9. Update Profile Image
-    const updateProfileImage = (imgBase64) => {
-        setUserData(prev => ({ ...prev, profileImage: imgBase64 }));
+    const markAsRead = (id) => {
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+        const readIds = JSON.parse(localStorage.getItem('dromoney_read_notifs') || '[]');
+        if (!readIds.includes(id)) {
+            readIds.push(id);
+            localStorage.setItem('dromoney_read_notifs', JSON.stringify(readIds));
+        }
     };
 
-    // 10. Add/Clear Notifications
+    const clearNotifications = () => {
+        setNotifications([]);
+    };
+
+    const refreshUserProfile = async () => {
+        if (!isAuthenticated) return;
+        setLoading(true);
+        try {
+            const response = await api.get('/user/auth/me');
+            if (response.success && response.data) {
+                mapAndSetUserData(response.data);
+            }
+        } catch (err) {
+            console.error("Profile Sync Error:", err);
+            if (err.status === 401) logout();
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const mapAndSetUserData = (dbUser) => {
+        setUserData({
+            name: dbUser.name,
+            id: `AFF-${dbUser.referralCode}`,
+            email: dbUser.email,
+            phone: dbUser.phone,
+            isPaid: dbUser.isPaid,
+            isBoosterActive: dbUser.isBoosterActive,
+            earnings: {
+                today: dbUser.wallet?.todayEarnings || 0,
+                total: dbUser.wallet?.lifetimeEarnings || 0,
+                referral: (dbUser.wallet?.lifetimeEarnings || 0) * 0.6
+            },
+            coins: {
+                total: dbUser.coins?.balance || 0,
+                history: []
+            },
+            referrals: {
+                count: dbUser.referralCount || 0,
+                code: dbUser.referralCode,
+                link: `${window.location.origin}/user/auth/register?ref=${dbUser.referralCode}`
+            },
+            wallet: {
+                balance: dbUser.wallet?.balance || 0,
+                transactions: []
+            },
+            kycStatus: dbUser.kyc?.status || 'Not Started',
+            kycRejectionReason: dbUser.kyc?.rejectionReason || '',
+            profileImage: dbUser.profileImage || '',
+            futureFund: {
+                progress: dbUser.futureFund?.progress || 0,
+                criteria: dbUser.futureFund?.criteria || []
+            }
+        });
+    };
+
+    const sendLoginOtp = async (phone) => {
+        setLoading(true);
+        try {
+            const response = await api.post('/user/auth/send-otp', { phone });
+            return { success: true, dev_otp: response.dev_otp };
+        } catch (err) {
+            return { success: false, error: err.message || 'OTP Send failed' };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const verifyLoginOtp = async (phone, otp, expectedOtp) => {
+        setLoading(true);
+        try {
+            const response = await api.post('/user/auth/verify-otp', { phone, otp, expectedOtp });
+            localStorage.setItem('dromoney_token', response.token);
+            setIsAuthenticated(true);
+            return { success: true };
+        } catch (err) {
+            return { success: false, error: err.message || 'Verification failed' };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const login = async (email, password) => {
+        setLoading(true);
+        try {
+            const response = await api.post('/user/auth/login', { email, password });
+            localStorage.setItem('dromoney_token', response.token);
+            setIsAuthenticated(true);
+            return { success: true };
+        } catch (err) {
+            return { success: false, error: err.message || err };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const register = async (formData) => {
+        setLoading(true);
+        try {
+            const response = await api.post('/user/auth/register', formData);
+            localStorage.setItem('dromoney_token', response.token);
+            setIsAuthenticated(true);
+            return { success: true };
+        } catch (err) {
+            return { success: false, error: err };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const logout = () => {
+        localStorage.removeItem('dromoney_token');
+        setIsAuthenticated(false);
+        setUserData(INITIAL_USER_STATE);
+        localStorage.removeItem('dromoney_read_notifs');
+    };
+
+    const unlockPlatform = async () => {
+        try {
+            await api.post('/user/data/unlock');
+            await refreshUserProfile();
+            return true;
+        } catch (err) { return false; }
+    };
+
+    const addCoins = async (amount, source) => {
+        try {
+            await api.post('/user/wallet/add-coins', { amount, source });
+            await refreshUserProfile();
+        } catch (err) { console.error(err); }
+    };
+
+    const requestWithdrawal = async (amount) => {
+        try {
+            await api.post('/user/wallet/withdraw', { amount });
+            await refreshUserProfile();
+            return true;
+        } catch (err) { return false; }
+    };
+
+    const updateProfileImage = async (newUrl) => {
+        setUserData(prev => ({ ...prev, profileImage: newUrl }));
+    };
+
     const addNotification = (title, message, type) => {
-        setNotifications(prev => [{ id: Date.now(), title, message, time: "Just now", type }, ...prev]);
+        setNotifications(prev => [{ id: Date.now(), title, message, time: "Just now", type, isRead: false }, ...prev]);
     };
-    const clearNotifications = () => setNotifications([]);
 
     const value = useMemo(() => ({
         userData,
         notifications,
-        joinedEvents,
+        loading,
+        isAuthenticated,
+        login,
+        sendLoginOtp,
+        verifyLoginOtp,
+        register,
+        logout,
         unlockPlatform,
         addCoins,
-        deductCoins,
-        joinEvent,
-        upgradeBooster,
-        simulateSale,
         requestWithdrawal,
-        updateProfileImage,
         addNotification,
+        refreshUserProfile,
+        updateProfileImage,
+        markAsRead,
         clearNotifications
-    }), [userData, notifications, joinedEvents]);
+    }), [userData, notifications, loading, isAuthenticated]);
 
     return (
         <UserContext.Provider value={value}>
@@ -188,8 +255,6 @@ export const UserProvider = ({ children }) => {
 
 export const useUser = () => {
     const context = useContext(UserContext);
-    if (!context) {
-        throw new Error('useUser must be used within a UserProvider');
-    }
+    if (!context) throw new Error('useUser must be used within a UserProvider');
     return context;
 };

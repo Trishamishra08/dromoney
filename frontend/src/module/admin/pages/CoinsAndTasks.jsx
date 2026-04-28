@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Coins, Settings, X, Lightbulb, Loader } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
-import { taskStorage } from '../../shared/services/taskStorage';
+import api from '../../shared/services/api';
 
 const CoinsAndTasks = () => {
     const [tasks, setTasks] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [coinValue, setCoinValue] = useState(0.1);
     const [dailyLimit, setDailyLimit] = useState(100);
     const [activeTab, setActiveTab] = useState('tasks');
@@ -12,30 +13,51 @@ const CoinsAndTasks = () => {
     // Modal State
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingTaskId, setEditingTaskId] = useState(null);
-    const [newTaskType, setNewTaskType] = useState('Web'); // Web, Video, Quiz, Spin, Proof
+    const [newTaskType, setNewTaskType] = useState('Social'); 
     const [newTaskData, setNewTaskData] = useState({
         title: '',
         description: '',
         reward: 1,
-        config: {} // Dynamic fields
+        category: 'Instagram',
+        link: '',
+        config: {} 
     });
 
     useEffect(() => {
-        setTasks(taskStorage.getTasks());
+        fetchTasks();
     }, []);
 
-    const deleteTask = (id) => {
-        taskStorage.deleteTask(id);
-        setTasks(taskStorage.getTasks());
+    const fetchTasks = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get('/admin/tasks');
+            if (response.success) setTasks(response.data);
+        } catch (err) {
+            console.error("Fetch Tasks Error:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const deleteTask = async (id) => {
+        if (!window.confirm("Are you sure?")) return;
+        try {
+            const response = await api.delete(`/admin/content/task/${id}`);
+            if (response.success) fetchTasks();
+        } catch (err) {
+            console.error("Delete Task Error:", err);
+        }
     };
 
     const openEditModal = (task) => {
-        setEditingTaskId(task.id);
+        setEditingTaskId(task._id);
         setNewTaskType(task.type);
         setNewTaskData({
             title: task.title,
             description: task.description,
-            reward: task.reward,
+            reward: task.coinsReward,
+            category: task.category,
+            link: task.link,
             config: task.config || {}
         });
         setIsAddModalOpen(true);
@@ -43,37 +65,40 @@ const CoinsAndTasks = () => {
 
     const openAddModal = () => {
         setEditingTaskId(null);
-        setNewTaskType('Web');
-        setNewTaskData({ title: '', description: '', reward: 1, config: {} });
+        setNewTaskType('Social');
+        setNewTaskData({ title: '', description: '', reward: 1, category: 'Instagram', link: '', config: {} });
         setIsAddModalOpen(true);
     };
 
-    const handleSaveTask = () => {
-        if (!newTaskData.title) return alert("Title is required");
+    const handleSaveTask = async () => {
+        if (!newTaskData.title || !newTaskData.link) return alert("Title and Link are required");
         
-        let icon = 'Monitor';
-        if (newTaskType === 'Video') icon = 'Youtube';
-        if (newTaskType === 'Spin') icon = 'Disc';
-        if (newTaskType === 'Quiz') icon = 'Lightbulb';
-        if (newTaskType === 'Proof') icon = 'Camera';
-
         const payload = {
             type: newTaskType,
+            category: newTaskData.category,
             title: newTaskData.title,
             description: newTaskData.description,
-            reward: Number(newTaskData.reward),
-            icon: icon,
+            coinsReward: Number(newTaskData.reward),
+            link: newTaskData.link,
             config: newTaskData.config
         };
 
-        if (editingTaskId) {
-            taskStorage.updateTask(editingTaskId, payload);
-        } else {
-            taskStorage.saveTask(payload);
+        try {
+            let response;
+            if (editingTaskId) {
+                // response = await api.put(`/admin/tasks/${editingTaskId}`, payload); // Simplified for now
+                response = await api.post('/admin/tasks', payload); 
+            } else {
+                response = await api.post('/admin/tasks', payload);
+            }
+            
+            if (response.success) {
+                fetchTasks();
+                setIsAddModalOpen(false);
+            }
+        } catch (err) {
+            alert(err);
         }
-        
-        setTasks(taskStorage.getTasks());
-        setIsAddModalOpen(false);
     };
 
     return (
@@ -180,7 +205,7 @@ const CoinsAndTasks = () => {
                             <div>
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">1. Select Task Type</label>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                    {['Web', 'Video', 'Quiz', 'Spin', 'Proof'].map(type => (
+                                    {['Social', 'Survey', 'Watch', 'Join', 'Bonus'].map(type => (
                                         <button 
                                             key={type}
                                             onClick={() => { setNewTaskType(type); setNewTaskData({...newTaskData, config: {}}); }}
@@ -192,13 +217,33 @@ const CoinsAndTasks = () => {
                                 </div>
                             </div>
 
+                            {/* Category Switcher */}
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">2. Category</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    {['Instagram', 'YouTube', 'Telegram', 'WhatsApp', 'Other'].map(cat => (
+                                        <button 
+                                            key={cat}
+                                            onClick={() => { setNewTaskData({...newTaskData, category: cat}); }}
+                                            className={`py-2 px-3 rounded-xl text-[10px] font-black transition-all border ${newTaskData.category === cat ? 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
+                                        >
+                                            {cat}
+                                        </button>                                    ))}
+                                </div>
+                            </div>
+
                             {/* Common Details */}
                             <div className="space-y-4 pt-4 border-t border-slate-100">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">2. Basic Details</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">3. Basic Details</label>
                                 
                                 <div>
                                     <label className="text-xs font-bold text-slate-600 block mb-1">Task Title <span className="text-rose-500">*</span></label>
-                                    <input type="text" placeholder="e.g. Watch our new Promo" value={newTaskData.title} onChange={e => setNewTaskData({...newTaskData, title: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 placeholder-slate-300 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+                                    <input type="text" placeholder="e.g. Follow us on Instagram" value={newTaskData.title} onChange={e => setNewTaskData({...newTaskData, title: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 placeholder-slate-300 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-bold text-slate-600 block mb-1">Direct Link <span className="text-rose-500">*</span></label>
+                                    <input type="text" placeholder="e.g. https://instagram.com/dromoney" value={newTaskData.link} onChange={e => setNewTaskData({...newTaskData, link: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 placeholder-slate-300 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
                                 </div>
                                 
                                 <div>

@@ -9,13 +9,11 @@ const UserLayout = () => {
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLangOpen, setIsLangOpen] = useState(false);
-    const { userData, notifications, clearNotifications } = useUser();
+    const { userData, notifications, clearNotifications, markAsRead } = useUser();
 
     const navItems = [
         { path: '/user/home', label: 'Home', icon: HomeIcon },
-        { path: '/user/income', label: 'Income', icon: TrendingUp },
-        { path: '/user/wallet', label: 'Wallet', icon: WalletIcon },
-        { path: '/user/watch', label: 'Watch and Earn', icon: MonitorPlay },
+        { path: '/user/wallet', label: 'Scan', icon: LayoutGrid, isCenter: true },
         { path: '/user/profile', label: 'Profile', icon: User },
     ];
 
@@ -29,15 +27,18 @@ const UserLayout = () => {
     };
 
     return (
-        <div className="min-h-screen bg-sky-50 text-sky-900 font-sans overflow-x-hidden">
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden">
             {/* --- New Dromoney Fixed Top Header --- */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-sky-100 px-4 py-2.5 flex items-center justify-between shadow-sm max-w-md mx-auto">
-                {/* Left Side: Logo & Brand */}
-                <div className="flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
-                    <div className="w-9 h-9 bg-gradient-to-tr from-blue-600 to-sky-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
-                        <Rocket size={20} className="text-white fill-white/20 -rotate-45" />
+            <header className="fixed top-0 left-0 right-0 z-50 bg-slate-50 px-6 py-4 flex items-center justify-between max-w-md mx-auto">
+                {/* Left Side: Profile & Greeting */}
+                <div className="flex items-center gap-3 active:scale-95 transition-transform cursor-pointer" onClick={() => setIsMenuOpen(true)}>
+                    <div className="w-10 h-10 rounded-full overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80" alt="Profile" className="w-full h-full object-cover" />
                     </div>
-                    <h1 className="text-xl font-black text-[#1A1C30] tracking-tight">Dromoney</h1>
+                    <div className="flex flex-col">
+                        <span className="text-[11px] font-medium text-slate-500 leading-tight">Hello {userData?.name || 'Jixon'},</span>
+                        <h1 className="text-sm font-bold text-slate-800 tracking-tight leading-tight">Welcome Back!</h1>
+                    </div>
                 </div>
 
                 {/* Right Side: Actions */}
@@ -45,20 +46,12 @@ const UserLayout = () => {
                     {/* Bell Icon */}
                     <button
                         onClick={() => setIsNotifOpen(true)}
-                        className="p-1.5 text-slate-500 hover:text-blue-600 transition-colors relative"
+                        className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-700 shadow-sm relative active:scale-95 transition-all"
                     >
-                        <Bell size={22} strokeWidth={2.5} />
+                        <Bell size={20} strokeWidth={2} />
                         {notifications.length > 0 && (
-                            <span className="absolute top-1 right-1.5 w-2 h-2 bg-orange-500 rounded-full border-2 border-white"></span>
+                            <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full"></span>
                         )}
-                    </button>
-
-                    {/* Menu Button (Hamburger) */}
-                    <button 
-                        onClick={() => setIsMenuOpen(true)}
-                        className="p-1.5 text-slate-500 hover:text-blue-600 active:scale-95 transition-all"
-                    >
-                        <Menu size={24} strokeWidth={2.5} />
                     </button>
                 </div>
             </header>
@@ -87,18 +80,44 @@ const UserLayout = () => {
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        {notifications.map((notif) => (
-                            <div key={notif.id} className="flex gap-4 p-4 rounded-2xl bg-sky-50/50 border border-sky-100/50 hover:bg-sky-50 transition-colors group">
-                                <div className="mt-1">{getNotifIcon(notif.type)}</div>
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <h4 className="text-sm font-black text-slate-800 group-hover:text-sky-700 transition-colors">{notif.title}</h4>
-                                        <span className="text-[9px] font-bold text-slate-400 bg-white px-1.5 py-0.5 rounded shadow-sm">{notif.time}</span>
+                        {notifications.length > 0 ? (
+                            notifications.map((notif) => (
+                                <div 
+                                    key={notif.id} 
+                                    onClick={() => markAsRead(notif.id)}
+                                    className={`flex gap-4 p-4 rounded-2xl transition-all cursor-pointer group relative ${
+                                        notif.isRead 
+                                        ? 'bg-slate-50/50 border border-slate-100 opacity-70' 
+                                        : 'bg-white border-2 border-sky-100 shadow-sm shadow-sky-100/50'
+                                    }`}
+                                >
+                                    {!notif.isRead && (
+                                        <div className="absolute top-4 right-4 w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(37,99,235,0.5)]"></div>
+                                    )}
+                                    <div className={`mt-1 transition-transform group-hover:scale-110 ${notif.isRead ? 'grayscale opacity-50' : ''}`}>
+                                        {getNotifIcon(notif.type)}
                                     </div>
-                                    <p className="text-xs font-bold text-slate-500 leading-relaxed">{notif.message}</p>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <h4 className={`text-sm font-black transition-colors ${notif.isRead ? 'text-slate-500' : 'text-slate-800'}`}>
+                                                {notif.title}
+                                            </h4>
+                                            <span className="text-[9px] font-black text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                                                {notif.time}
+                                            </span>
+                                        </div>
+                                        <p className={`text-[11px] font-bold leading-relaxed ${notif.isRead ? 'text-slate-400' : 'text-slate-500'}`}>
+                                            {notif.message}
+                                        </p>
+                                    </div>
                                 </div>
+                            ))
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center opacity-30 select-none py-20">
+                                <Bell size={60} className="text-slate-200 mb-4 stroke-1" />
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">All caught up</p>
                             </div>
-                        ))}
+                        )}
                     </div>
 
                     <div className="p-4 border-t border-sky-50 text-center">
@@ -230,24 +249,30 @@ const UserLayout = () => {
             </main>
 
             {/* --- Premium Bottom Navigation Bar --- */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-sky-100 px-2 py-2 flex items-center justify-around shadow-[0_-4px_10px_rgba(14,165,233,0.06)] z-50 rounded-t-2xl">
+            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-6 py-3 flex items-center justify-between z-50 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.03)] max-w-md mx-auto">
                 {navItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = location.pathname === item.path;
+
+                    if (item.isCenter) {
+                        return (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                className="relative -top-6 flex flex-col items-center justify-center w-14 h-14 bg-teal-800 rounded-full shadow-lg shadow-teal-800/40 text-white transition-transform active:scale-95"
+                            >
+                                <LayoutGrid size={24} strokeWidth={2} />
+                            </NavLink>
+                        );
+                    }
 
                     return (
                         <NavLink
                             key={item.path}
                             to={item.path}
-                            className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all duration-300 ${isActive
-                                ? 'bg-sky-500 text-white shadow-lg shadow-sky-200 scale-105'
-                                : 'text-slate-400 hover:text-sky-500'
-                                }`}
+                            className={`flex flex-col items-center gap-1 p-2 transition-all duration-300 ${isActive ? 'text-teal-800' : 'text-slate-400 hover:text-teal-800'}`}
                         >
-                            <Icon size={isActive ? 22 : 20} strokeWidth={isActive ? 2.5 : 2} />
-                            <span className={`text-[10px] font-bold ${isActive ? 'text-white' : 'text-slate-500'}`}>
-                                {item.label}
-                            </span>
+                            <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
                         </NavLink>
                     );
                 })}

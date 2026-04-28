@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { taskStorage } from '../../shared/services/taskStorage';
-import { ChevronLeft, CheckCircle2, Play, UploadCloud, Link as LinkIcon, Loader2, Image as ImageIcon } from 'lucide-react';
+import { ChevronLeft, CheckCircle2, Play, UploadCloud, Link as LinkIcon, Loader2, Image as ImageIcon, Coins } from 'lucide-react';
 
 const TaskRunner = () => {
     const { id } = useParams();
@@ -29,7 +29,7 @@ const TaskRunner = () => {
         
         if (foundTask) {
              const tType = foundTask.type;
-             const timerValue = Number(foundTask.config?.timer) || (tType === 'Video' ? 30 : 15);
+             const timerValue = Number(foundTask.config?.timer) || (tType === 'Video' ? 30 : 25);
              if (tType === 'Video' || tType === 'Web') {
                  setTimeLeft(timerValue);
              }
@@ -50,8 +50,8 @@ const TaskRunner = () => {
     const startTask = () => {
         setStatus('running');
         
-        // Open the external URL if it exists
-        if ((task.type === 'Web' || task.type === 'Video') && task.config?.url) {
+        // Open the external URL if it's Web task
+        if (task.type === 'Web' && task.config?.url) {
             window.open(task.config.url, '_blank', 'noopener,noreferrer');
         }
     };
@@ -76,7 +76,11 @@ const TaskRunner = () => {
                     <p className="text-[9px] text-sky-400 font-bold uppercase tracking-widest leading-none mt-1">Live Task Mode</p>
 
                 </div>
-                <div className="bg-amber-500/10 px-3 py-1.5 rounded-full border border-amber-500/20 shadow-inner shrink-0">
+                <div className="bg-amber-500/10 px-3 py-1.5 rounded-full border border-amber-500/20 shadow-inner shrink-0 flex items-center gap-2">
+                    <div className="flex items-center gap-1 border-r border-amber-500/20 pr-2 mr-0.5">
+                        <Coins size={12} className="text-amber-400" />
+                        <span className="font-black text-amber-400 text-xs">{userData.coins.total}</span>
+                    </div>
                     <span className="font-black text-amber-400 text-xs">+{task.reward} Coin</span>
                 </div>
             </div>
@@ -87,35 +91,66 @@ const TaskRunner = () => {
                 {/* VIDEO TASK */}
                 {task.type === 'Video' && (
                     <div className="flex-1 flex flex-col">
-                        <div className="w-full bg-slate-900 rounded-3xl overflow-hidden aspect-video relative border border-slate-800 shadow-2xl flex items-center justify-center group">
-                            {/* Dummy Video Player UI Background */}
-                            <div className="absolute inset-0 bg-slate-950 border-[6px] border-slate-900 rounded-3xl"></div>
+                        <div className="w-full bg-slate-900 rounded-3xl overflow-hidden aspect-video relative border border-slate-800 shadow-2xl flex flex-col justify-center items-center group">
                             
                             {status === 'idle' && (
-                                <button onClick={startTask} className="z-10 w-16 h-16 bg-sky-500 hover:scale-110 active:scale-95 transition-transform rounded-full flex items-center justify-center pl-1 shadow-[0_0_25px_rgba(14,165,233,0.6)]">
-                                    <Play size={28} className="text-slate-950" />
-                                </button>
+                                <>
+                                    <div className="absolute inset-0 bg-slate-950"></div>
+                                    <button onClick={startTask} className="z-10 w-16 h-16 bg-sky-500 hover:scale-110 active:scale-95 transition-transform rounded-full flex items-center justify-center pl-1 shadow-[0_0_25px_rgba(14,165,233,0.6)]">
+                                        <Play size={28} className="text-slate-950" />
+                                    </button>
+                                </>
                             )}
                             
                             {status === 'running' && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-10">
-                                    <span className="text-slate-500 font-bold tracking-widest text-[10px] sm:text-xs px-8 text-center uppercase">[ Advertisement video is playing here on real app ]</span>
-                                    <div className="absolute top-4 right-4 bg-slate-950/80 px-4 py-2 rounded-full border border-slate-800 backdrop-blur flex items-center gap-2 shadow-xl">
+                                <div className="absolute inset-0 flex flex-col bg-slate-950 z-10">
+                                    <iframe 
+                                        src={`${task.config?.url}?autoplay=1&controls=0&mute=1`} 
+                                        className="w-full flex-1 border-0 pointer-events-none"
+                                        title="Sponsor Video"
+                                        allow="autoplay"
+                                    ></iframe>
+                                    
+                                    {/* Progress Bar Container */}
+                                    <div className="h-2 w-full bg-slate-800 relative">
+                                        {/* Dynamic Progress Line */}
+                                        <div 
+                                            className="absolute top-0 left-0 h-full bg-sky-500 transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(14,165,233,0.8)]"
+                                            style={{ width: `${((30 - timeLeft) / 30) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                    
+                                    <div className="absolute top-3 right-3 bg-slate-950/80 px-3 py-1.5 rounded-full border border-slate-800 backdrop-blur flex items-center gap-2 shadow-xl">
                                         <div className="w-2 h-2 rounded-full bg-rose-500 animate-[ping_2s_infinite]"></div>
-                                        <span className="text-white font-black font-mono text-xs">00:{timeLeft.toString().padStart(2, '0')}</span>
+                                        <span className="text-white font-black font-mono text-[10px]">00:{timeLeft.toString().padStart(2, '0')}</span>
                                     </div>
                                 </div>
                             )}
 
                             {status === 'verify' && (
-                                <div className="absolute inset-0 bg-sky-950/80 backdrop-blur-md flex flex-col items-center justify-center z-10 border-2 border-sky-500/50 rounded-3xl">
-                                    <CheckCircle2 size={48} className="text-sky-400 mb-2 drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]" />
-                                    <span className="text-white font-black tracking-widest uppercase text-sm">Video Finished</span>
+                                <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-20 animate-in fade-in duration-500 p-4">
+                                    <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-3 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                                        <CheckCircle2 size={32} className="text-emerald-400" />
+                                    </div>
+                                    <h3 className="text-base font-black text-white uppercase tracking-tight mb-4">Video Watched!</h3>
+                                    <button 
+                                        onClick={submitTask}
+                                        className="w-full max-w-[200px] px-6 py-3 bg-sky-500 hover:bg-sky-400 active:scale-95 font-black text-slate-950 rounded-xl shadow-[0_0_15px_rgba(14,165,233,0.3)] transition-all uppercase tracking-widest text-[10px]"
+                                    >
+                                        Claim Reward
+                                    </button>
+                                </div>
+                            )}
+                            
+                            {status === 'completed' && (
+                                <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-20 animate-in zoom-in duration-500">
+                                    <Loader2 size={32} className="text-sky-500 animate-spin mb-3" />
+                                    <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Processing...</h3>
                                 </div>
                             )}
                         </div>
 
-                        <div className="mt-8 bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-inner">
+                        <div className="mt-6 bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-inner">
                             <h3 className="text-xs font-black text-slate-300 mb-3 uppercase tracking-widest text-sky-400">Task Instructions</h3>
                             <ul className="text-xs text-slate-400 list-disc list-inside space-y-2 font-medium leading-relaxed marker:text-slate-600">
                                 <li>Tap PLAY and do not close your screen during playback.</li>
@@ -128,63 +163,51 @@ const TaskRunner = () => {
 
                 {/* WEB TASK */}
                 {task.type === 'Web' && (
-                    <div className="flex-1 flex flex-col">
-                        <div className="w-full flex-1 min-h-[400px] bg-slate-950 border border-slate-800 rounded-3xl flex flex-col overflow-hidden relative shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-                            {/* Browser Header Window */}
-                            <div className="bg-slate-900/90 backdrop-blur px-4 py-3 border-b border-slate-800 flex items-center gap-4">
-                                <div className="flex gap-1.5 opacity-50">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
-                                    <div className="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
-                                    <div className="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
-                                </div>
-                                <div className="flex-1 bg-slate-950 rounded-lg px-3 py-1.5 flex items-center gap-2 border border-slate-800">
-                                    <LinkIcon size={12} className="text-slate-500" />
-                                    <span className="text-[10px] text-slate-400 font-medium truncate w-[150px]">https://sponsor-website.com/secure</span>
-                                </div>
-                            </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                        <div className="w-full flex-1 min-h-[400px] bg-slate-900 border border-slate-800 rounded-3xl flex flex-col overflow-hidden relative shadow-lg items-center justify-center p-6 text-center">
                             
-                            {/* Mock Browser Body Canvas */}
-                            <div className="flex-1 bg-white relative">
-                                {status === 'idle' && (
-                                    <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center z-10">
-                                        <button onClick={startTask} className="px-8 py-3 bg-sky-500 hover:bg-sky-400 active:scale-95 font-black text-slate-950 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)] transition-all uppercase tracking-widest text-[10px]">Open Sponsor Portal</button>
-                                        <p className="text-[9px] text-slate-500 mt-4 font-bold uppercase tracking-widest">Opens in Safe Browser</p>
-                                    </div>
-                                )}
+                            {status === 'idle' && (
+                                <div className="flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500">
+                                    <button onClick={startTask} className="px-8 py-4 bg-sky-500 hover:bg-sky-400 active:scale-95 font-black text-slate-950 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)] transition-all uppercase tracking-widest text-xs flex items-center gap-2">
+                                        Open Sponsor Portal <LinkIcon size={16} />
+                                    </button>
+                                    <p className="text-[10px] text-slate-500 mt-5 font-bold uppercase tracking-widest">Opens in Safe Browser</p>
+                                </div>
+                            )}
                                 
-                                {(status === 'running' || status === 'verify') && (
-                                    <div className="absolute inset-0 flex flex-col p-8 items-center bg-slate-100/50 pointer-events-none">
-                                        {/* Fake wireframe website layout */}
-                                        <div className="w-full h-12 bg-slate-200 rounded mb-8"></div>
-                                        <div className="w-3/4 h-6 bg-slate-200 rounded mb-4 self-start"></div>
-                                        <div className="w-full h-3 bg-slate-200 rounded mb-2"></div>
-                                        <div className="w-full h-3 bg-slate-200 rounded mb-2"></div>
-                                        <div className="w-2/3 h-3 bg-slate-200 rounded mb-10 self-start"></div>
-                                        <div className="w-full aspect-video bg-slate-200 rounded-xl flex items-center justify-center border-4 border-white shadow-sm mt-auto">
-                                            <span className="text-slate-400 font-black uppercase text-xs tracking-widest">Sponsor Asset Area</span>
-                                        </div>
+                            {status === 'running' && (
+                                <div className="flex flex-col items-center justify-center animate-in fade-in duration-500">
+                                    <div className="relative w-24 h-24 flex items-center justify-center mb-6">
+                                        <div className="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+                                        <div className="absolute inset-0 rounded-full border-4 border-sky-500 border-t-transparent animate-spin"></div>
+                                        <span className="text-2xl font-black text-sky-400">{timeLeft}</span>
                                     </div>
-                                )}
-                            </div>
-
-                            {/* Verification Overlay floating */}
-                            {(status === 'running') && (
-                                <div className="absolute bottom-6 left-6 right-6 bg-slate-900/90 backdrop-blur-xl p-4 border border-slate-700/50 rounded-2xl flex items-center gap-4 shadow-2xl">
-                                    <div className="shrink-0 w-10 h-10 rounded-full border-[3px] border-sky-500/20 border-t-sky-500 animate-spin"></div>
-                                    <div className="flex-1">
-                                        <p className="text-xs font-black text-white leading-none tracking-wide mb-1">Stay active on page...</p>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Verifying tracker: <span className="text-sky-400">{timeLeft}s</span></p>
-                                    </div>
+                                    <h3 className="text-lg font-black text-white tracking-tight uppercase mb-2">Verifying Session</h3>
+                                    <p className="text-xs text-slate-400 font-medium">Please wait while we verify your visit...</p>
                                 </div>
                             )}
 
-                             {(status === 'verify') && (
-                                <div className="absolute bottom-6 left-6 right-6 bg-sky-900/90 backdrop-blur-xl p-4 border border-sky-500/30 rounded-2xl flex items-center gap-4 shadow-[0_0_30px_rgba(14,165,233,0.3)]">
-                                    <CheckCircle2 size={32} className="text-sky-400" />
-                                    <div className="flex-1">
-                                        <p className="text-xs font-black text-white leading-none tracking-wide mb-1">Session Verified!</p>
-                                        <p className="text-[10px] font-bold text-sky-200 uppercase tracking-widest">You can claim reward.</p>
+                            {status === 'verify' && (
+                                <div className="flex flex-col items-center justify-center animate-in slide-in-from-bottom duration-500 w-full max-w-sm">
+                                    <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 border border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                                        <CheckCircle2 size={40} className="text-emerald-400" />
                                     </div>
+                                    <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2">Task Successfully Completed!</h3>
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-8">You can now claim your reward</p>
+                                    
+                                    <button 
+                                        onClick={submitTask}
+                                        className="w-full px-8 py-4 bg-sky-500 hover:bg-sky-400 active:scale-95 font-black text-slate-950 rounded-2xl shadow-[0_0_20px_rgba(14,165,233,0.3)] transition-all uppercase tracking-[0.2em] text-[11px]"
+                                    >
+                                        Claim Final Reward
+                                    </button>
+                                </div>
+                            )}
+                            
+                            {status === 'completed' && (
+                                <div className="flex flex-col items-center justify-center animate-in zoom-in duration-500">
+                                    <Loader2 size={40} className="text-sky-500 animate-spin mb-4" />
+                                    <h3 className="text-sm font-black text-white uppercase tracking-widest">Processing Reward...</h3>
                                 </div>
                             )}
                         </div>
@@ -243,6 +266,42 @@ const TaskRunner = () => {
                        )}
                     </div>
                 )}
+                {/* SHARE TASK */}
+                {task.type === 'Share' && (
+                    <div className="flex-1 flex flex-col gap-5 justify-center py-10">
+                        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-lg relative overflow-hidden">
+                            <div className="absolute -top-10 -left-10 w-32 h-32 bg-sky-500/10 rounded-full blur-[40px]"></div>
+                            <div className="w-20 h-20 bg-sky-500/10 rounded-3xl mx-auto flex items-center justify-center mb-6 border border-sky-500/30">
+                                <LinkIcon size={32} className="text-sky-400" />
+                            </div>
+                            <h2 className="text-white font-black text-xl mb-3">Share & Earn</h2>
+                            <p className="text-[11px] text-slate-400 font-bold mb-8 px-4 leading-relaxed">
+                                {task.description} <br/> 
+                                Spread the word to your friends!
+                            </p>
+                            
+                            <button 
+                                onClick={() => {
+                                    if (navigator.share) {
+                                        navigator.share({
+                                            title: 'Join Dromoney',
+                                            text: task.config?.text || 'Check out this awesome earning app!',
+                                            url: task.config?.url || window.location.origin
+                                        }).then(() => setStatus('verify'))
+                                          .catch(err => console.log('Share failed', err));
+                                    } else {
+                                        window.open(`https://wa.me/?text=${encodeURIComponent((task.config?.text || '') + ' ' + (task.config?.url || ''))}`, '_blank');
+                                        setStatus('verify');
+                                    }
+                                }}
+                                className="w-full bg-sky-500 text-slate-950 font-black uppercase tracking-widest py-4 rounded-xl shadow-xl shadow-sky-500/20 active:scale-95 transition-all text-xs flex justify-center items-center gap-2"
+                            >
+                                Share Now <Play size={14} className="fill-current" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* QUIZ AND SPIN MOCKS */}
                 {(task.type === 'Quiz' || task.type === 'Spin') && (
                      <div className="flex-1 flex items-center justify-center">
@@ -258,19 +317,21 @@ const TaskRunner = () => {
             </div>
 
             {/* Bottom Action Footer fixed to bottom of this specific page */}
-             <div className="p-4 bg-slate-950 border-t border-slate-800 shrink-0">
-                <button 
-                    onClick={submitTask}
-                    disabled={status !== 'verify' || (task.type === 'Proof' && !screenshotFile) || status === 'completed'}
-                    className="w-full bg-sky-500 hover:bg-sky-400 active:scale-[0.98] disabled:opacity-50 disabled:bg-slate-900 disabled:text-slate-600 text-slate-950 font-black uppercase tracking-[0.2em] py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(14,165,233,0.2)] disabled:shadow-none flex justify-center items-center gap-2 text-[11px]"
-                >
-                    {status === 'completed' && <Loader2 className="animate-spin" size={16} />}
-                    {status === 'idle' ? 'Follow instructions above' : 
-                     status === 'running' ? 'Task in progress...' :
-                     status === 'completed' ? 'Processing...' :
-                     'Claim Final Reward'}
-                </button>
-             </div>
+             {task.type !== 'Web' && (
+                 <div className="p-4 bg-slate-950 border-t border-slate-800 shrink-0">
+                    <button 
+                        onClick={submitTask}
+                        disabled={status !== 'verify' || (task.type === 'Proof' && !screenshotFile) || status === 'completed'}
+                        className="w-full bg-sky-500 hover:bg-sky-400 active:scale-[0.98] disabled:opacity-50 disabled:bg-slate-900 disabled:text-slate-600 text-slate-950 font-black uppercase tracking-[0.2em] py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(14,165,233,0.2)] disabled:shadow-none flex justify-center items-center gap-2 text-[11px]"
+                    >
+                        {status === 'completed' && <Loader2 className="animate-spin" size={16} />}
+                        {status === 'idle' ? 'Follow instructions above' : 
+                         status === 'running' ? 'Task in progress...' :
+                         status === 'completed' ? 'Processing...' :
+                         'Claim Final Reward'}
+                    </button>
+                 </div>
+             )}
         </div>
     );
 };

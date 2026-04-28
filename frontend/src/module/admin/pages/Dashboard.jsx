@@ -9,25 +9,79 @@ import {
     DollarSign, Briefcase, PlayCircle, Settings, ShieldQuestion,
     Filter, Target, PieChart, Info, MapPin, Eye, MousePointer2
 } from 'lucide-react';
+import { useAdmin } from '../context/AdminContext';
+import api from '../../shared/services/api';
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    const { stats: liveStats, fetchDashboardStats } = useAdmin();
     
     // ── Interactive States ──
     const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [regOpen, setRegOpen] = useState(true);
     const [broadcastMsg, setBroadcastMsg] = useState('');
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [alerts, setAlerts] = useState([]);
+    const [queue, setQueue] = useState([]);
 
-    // ── DATA SOURCES (Verified with App.jsx) ──
-    const stats = [
-        { label: 'Active Users', value: '1,248', trend: '+12.5%', color: 'from-sky-500 to-indigo-600', icon: Users, path: '/admin/users' },
-        { label: 'Total Revenue', value: '₹4,82,900', trend: '+₹14k', color: 'from-emerald-500 to-teal-600', icon: TrendingUp, path: '/admin/payments' },
-        { label: 'Coins in Market', value: '8.4M', trend: '24k today', color: 'from-amber-400 to-orange-600', icon: Zap, path: '/admin/tasks' },
-        { label: 'Pending Payouts', value: '₹24,500', trend: '8 new', color: 'from-rose-500 to-pink-600', icon: Wallet, path: '/admin/withdrawals' },
+    useEffect(() => {
+        fetchAlerts();
+    }, []);
+
+    const fetchAlerts = async () => {
+        try {
+            const response = await api.get('/admin/dashboard/alerts');
+            if (response.success) setAlerts(response.data);
+            
+            // Optionally fetch user queue
+            const userRes = await api.get('/admin/users');
+            if (userRes.success) {
+                const pending = userRes.data.filter(u => u.kyc?.status === 'Pending').slice(0, 3);
+                setQueue(pending.map(u => ({
+                    name: u.name,
+                    time: 'Recent',
+                    type: 'KYC',
+                    status: 'Pending'
+                })));
+            }
+        } catch (err) {
+            console.error("Alerts fetching error:", err);
+        }
+    };
+
+    // ── DATA SOURCES (Mapped to Live Stats if available) ──
+    const displayStats = liveStats?.stats?.map(s => ({
+        ...s,
+        icon: s.label.includes('User') ? Users : s.label.includes('Revenue') ? TrendingUp : s.label.includes('Payout') ? Wallet : Zap,
+        path: s.label.includes('User') ? '/admin/users' : s.label.includes('Revenue') ? '/admin/payments' : s.label.includes('Payout') ? '/admin/withdrawals' : '/admin/tasks'
+    })) || [
+        { label: 'Active Users', value: '...', trend: 'Sync...', color: 'from-sky-500 to-indigo-600', icon: Users, path: '/admin/users' },
+        { label: 'Total Revenue', value: '...', trend: 'Sync...', color: 'from-emerald-500 to-teal-600', icon: TrendingUp, path: '/admin/payments' },
+        { label: 'Coins in Market', value: '...', trend: 'Sync...', color: 'from-amber-400 to-orange-600', icon: Zap, path: '/admin/tasks' },
+        { label: 'Pending Payouts', value: '...', trend: 'Sync...', color: 'from-rose-500 to-pink-600', icon: Wallet, path: '/admin/withdrawals' },
     ];
 
-    // These paths are EXPLICITLY matched with App.jsx Route definitions
+    const conversionFunnel = liveStats?.conversionFunnel || [
+        { label: 'Website Visitors', value: '1,240', percent: '100%', color: 'bg-slate-200' },
+        { label: 'Registrations', value: '0', percent: '0%', color: 'bg-indigo-400' },
+        { label: 'Paid Members', value: '0', percent: '0%', color: 'bg-sky-500' },
+        { label: 'Active Earners', value: '0', percent: '0%', color: 'bg-emerald-500' },
+    ];
+
+    const fraudAlerts = alerts.length > 0 ? alerts : [
+        { user: 'Security Bot', reason: 'Scanning for anomalies...', severity: 'low', time: 'Active' },
+    ];
+
+    const kycQueue = queue.length > 0 ? queue : [
+        { name: 'System Queue', time: 'Live', type: 'Status', status: 'Empty' },
+    ];
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await Promise.all([fetchDashboardStats(), fetchAlerts()]);
+        setTimeout(() => setIsRefreshing(false), 800);
+    };
+
     const quickActions = [
         { label: 'Send Alert', icon: Bell, color: 'text-indigo-500', bg: 'bg-indigo-50', path: '/admin/notifications' },
         { label: 'Add Task', icon: Plus, color: 'text-emerald-500', bg: 'bg-emerald-50', path: '/admin/tasks' },
@@ -35,30 +89,6 @@ const Dashboard = () => {
         { label: 'Manage Ads', icon: PlayCircle, color: 'text-sky-500', bg: 'bg-sky-50', path: '/admin/watch-and-earn' },
         { label: 'Settings', icon: Settings, color: 'text-slate-500', bg: 'bg-slate-50', path: '/admin/settings' },
     ];
-
-    const conversionFunnel = [
-        { label: 'Website Visitors', value: '12,400', percent: '100%', color: 'bg-slate-200' },
-        { label: 'Registrations', value: '3,240', percent: '26%', color: 'bg-indigo-400' },
-        { label: 'Paid Members', value: '840', percent: '6.7%', color: 'bg-sky-500' },
-        { label: 'Active Earners', value: '450', percent: '3.6%', color: 'bg-emerald-500' },
-    ];
-
-    const fraudAlerts = [
-        { user: 'Sanjeev_9', reason: 'Multiple Withdrawals (Same UPI)', severity: 'high', time: '10m ago' },
-        { user: 'Lucky_Player', reason: 'VPN Detection Alert', severity: 'medium', time: '22m ago' },
-        { user: 'Raj_Kumar', reason: 'Abnormal Coin Gain', severity: 'low', time: '1h ago' },
-    ];
-
-    const kycQueue = [
-        { name: 'Rahul Sharma', time: '12m ago', type: 'KYC', status: 'Pending' },
-        { name: 'Priya Singh', time: '45m ago', type: 'Unlock', status: 'In Review' },
-        { name: 'Amit Kumar', time: '1h ago', type: 'KYC', status: 'Pending' },
-    ];
-
-    const handleRefresh = () => {
-        setIsRefreshing(true);
-        setTimeout(() => setIsRefreshing(false), 1200);
-    };
 
     return (
         <div className="p-6 space-y-8 animate-in fade-in duration-700 bg-slate-50/30 min-h-screen pb-20 overflow-x-hidden">
@@ -119,7 +149,7 @@ const Dashboard = () => {
 
             {/* ── KPI GRID ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((s, i) => (
+                {displayStats.map((s, i) => (
                     <div key={i} onClick={() => navigate(s.path)} className="bg-white group cursor-pointer rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-100/30 transition-all relative overflow-hidden active:scale-[0.98]">
                         <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${s.color} opacity-0 group-hover:opacity-[0.03] transition-opacity rounded-full -mr-8 -mt-8`}></div>
                         <div className="flex items-start justify-between mb-4">

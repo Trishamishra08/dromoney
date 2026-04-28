@@ -1,0 +1,97 @@
+const express = require('express');
+const dotenv = require('dotenv');
+const morgan = require('morgan');
+const cors = require('cors');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
+const connectDB = require('./config/db');
+
+// Load env vars
+dotenv.config();
+
+// Connect to database
+connectDB();
+
+const app = express();
+
+// Body parser
+app.use(express.json());
+
+// Set static folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Dev logging middleware
+if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+}
+
+// Security Middlewares
+app.use(helmet({
+    crossOriginResourcePolicy: false,
+})); // Set security headers
+app.use(cors()); // Enable CORS
+// app.use(mongoSanitize()); // Sanitize data
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 mins
+    max: 1000 // limit each IP to 1000 requests per windowMs
+});
+app.use('/api/', limiter);
+
+const userAuth = require('./routes/userAuthRoutes');
+const userWallet = require('./routes/userWalletRoutes');
+const userData = require('./routes/userDataRoutes');
+const public = require('./routes/publicRoutes');
+const admin = require('./routes/adminRoutes');
+const errorHandler = require('./middleware/error');
+
+// Mount routers
+app.use('/api/user/auth', userAuth);
+app.use('/api/user/wallet', userWallet);
+app.use('/api/user/data', userData);
+app.use('/api/public', public);
+app.use('/api/admin', admin); // Mount admin routes
+
+// Error handler (Must be after routers)
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5000;
+
+// Create HTTP server
+const http = require('http');
+const socketio = require('socket.io');
+
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = socketio(server, {
+    cors: {
+        origin: "*", // Adjust this in production
+        methods: ["GET", "POST"]
+    }
+});
+
+// Expose io globally for controllers
+global.io = io;
+
+io.on('connection', (socket) => {
+    console.log('New client connected:', socket.id);
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
+});
+
+server.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err, promise) => {
+    console.log(`Error: ${err.message}`);
+    // Close server & exit process
+    server.close(() => process.exit(1));
+});

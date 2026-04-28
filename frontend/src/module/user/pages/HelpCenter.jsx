@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, MessageCircle, BookOpen, AlertCircle, Send, CheckCircle2, Loader2, Sparkles, ChevronDown } from 'lucide-react';
 import { useUser } from '../context/UserContext';
+import api from '../../shared/services/api';
 
 const HelpCenter = () => {
     const navigate = useNavigate();
@@ -9,30 +10,42 @@ const HelpCenter = () => {
     const [problem, setProblem] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [activeGuide, setActiveGuide] = useState(null);
+    const [guides, setGuides] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const GUIDES = [
-        { 
-            q: "How to complete daily tasks?", 
-            a: "Go to the Earn section, select a task, follow the instructions, and submit. Coins are credited instantly." 
-        },
-        { 
-            q: "How to request for payout?", 
-            a: "Visit the Wallet section, enter your UPI/Bank details, and click Withdraw. Processing takes 24-48 hours." 
-        },
-        { 
-            q: "Setting up your affiliate link", 
-            a: "Go to Profile, copy your unique link, and share it. You earn ₹200 on every successful referral sale." 
+    const fetchGuides = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get('/public/content/menu_help_guides');
+            if (res.success && res.data && res.data.data) {
+                setGuides(res.data.data.sections || []);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
 
-    const handleSendReport = () => {
+    React.useEffect(() => {
+        fetchGuides();
+    }, []);
+
+    const handleSendReport = async () => {
         if (!problem.trim()) return;
         setIsSending(true);
-        setTimeout(() => {
+        try {
+            const res = await api.post('/user/data/reports', { message: problem });
+            if (res.success) {
+                setProblem('');
+                addNotification("Problem Reported!", "Our technical team will investigate soon.", "success");
+            }
+        } catch (err) {
+            console.error(err);
+            addNotification("Error", "Failed to send report. Try again.", "error");
+        } finally {
             setIsSending(false);
-            setProblem('');
-            addNotification("Problem Reported!", "Our technical team will investigate and contact you soon.", "success");
-        }, 1500);
+        }
     };
 
     const handleWhatsApp = () => {
@@ -90,7 +103,8 @@ const HelpCenter = () => {
                     </div>
                     
                     <div className="space-y-3 pt-2">
-                        {GUIDES.map((guide, i) => (
+                        {loading && <div className="text-center py-4 text-slate-300 animate-pulse">Loading guides...</div>}
+                        {guides.map((guide, i) => (
                             <div key={i} className={`rounded-2xl transition-all duration-300 ${activeGuide === i ? 'bg-slate-50/80 p-3 -mx-3' : 'border-b border-slate-50 last:border-0 pb-3 last:pb-0'}`}>
                                 <button 
                                     onClick={() => setActiveGuide(activeGuide === i ? null : i)}

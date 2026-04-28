@@ -1,36 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Eye, IndianRupee, Clock, CheckSquare, XSquare, Search, XCircle as XClose, Download, ExternalLink, Calendar, CreditCard, User, Mail, Image as ImageIcon } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import StatusBadge from '../components/StatusBadge';
 import AdminStatCard from '../components/AdminStatCard';
+import api from '../../shared/services/api';
 
 const Payments = () => {
-    // ── Data & States ──
-    const [paymentsList, setPaymentsList] = useState([
-        { id: 'TXN001', user: 'Rahul Sharma', email: 'rahul@gmail.com', amount: '₹499', method: 'UPI', date: '10 Apr 2026', status: 'Success', utr: 'UTR1234567890' },
-        { id: 'TXN002', user: 'Priya Singh', email: 'priya@gmail.com', amount: '₹499', method: 'UPI', date: '09 Apr 2026', status: 'Pending', utr: 'UTR8877665544' },
-        { id: 'TXN003', user: 'Amit Kumar', email: 'amit@gmail.com', amount: '₹499', method: 'Bank', date: '08 Apr 2026', status: 'Failed', utr: 'UTR0001112223' },
-        { id: 'TXN004', user: 'Neha Verma', email: 'neha@gmail.com', amount: '₹499', method: 'UPI', date: '08 Apr 2026', status: 'Success', utr: 'UTR9999999999' },
-        { id: 'TXN005', user: 'Ravi Patel', email: 'ravi@gmail.com', amount: '₹499', method: 'UPI', date: '07 Apr 2026', status: 'Success', utr: 'UTR5544332211' },
-        { id: 'TXN006', user: 'Sunita Mehta', email: 'sunita@gmail.com', amount: '₹499', method: 'Bank', date: '06 Apr 2026', status: 'Pending', utr: 'UTR2233445566' },
-        { id: 'TXN007', user: 'Karan Joshi', email: 'karan@gmail.com', amount: '₹499', method: 'UPI', date: '05 Apr 2026', status: 'Success', utr: 'UTR1111111111' },
-        { id: 'TXN008', user: 'Vikki Singh', email: 'vikki@gmail.com', amount: '₹499', method: 'UPI', date: '04 Apr 2026', status: 'Success', utr: 'UTR7778889990' },
-    ]);
-
+    const [paymentsList, setPaymentsList] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5);
+    const [itemsPerPage] = useState(10);
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const tabs = ['All', 'Success', 'Pending', 'Failed'];
+    useEffect(() => {
+        fetchPayments();
+    }, []);
 
-    // ── Logic ──
-    const handleStatusUpdate = (id, newStatus) => {
-        setPaymentsList(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
-        setIsModalOpen(false);
+    const fetchPayments = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get('/admin/payments');
+            if (response.success) {
+                const mapped = response.data.map(p => ({
+                    id: p._id,
+                    user: p.user?.name || 'Deleted User',
+                    email: p.user?.email || 'N/A',
+                    phone: p.user?.phone || 'N/A',
+                    plan: p.plan || 'Lifetime Access',
+                    amount: `₹${p.amount}`,
+                    method: p.method || 'Razorpay',
+                    date: new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+                    status: p.status,
+                    utr: p.razorpayPaymentId || p.utrNumber || 'N/A',
+                    screenshot: p.screenshot
+                }));
+                setPaymentsList(mapped);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    const handleStatusUpdate = async (id, newStatus) => {
+        try {
+            const response = await api.put(`/admin/payments/${id}`, { status: newStatus });
+            if (response.success) {
+                fetchPayments();
+                setIsModalOpen(false);
+            }
+        } catch (err) {
+            alert(err);
+        }
+    };
+
+    const tabs = ['All', 'Success', 'Pending', 'Failed'];
 
     const handleSearch = (e) => {
         setSearch(e.target.value);
@@ -38,7 +66,7 @@ const Payments = () => {
     };
 
     const filtered = paymentsList.filter(p => {
-        const matchesSearch = p.user.toLowerCase().includes(search.toLowerCase()) || p.id.toLowerCase().includes(search.toLowerCase()) || p.utr.includes(search);
+        const matchesSearch = p.user.toLowerCase().includes(search.toLowerCase()) || p.id.toLowerCase().includes(search.toLowerCase()) || p.utr?.includes(search);
         const matchesStatus = filter === 'All' || p.status === filter;
         return matchesSearch && matchesStatus;
     });
@@ -54,7 +82,7 @@ const Payments = () => {
     };
 
     // Derived Stats
-    const totalCollected = paymentsList.filter(p => p.status === 'Success').length * 499;
+    const totalCollected = paymentsList.filter(p => p.status === 'Success').reduce((acc, curr) => acc + Number(curr.amount.replace('₹', '')), 0);
     const pendingCount = paymentsList.filter(p => p.status === 'Pending').length;
     const successCount = paymentsList.filter(p => p.status === 'Success').length;
     const failedCount = paymentsList.filter(p => p.status === 'Failed').length;

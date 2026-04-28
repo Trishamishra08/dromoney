@@ -19,6 +19,24 @@ const Marketing = () => {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const handleInvite = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Join Drowmoney & Earn',
+                    text: `Hey! Join Drowmoney using my link and start earning ₹200 per referral easily! 🚀`,
+                    url: referralLink,
+                });
+            } catch (err) {
+                console.log('Share failed or cancelled');
+            }
+        } else {
+            // Fallback for desktop: Copy to clipboard
+            handleCopy();
+            alert("Referral Link Copied! You can now paste and share it on any platform.");
+        }
+    };
+
     return (
         <div className="flex flex-col min-h-screen bg-white animate-in zoom-in-95 duration-700 pb-20">
             {/* Minimal Header */}
@@ -77,7 +95,10 @@ const Marketing = () => {
                     </div>
 
                     {/* Invite Button */}
-                    <button className="w-full bg-[#1A1C30] hover:bg-black active:scale-95 text-white font-black uppercase tracking-[0.15em] py-4.5 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-slate-200 transition-all relative z-10 text-[11px]">
+                    <button 
+                        onClick={handleInvite}
+                        className="w-full bg-[#1A1C30] hover:bg-black active:scale-95 text-white font-black uppercase tracking-[0.15em] py-4.5 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-slate-200 transition-all relative z-10 text-[11px]"
+                    >
                         <Send size={18} className="rotate-[-20deg]" />
                         INVITE & EARN NOW
                     </button>

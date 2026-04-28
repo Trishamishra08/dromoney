@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    Plus, Trash2, Edit3, Save, X, 
+    Plus, Trash2, Edit3, Save, X, Loader2,
     TrendingUp, Rocket, Zap, Trophy,
     Sparkles, Gift, Shield, Users, 
     Briefcase, ClipboardList, CreditCard,
     ChevronRight, MoveUp, MoveDown
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
-import { BusinessDataService } from '../../../services/BusinessDataService';
+import api from '../../shared/services/api';
 
 // Icon Map for previewing - using only confirmed working icons
 const ICON_MAP = {
@@ -20,23 +20,54 @@ const BusinessContent = () => {
     const [ideas, setIdeas] = useState([]);
     const [editingIdea, setEditingIdea] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        setIdeas(BusinessDataService.getIdeas());
+        fetchIdeas();
     }, []);
 
-    const handleSave = () => {
-        if (!editingIdea.title) return alert("Title is required");
-        const updated = BusinessDataService.saveIdea(editingIdea);
-        setIdeas(updated);
-        setShowModal(false);
-        setEditingIdea(null);
+    const fetchIdeas = async () => {
+        try {
+            const res = await api.get('/admin/business-ideas');
+            if (res.success) {
+                setIdeas(res.data);
+            }
+        } catch (err) {
+            console.error("Fetch failed", err);
+        }
     };
 
-    const handleDelete = (id) => {
+    const handleSave = async () => {
+        if (!editingIdea.title) return alert("Title is required");
+        setLoading(true);
+        try {
+            const isEdit = !!editingIdea._id;
+            const res = isEdit 
+                ? await api.put(`/admin/business-ideas/${editingIdea._id}`, editingIdea)
+                : await api.post('/admin/business-ideas', editingIdea);
+
+            if (res.success) {
+                fetchIdeas();
+                setShowModal(false);
+                setEditingIdea(null);
+            }
+        } catch (err) {
+            alert("Save failed");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this idea?")) {
-            const updated = BusinessDataService.deleteIdea(id);
-            setIdeas(updated);
+            try {
+                const res = await api.delete(`/admin/business-ideas/${id}`);
+                if (res.success) {
+                    setIdeas(prev => prev.filter(i => i._id !== id));
+                }
+            } catch (err) {
+                alert("Delete failed");
+            }
         }
     };
 
@@ -49,6 +80,7 @@ const BusinessContent = () => {
             color: 'text-indigo-500',
             bg: 'bg-indigo-50',
             type: 'Free',
+            youtubeLink: '',
             steps: [{ title: '', text: '' }]
         });
         setShowModal(true);
@@ -103,7 +135,7 @@ const BusinessContent = () => {
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 {ideas.map(item => (
-                    <div key={item.id} className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 hover:shadow-md transition-all flex flex-col group">
+                    <div key={item._id} className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 hover:shadow-md transition-all flex flex-col group">
                         <div className="flex items-start gap-4 mb-4">
                             <div className={`w-14 h-14 ${item.bg || 'bg-slate-100'} rounded-2xl flex items-center justify-center ${item.color || 'text-slate-600'} border border-black/5 shadow-inner`}>
                                 {ICON_MAP[item.icon] ? React.createElement(ICON_MAP[item.icon], { size: 28 }) : <Briefcase size={28} />}
@@ -138,7 +170,7 @@ const BusinessContent = () => {
                                 <Edit3 size={14} /> Edit Content
                             </button>
                             <button 
-                                onClick={() => handleDelete(item.id)}
+                                onClick={() => handleDelete(item._id)}
                                 className="w-12 h-12 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-xl flex items-center justify-center transition-all border border-rose-100"
                             >
                                 <Trash2 size={16} />
@@ -147,6 +179,9 @@ const BusinessContent = () => {
                     </div>
                 ))}
             </div>
+
+            {/* Edit/Create Modal - Updating Footer for Loading */}
+            {/* Find line 350 for Save Strategy button */}
 
             {/* Edit/Create Modal */}
             {showModal && editingIdea && (
@@ -192,6 +227,17 @@ const BusinessContent = () => {
                                             onChange={(e) => setEditingIdea({...editingIdea, potential: e.target.value})}
                                             className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold outline-none"
                                             placeholder="₹50k - ₹2L+ / mo"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-rose-500 uppercase tracking-widest ml-1">YouTube Tutorial Link</label>
+                                        <input 
+                                            type="text" 
+                                            value={editingIdea.youtubeLink || ''}
+                                            onChange={(e) => setEditingIdea({...editingIdea, youtubeLink: e.target.value})}
+                                            className="w-full bg-rose-50/20 border border-rose-100/50 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-rose-500/10 focus:border-rose-400 outline-none transition-all"
+                                            placeholder="e.g. https://youtu.be/..."
                                         />
                                     </div>
 
@@ -312,9 +358,11 @@ const BusinessContent = () => {
                             </button>
                             <button 
                                 onClick={handleSave}
-                                className="bg-[#1A1C30] text-white px-10 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2"
+                                disabled={loading}
+                                className={`bg-[#1A1C30] text-white px-10 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                             >
-                                <Save size={16} /> Save Strategy
+                                {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                {loading ? 'Saving...' : 'Save Strategy'}
                             </button>
                         </div>
                     </div>

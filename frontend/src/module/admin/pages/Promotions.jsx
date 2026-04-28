@@ -1,68 +1,86 @@
 import React, { useState, useEffect } from 'react';
 import { Megaphone, Trash2, CheckCircle2, MessageSquare, Clock, User, Phone, Globe, DollarSign, Users, X, Send } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
-import { promotionStorage } from '../../shared/services/promotionStorage';
+import api from '../../shared/services/api';
 
 const Promotions = () => {
     const [promotions, setPromotions] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [isMsgModalOpen, setIsMsgModalOpen] = useState(false);
     const [selectedPromo, setSelectedPromo] = useState(null);
     const [adminMsg, setAdminMsg] = useState('');
 
     useEffect(() => {
-        setPromotions(promotionStorage.getPromotions());
+        fetchPromotions();
     }, []);
 
-    const deletePromo = (id) => {
-        if (window.confirm("Are you sure you want to delete this brand request?")) {
-            promotionStorage.deletePromotion(id);
-            setPromotions(promotionStorage.getPromotions());
+    const fetchPromotions = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get('/admin/promotions');
+            if (response.success) {
+                const mapped = response.data.map(p => ({
+                    id: p._id,
+                    name: p.user?.name || 'Unknown',
+                    mobile: p.user?.phone || 'N/A',
+                    whatsapp: p.whatsappNumber,
+                    category: p.taskType,
+                    budget: p.budget,
+                    usersRequired: p.targetUsers,
+                    link: p.taskLink,
+                    description: p.description,
+                    status: p.status,
+                    date: new Date(p.createdAt).toLocaleDateString(),
+                    adminResponse: p.adminResponse
+                }));
+                setPromotions(mapped);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const updateStatus = (id, newStatus) => {
-        const promo = promotions.find(p => p.id === id);
-        promotionStorage.updatePromotion(id, { status: newStatus });
-        
-        // Notify user
-        const notifications = JSON.parse(localStorage.getItem('dromoney_user_notifications') || '[]');
-        notifications.unshift({
-            id: Date.now(),
-            title: `Promotion ${newStatus}`,
-            message: `Your brand promotion request has been ${newStatus.toLowerCase()}.`,
-            time: "Just now",
-            type: newStatus === 'Approved' ? 'success' : 'warning'
-        });
-        localStorage.setItem('dromoney_user_notifications', JSON.stringify(notifications));
-        
-        setPromotions(promotionStorage.getPromotions());
-        alert(`Status updated to ${newStatus}`);
+    const deletePromo = async (id) => {
+        if (window.confirm("Are you sure you want to delete this brand request?")) {
+            try {
+                const response = await api.delete(`/admin/content/promotion/${id}`);
+                if (response.success) fetchPromotions();
+            } catch (err) {
+                console.error(err);
+            }
+        }
     };
 
-    const handleMessageSubmit = () => {
+    const updateStatus = async (id, newStatus) => {
+        try {
+            const response = await api.put(`/admin/promotions/${id}`, { status: newStatus });
+            if (response.success) {
+                fetchPromotions();
+                alert(`Status updated to ${newStatus}`);
+            }
+        } catch (err) {
+            alert(err);
+        }
+    };
+
+    const handleMessageSubmit = async () => {
         if (!adminMsg) return;
-        
-        // Save the message/status update
-        promotionStorage.updatePromotion(selectedPromo.id, { 
-            status: 'Contacted',
-            adminResponse: adminMsg 
-        });
-
-        // Simulate sending notification to user
-        const notifications = JSON.parse(localStorage.getItem('dromoney_user_notifications') || '[]');
-        notifications.unshift({
-            id: Date.now(),
-            title: "Brand Promotion Update",
-            message: `Admin responded: ${adminMsg}`,
-            time: "Just now",
-            type: "info"
-        });
-        localStorage.setItem('dromoney_user_notifications', JSON.stringify(notifications));
-
-        setPromotions(promotionStorage.getPromotions());
-        setIsMsgModalOpen(false);
-        setAdminMsg('');
-        alert("Message sent to user and status updated!");
+        try {
+            const response = await api.put(`/admin/promotions/${selectedPromo.id}`, { 
+                status: 'Contacted',
+                adminResponse: adminMsg 
+            });
+            if (response.success) {
+                fetchPromotions();
+                setIsMsgModalOpen(false);
+                setAdminMsg('');
+                alert("Message sent to user and status updated!");
+            }
+        } catch (err) {
+            alert(err);
+        }
     };
 
     return (

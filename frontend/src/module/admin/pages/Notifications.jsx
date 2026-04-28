@@ -1,24 +1,85 @@
-import React, { useState } from 'react';
-import { Send, Bell, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, Bell, Users, Loader2, Trash2, Clock, History as HistoryIcon } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
-
-const history = [
-    { title: 'Special Offer!', message: '₹200 → ₹250 referral bonus this week only!', sent: '09 Apr, 3:00 PM', recipients: '1,248' },
-    { title: 'New Event Live', message: 'Mega Jackpot Night is now live. Join now!', sent: '08 Apr, 6:00 PM', recipients: '1,248' },
-    { title: 'System Update', message: 'Platform maintenance on 7 Apr 11 PM - 1 AM.', sent: '07 Apr, 9:00 AM', recipients: '1,248' },
-];
+import api from '../../shared/services/api';
 
 const Notifications = () => {
     const [title, setTitle] = useState('');
     const [message, setMessage] = useState('');
     const [sent, setSent] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [history, setHistory] = useState([]);
+    const [userStats, setUserStats] = useState({ totalActive: 0 });
 
-    const handleSend = () => {
+    useEffect(() => {
+        fetchHistory();
+        fetchStats();
+    }, []);
+
+    const fetchHistory = async () => {
+        try {
+            const res = await api.get('/admin/notifications');
+            if (res.success) {
+                // Sorting is already descending from backend, but double checking here
+                const sorted = [...res.data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                setHistory(sorted);
+            }
+        } catch (err) { console.error(err); }
+    };
+
+    const fetchStats = async () => {
+        try {
+            const res = await api.get('/admin/dashboard/stats');
+            if (res.success && res.data.stats) {
+                // Find the Active Users card in the stats array
+                const activeUserCard = res.data.stats.find(s => s.label === 'Active Users');
+                const count = activeUserCard ? parseInt(activeUserCard.value.replace(/,/g, '')) : 0;
+                setUserStats({ totalActive: count });
+            }
+        } catch (err) { console.error(err); }
+    };
+
+    const handleSend = async () => {
         if (!title || !message) return;
-        setSent(true);
-        setTimeout(() => setSent(false), 3000);
-        setTitle('');
-        setMessage('');
+        setLoading(true);
+        try {
+            const res = await api.post('/admin/notifications', { title, message });
+            if (res.success) {
+                setSent(true);
+                setTimeout(() => setSent(false), 3000);
+                setTitle('');
+                setMessage('');
+                fetchHistory();
+            }
+        } catch (err) {
+            alert("Failed to send broadcast");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this notification?")) return;
+        try {
+            const res = await api.delete(`/admin/notifications/${id}`);
+            if (res.success) {
+                setHistory(prev => prev.filter(n => n._id !== id));
+            }
+        } catch (err) {
+            alert("Delete failed");
+        }
+    };
+
+    const handleClearAll = async () => {
+        if (!window.confirm("Are you sure you want to clear the entire broadcast history? This cannot be undone.")) return;
+        try {
+            const res = await api.delete('/admin/notifications/bulk/clear');
+            if (res.success) {
+                setHistory([]);
+            }
+        } catch (err) {
+            alert("Clear failed");
+        }
     };
 
     return (
@@ -47,31 +108,69 @@ const Notifications = () => {
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-sky-50 rounded-xl border border-sky-100">
                             <Users size={16} className="text-sky-500 shrink-0" />
-                            <p className="text-[12px] font-bold text-sky-700">Will be sent to <span className="font-black">1,248 users</span></p>
+                            <p className="text-[12px] font-bold text-sky-700">Will be sent to <span className="font-black">{userStats.totalActive.toLocaleString()} users</span></p>
                         </div>
-                        <button onClick={handleSend}
-                            className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-black text-[12px] uppercase tracking-widest transition-all active:scale-95 shadow-md ${sent ? 'bg-emerald-500 text-white shadow-emerald-100' : 'bg-sky-500 hover:bg-sky-600 text-white shadow-sky-100'}`}>
-                            {sent ? '✓ Sent Successfully!' : <><Send size={15} /> Send Broadcast</>}
+                        <button 
+                            disabled={loading}
+                            onClick={handleSend}
+                            className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-black text-[12px] uppercase tracking-widest transition-all active:scale-95 shadow-md ${sent ? 'bg-emerald-500 text-white shadow-emerald-100' : 'bg-slate-900 hover:bg-black text-white shadow-sky-100'}`}>
+                            {loading ? <Loader2 size={15} className="animate-spin" /> : sent ? '✓ Sent Successfully!' : <><Send size={15} /> Send Broadcast</>}
                         </button>
                     </div>
                 </div>
 
                 {/* History */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div className="px-5 py-4 border-b border-slate-50">
-                        <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest">Broadcast History</h2>
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                    <div className="px-5 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/20">
+                        <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                            <HistoryIcon size={16} className="text-slate-400" /> Broadcast History
+                        </h2>
+                        {history.length > 0 && (
+                            <button 
+                                onClick={handleClearAll}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase text-rose-500 hover:bg-rose-50 transition-all border border-transparent hover:border-rose-100"
+                                title="Clear all history"
+                            >
+                                <Trash2 size={12} /> Clear All
+                            </button>
+                        )}
                     </div>
-                    <div className="divide-y divide-slate-50">
-                        {history.map((n, i) => (
-                            <div key={i} className="p-5 hover:bg-slate-50/40 transition-colors">
+                    <div className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto custom-scrollbar">
+                        {history.length > 0 ? history.map((n) => (
+                            <div key={n._id} className="p-5 hover:bg-slate-50/60 transition-all group/item">
                                 <div className="flex items-start justify-between mb-2">
-                                    <h3 className="font-black text-slate-800 text-[13px] leading-none">{n.title}</h3>
-                                    <span className="text-[9px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100 shrink-0 ml-3">{n.sent}</span>
+                                    <div className="flex-1">
+                                        <h3 className="font-black text-slate-800 text-[13px] leading-tight mb-1">{n.title}</h3>
+                                        <div className="flex items-center gap-2 text-slate-400">
+                                            <Clock size={10} />
+                                            <span className="text-[9px] font-black uppercase tracking-widest">
+                                                {new Date(n.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleDelete(n._id)}
+                                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover/item:opacity-100"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
                                 </div>
-                                <p className="text-[12px] text-slate-500 font-medium leading-relaxed">{n.message}</p>
-                                <p className="text-[10px] font-black text-sky-500 mt-2">→ {n.recipients} recipients</p>
+                                <p className="text-[12px] text-slate-500 font-medium leading-relaxed pr-4">{n.message}</p>
+                                <div className="mt-3 flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-sky-50 rounded-md border border-sky-100">
+                                        <Users size={10} className="text-sky-500" />
+                                        <span className="text-[9px] font-black text-sky-600 uppercase tracking-tighter">{n.recipients?.toLocaleString()} Recipients</span>
+                                    </div>
+                                </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="p-16 text-center">
+                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                                    <Bell size={24} className="text-slate-200" />
+                                </div>
+                                <p className="text-xs font-black text-slate-300 uppercase tracking-widest leading-none">No Broadcast History</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

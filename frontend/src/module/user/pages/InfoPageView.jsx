@@ -1,21 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Info, HelpCircle, Sparkles, Headset, Building2 } from 'lucide-react';
-import { contentStorage } from '../../shared/services/contentStorage';
+import { ChevronLeft, Info, HelpCircle, Sparkles, Headset, Building2, CheckCircle2 } from 'lucide-react';
+import api from '../../shared/services/api';
 
 const InfoPageView = () => {
     const { pageId } = useParams();
     const navigate = useNavigate();
-    const [pageData, setPageData] = useState({ title: 'Loading...', content: '' });
+    const [pageData, setPageData] = useState({ title: 'Loading...', subtitle: '', sections: [] });
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         window.scrollTo(0, 0);
-        const pages = contentStorage.getPages();
-        if (pages[pageId]) {
-            setPageData(pages[pageId]);
-        } else {
-            setPageData({ title: 'Page Not Found', content: 'The requested information is not available.' });
-        }
+        const fetchPageContent = async () => {
+            setLoading(true);
+            try {
+                const dbKey = `menu_${pageId.replace(/-/g, '_')}`;
+                const res = await api.get(`/public/content/${dbKey}`);
+                if (res.success && res.data && res.data.data) {
+                    setPageData({
+                        title: res.data.data.title || res.data.title,
+                        subtitle: res.data.data.subtitle || res.data.description,
+                        sections: res.data.data.sections || []
+                    });
+                } else {
+                    setPageData({ title: 'Page Not Found', subtitle: '', sections: [] });
+                }
+            } catch (err) {
+                console.error(err);
+                setPageData({ title: 'Error', subtitle: 'Failed to load content.', sections: [] });
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPageContent();
     }, [pageId]);
 
     const getIcon = () => {
@@ -27,6 +44,13 @@ const InfoPageView = () => {
             default: return <Info size={32} className="text-slate-500" />;
         }
     };
+
+    if (loading) {
+        return <div className="flex flex-col min-h-screen bg-[#F8FAFC] items-center justify-center">
+            <Rocket className="text-sky-500 animate-bounce" size={48} />
+            <p className="mt-4 text-slate-400 font-bold animate-pulse">Fetching Content...</p>
+        </div>;
+    }
 
     return (
         <div className="flex flex-col min-h-screen bg-[#F8FAFC]">
@@ -43,18 +67,27 @@ const InfoPageView = () => {
                 </h1>
             </div>
 
-            <div className="flex-1 p-5 animate-in slide-in-from-bottom-4 duration-500 pb-8 mt-2">
+            <div className="flex-1 p-5 animate-in slide-in-from-bottom-4 duration-500 pb-20 mt-2">
                 <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden">
                     <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-slate-100/50">
                         {getIcon()}
                     </div>
                     
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight mb-8">
+                    <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight mb-2">
                         {pageData.title}
                     </h2>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-8">{pageData.subtitle}</p>
                     
-                    <div className="font-bold text-[13px] text-slate-500 leading-relaxed whitespace-pre-wrap space-y-4">
-                        {pageData.content}
+                    <div className="space-y-8">
+                        {pageData.sections?.map((section, idx) => (
+                            <div key={idx} className="relative pl-8">
+                                <div className="absolute left-0 top-1">
+                                    <CheckCircle2 size={18} className="text-sky-500" />
+                                </div>
+                                <h4 className="text-[14px] font-black text-slate-800 mb-1">{section.title}</h4>
+                                <p className="text-[12px] font-bold text-slate-500 leading-relaxed">{section.text}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

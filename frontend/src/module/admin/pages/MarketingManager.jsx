@@ -1,52 +1,225 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    Sparkles, Zap, Rocket, Plus, Trash2, 
-    Save, Layout, Palette, Type, 
+import {
+    Sparkles, Zap, Rocket, Plus, Trash2,
+    Save, Layout, Palette, Type,
     ChevronRight, ChevronLeft, Info, CheckCircle2,
     Trophy, Users, Target, MousePointer2, List, FileText, Briefcase
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { contentStorage } from '../../shared/services/contentStorage';
+import api from '../../shared/services/api';
+import { useAdmin } from '../context/AdminContext';
 
 const MarketingManager = () => {
+    const { addNotification } = useAdmin();
     const [activeTab, setActiveTab] = useState('banners');
 
-    // ── Info Pages Data (Dynamic CMS) ──
-    const [infoPages, setInfoPages] = useState({});
-    const [selectedPage, setSelectedPage] = useState('how-it-works');
-
-
     // ── Banners Data ──
-    const [banners, setBanners] = useState([
-        { id: 1, tag: 'Affiliate Program', title: 'Earn ₹200 Per Sale', subtitle: 'Share your link & get instant commission', gradient: 'from-sky-500 to-sky-700' },
-        { id: 2, tag: '3X Booster Active', title: 'Multiply Your Coins', subtitle: 'Upgrade and earn 3x coins on tasks', gradient: 'from-indigo-500 to-indigo-700' },
-    ]);
+    const [banners, setBanners] = useState([]);
+    const [loadingBanners, setLoadingBanners] = useState(false);
 
-    // ── Boosters Data (Image 1) ──
-    const [boosters, setBoosters] = useState({
-        support: {
-            title: '₹11 Support Booster',
-            subtitle: 'Boost participation & win more!',
-            benefits: ['2X Winning Chance', 'Priority Event Support', 'Support Badge Profile']
-        },
-        task: {
-            title: '₹49 Task Booster',
-            subtitle: 'Increase coin value 3X now!',
-            benefits: ['3X Coin Multiplier', 'Instant Task Approval', 'Withdrawal Priority']
+    const fetchBanners = async () => {
+        setLoadingBanners(true);
+        try {
+            const res = await api.get('/admin/banners');
+            if (res.success) setBanners(res.data);
+        } catch (err) {
+            console.error('Error fetching banners:', err);
+        } finally {
+            setLoadingBanners(false);
         }
+    };
+
+    const handleAddBanner = async () => {
+        const dummy = {
+            tag: 'NEW OFFER',
+            title: 'New Banner',
+            subtitle: 'Click edit to customize this banner.',
+            gradient: 'from-slate-500 to-slate-700',
+            iconName: 'Sparkles',
+            ctaText: 'View More',
+            path: '/user/home',
+            isActive: true
+        };
+        try {
+            const res = await api.post('/admin/banners', dummy);
+            if (res.success) setBanners([res.data, ...banners]);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleSyncBanner = async (bannerData) => {
+        const { _id, createdAt, __v, ...payload } = bannerData;
+        try {
+            await api.put(`/admin/banners/${_id}`, payload);
+            addNotification("Success", "Banner Sync Successful!", "success");
+        } catch (err) {
+            console.error(err);
+            addNotification("Error", "Failed to sync banner.", "error");
+        }
+    };
+
+    const handleDeleteBanner = async (id) => {
+        if (!window.confirm("Delete this banner?")) return;
+        try {
+            await api.delete(`/admin/banners/${id}`);
+            setBanners(banners.filter(b => b._id !== id));
+            addNotification("Success", "Banner deleted.", "success");
+        } catch (err) {
+            console.error(err);
+            addNotification("Error", "Failed to delete.", "error");
+        }
+    };
+
+    const [boosters, setBoosters] = useState({
+        support: { _id: null, title: '₹11 Support Booster', subtitle: 'Boost participation & win more!', benefits: [] },
+        task: { _id: null, title: '₹49 Task Booster', subtitle: 'Increase coin value 3X now!', benefits: [] }
     });
+
+    const fetchBoosters = async () => {
+        try {
+            const res = await api.get('/admin/boosters');
+            if (res.success && res.data) {
+                const results = { ...boosters };
+                res.data.forEach(item => {
+                    if (item.type === 'support' || item.type === 'task') {
+                        results[item.type] = item;
+                    }
+                });
+                setBoosters(results);
+            }
+        } catch (err) {
+            console.error('Error fetching boosters:', err);
+        }
+    };
 
     // ── Lifetime Access Data (Image 2) ──
     const [lifetime, setLifetime] = useState({
         title: 'Lifetime Access',
-        priceTag: '👉 “₹499 buy course \'\' One Time',
-        note: 'उसके बाद लाइफ टाइम सर्विस अनलॉक रहेगी ।',
-        features: [
-            'सभी earning features use कर सकता है',
-            'tasks complete कर सकता है',
-            'events में भाग ले सकता है'
-        ]
+        priceTag: '',
+        note: '',
+        features: []
     });
+
+    const fetchLifetimePromo = async () => {
+        try {
+            const res = await api.get('/public/content/lifetime_promo');
+            if (res.success && res.data && res.data.data) {
+                setLifetime(res.data.data);
+            }
+        } catch (err) {
+            console.error('Error fetching lifetime promo:', err);
+        }
+    };
+
+    const handleDeployLifetimePromo = async () => {
+        try {
+            const payload = {
+                key: 'lifetime_promo',
+                title: 'Lifetime Promotion Data',
+                data: lifetime
+            };
+            const res = await api.post('/admin/content', payload);
+            if (res.success) addNotification("Success", "Lifetime Promotion Deployed Successfully!", "success");
+        } catch (err) {
+            console.error(err);
+            addNotification("Error", "Failed to deploy promotion.", "error");
+        }
+    };
+
+    // ── Info Pages Data (Dynamic CMS) ──
+    const [infoPages, setInfoPages] = useState({
+        'menu_how_it_works': { title: '', subtitle: '', sections: [] },
+        'menu_benefits': { title: '', subtitle: '', sections: [] },
+        'menu_support': { title: '', subtitle: '', sections: [] },
+        'menu_about': { title: '', subtitle: '', sections: [] }
+    });
+    const [selectedPage, setSelectedPage] = useState('menu_how_it_works');
+
+    const fetchAllMarketingData = async () => {
+        const keys = [
+            'menu_how_it_works', 'menu_benefits', 'menu_support', 'menu_about',
+            'menu_boosters', 'menu_future_features', 'income_projects'
+        ];
+        try {
+            const res = await api.get(`/public/content/bulk?keys=${keys.join(',')}`);
+            if (res.success && res.data) {
+                const results = {};
+                const data = res.data;
+
+                // 1. Process Info Pages
+                const infoKeys = ['menu_how_it_works', 'menu_benefits', 'menu_support', 'menu_about'];
+                infoKeys.forEach(key => {
+                    const item = data[key];
+                    if (item && item.data) {
+                        results[key] = {
+                            title: item.data.title || item.title,
+                            subtitle: item.data.subtitle || item.description,
+                            sections: item.data.sections || []
+                        };
+                    }
+                });
+                if (Object.keys(results).length > 0) setInfoPages(prev => ({ ...prev, ...results }));
+
+                // 2. Process Boosters - REMOVED, now fetched via fetchBoosters()
+                /*
+                if (data['menu_boosters'] && data['menu_boosters'].data) {
+                    setBoosters(data['menu_boosters'].data);
+                }
+                */
+
+                // 3. Process Future Features
+                const fData = data['menu_future_features']?.data;
+                if (fData) {
+                    setFutureFeatures(Array.isArray(fData) ? fData : (fData.sections || []));
+                }
+
+                // 4. Process Income Projects
+                if (data['income_projects'] && data['income_projects'].data) {
+                    setProjectsData(data['income_projects'].data);
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching bulk marketing data:', err);
+        }
+    };
+
+    const handleUpdateMarketingKey = async (key, data, label) => {
+        try {
+            const payload = {
+                key: key,
+                title: label,
+                data: data
+            };
+            const res = await api.post('/admin/content', payload);
+            if (res.success) addNotification("Success", `${label} Updated!`, "success");
+        } catch (err) {
+            console.error(err);
+            addNotification("Error", "Failed to update.", "error");
+        }
+    };
+
+    const handleUpdateBooster = async (type) => {
+        const b = boosters[type];
+        if (!b._id) return addNotification("Error", "Booster ID not found. Sync from DB first.", "error");
+
+        try {
+            const { _id, createdAt, __v, ...payload } = b;
+            const res = await api.put(`/admin/boosters/${_id}`, payload);
+            if (res.success) addNotification("Success", `${b.title} Updated!`, "success");
+        } catch (err) {
+            console.error(err);
+            addNotification("Error", "Failed to update booster.", "error");
+        }
+    };
+
+    useEffect(() => {
+        fetchBanners();
+        fetchLifetimePromo();
+        fetchAllMarketingData();
+        fetchBoosters();
+    }, []);
 
     // ── Future Features Data (Image 1 & 2) ──
     const [futureFeatures, setFutureFeatures] = useState([
@@ -54,14 +227,11 @@ const MarketingManager = () => {
         { title: 'Global Payouts', text: 'Expansion beyond local banking to support international earners through crypto and PayPal.' },
         { title: 'Advanced AI Tools', text: 'Get automated marketing kits generated for your affiliate links for 10x better results.' }
     ]);
-    
+
     // -- Projects Card Data --
     const [projectsData, setProjectsData] = useState({ title: '', description: '' });
 
-    useEffect(() => {
-        setInfoPages(contentStorage.getPages());
-        setProjectsData(contentStorage.getProjects());
-    }, []);
+    // Old Storage effects removed
 
     return (
         <div className="p-6 animate-in fade-in duration-700 bg-slate-50/50 min-h-screen">
@@ -75,9 +245,9 @@ const MarketingManager = () => {
                     { id: 'boosters', label: 'Booster Packs', icon: Zap },
                     { id: 'lifetime', label: 'Lifetime Promo', icon: Rocket },
                     { id: 'projects', label: 'Income Projects', icon: Briefcase },
-                    { id: 'future', label: 'Future Features', icon: Sparkles },
+                    { id: 'future', label: 'Future and Option', icon: Sparkles },
                 ].map(tab => (
-                    <button 
+                    <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-3 px-8 py-3.5 rounded-[22px] font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-[#0F172A] text-white shadow-xl shadow-slate-200' : 'text-slate-400 hover:bg-slate-50'}`}
@@ -88,7 +258,7 @@ const MarketingManager = () => {
             </div>
 
             <div className="animate-in slide-in-from-bottom-4 duration-500 pb-20">
-                
+
                 {/* ── NEW: INFO PAGES CMS ── */}
                 {activeTab === 'menu' && infoPages && infoPages[selectedPage] && (
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
@@ -96,23 +266,23 @@ const MarketingManager = () => {
                         <div className="space-y-6">
                             <div className="flex flex-wrap gap-2 mb-4">
                                 {Object.keys(infoPages).map(key => (
-                                    <button 
+                                    <button
                                         key={key}
                                         onClick={() => setSelectedPage(key)}
                                         className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${selectedPage === key ? 'bg-sky-500 text-white shadow-lg shadow-sky-200' : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'}`}
                                     >
-                                        {key.replace('-', ' ')}
+                                        {key.replace('menu_', '').replace(/_/g, ' ')}
                                     </button>
                                 ))}
                             </div>
-                            
+
                             <div className="bg-white rounded-[44px] border border-slate-100 shadow-sm p-8">
                                 <div className="flex items-center justify-between mb-8 border-b border-slate-50 pb-6">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-sky-50 text-sky-500 rounded-2xl flex items-center justify-center"><FileText size={24} /></div>
                                         <div>
                                             <h3 className="text-lg font-black text-slate-800 tracking-tight uppercase">Menu Content Editor</h3>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Editing: {selectedPage.replace('-', ' ')}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Editing: {selectedPage.replace('menu_', '').replace(/_/g, ' ')}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -121,13 +291,13 @@ const MarketingManager = () => {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Page Title</label>
                                         <input value={infoPages[selectedPage].title} onChange={(e) => {
-                                            const np = {...infoPages}; np[selectedPage].title = e.target.value; setInfoPages(np);
+                                            const np = { ...infoPages }; np[selectedPage].title = e.target.value; setInfoPages(np);
                                         }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Page Subtitle</label>
                                         <input value={infoPages[selectedPage].subtitle} onChange={(e) => {
-                                            const np = {...infoPages}; np[selectedPage].subtitle = e.target.value; setInfoPages(np);
+                                            const np = { ...infoPages }; np[selectedPage].subtitle = e.target.value; setInfoPages(np);
                                         }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] font-bold text-slate-500 focus:ring-2 focus:ring-sky-500 outline-none" />
                                     </div>
 
@@ -136,26 +306,30 @@ const MarketingManager = () => {
                                         {infoPages[selectedPage].sections?.map((section, i) => (
                                             <div key={i} className="bg-slate-50 rounded-3xl p-5 border border-slate-100 relative group">
                                                 <button onClick={() => {
-                                                    const np = {...infoPages}; np[selectedPage].sections.splice(i, 1); setInfoPages(np);
+                                                    const np = { ...infoPages }; np[selectedPage].sections.splice(i, 1); setInfoPages(np);
                                                 }} className="absolute top-4 right-4 text-rose-400 hover:text-rose-600"><Trash2 size={16} /></button>
                                                 <input value={section.title} onChange={(e) => {
-                                                    const np = {...infoPages}; np[selectedPage].sections[i].title = e.target.value; setInfoPages(np);
+                                                    const np = { ...infoPages }; np[selectedPage].sections[i].title = e.target.value; setInfoPages(np);
                                                 }} className="w-[85%] bg-white border-b border-slate-100 px-3 py-2 text-[13px] font-black text-slate-700 outline-none mb-2 rounded-t-xl" placeholder="Section Title" />
                                                 <textarea value={section.text} onChange={(e) => {
-                                                    const np = {...infoPages}; np[selectedPage].sections[i].text = e.target.value; setInfoPages(np);
+                                                    const np = { ...infoPages }; np[selectedPage].sections[i].text = e.target.value; setInfoPages(np);
                                                 }} className="w-full bg-white px-3 py-2 text-[12px] font-bold text-slate-500 h-16 outline-none resize-none rounded-b-xl" placeholder="Section Description..." />
                                             </div>
                                         ))}
                                         <button onClick={() => {
-                                            const np = {...infoPages};
-                                            if(!np[selectedPage].sections) np[selectedPage].sections = [];
-                                            np[selectedPage].sections.push({title: 'New Section', text: 'Enter details...'});
+                                            const np = { ...infoPages };
+                                            if (!np[selectedPage].sections) np[selectedPage].sections = [];
+                                            np[selectedPage].sections.push({ title: 'New Section', text: 'Enter details...' });
                                             setInfoPages(np);
                                         }} className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-all">+ Add Section</button>
                                     </div>
                                     <button onClick={() => {
-                                        contentStorage.updatePage(selectedPage, infoPages[selectedPage]);
-                                        alert('Saved successfully!');
+                                        const page = infoPages[selectedPage];
+                                        handleUpdateMarketingKey(selectedPage, {
+                                            title: page.title,
+                                            subtitle: page.subtitle,
+                                            sections: page.sections
+                                        }, page.title);
                                     }} className="w-full mt-6 bg-[#0F172A] text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2">
                                         <Save size={16} /> Update Page Content
                                     </button>
@@ -205,7 +379,7 @@ const MarketingManager = () => {
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Add features seen in the DISCOVER page</p>
                                         </div>
                                     </div>
-                                    <button className="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2"><Save size={14} /> Global Sync</button>
+                                    <button onClick={() => handleUpdateMarketingKey('menu_future_features', { sections: futureFeatures }, 'Future and Option List')} className="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 hover:scale-105 transition-transform active:scale-95"><Save size={14} /> Global Sync</button>
                                 </div>
 
                                 <div className="space-y-6">
@@ -249,7 +423,7 @@ const MarketingManager = () => {
                                             <Sparkles size={32} className="text-slate-800" />
                                         </div>
                                         <div className="flex-1 flex flex-col justify-center mb-6">
-                                            <h3 className="text-[16px] font-black text-slate-800 leading-tight mb-2 uppercase tracking-tight">Future Features</h3>
+                                            <h3 className="text-[16px] font-black text-slate-800 leading-tight mb-2 uppercase tracking-tight">Future and Option</h3>
                                             <p className="text-[11px] font-bold text-slate-400 leading-tight uppercase tracking-[0.1em]">Upcoming earning opportunities</p>
                                         </div>
                                         <button className="w-full bg-slate-900 text-white text-[12px] font-black py-4 rounded-2xl uppercase tracking-[0.2em] shadow-xl shadow-slate-200">
@@ -267,12 +441,12 @@ const MarketingManager = () => {
                                     <div className="absolute -left-10 top-0 opacity-10">
                                         <Rocket size={180} className="text-white" />
                                     </div>
-                                    
+
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-4 mb-2">
-                                             <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white"><ChevronLeft size={24} /></div>
+                                            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white"><ChevronLeft size={24} /></div>
                                         </div>
-                                        <h2 className="text-2xl font-black text-white tracking-tight uppercase mt-6 leading-none">Future Features</h2>
+                                        <h2 className="text-2xl font-black text-white tracking-tight uppercase mt-6 leading-none">Future and Option</h2>
                                         <p className="text-[11px] font-black text-sky-400 uppercase tracking-[0.25em] mt-2 mb-10">Upcoming Opportunities</p>
 
                                         <div className="bg-white rounded-[40px] p-8 space-y-8 shadow-2xl min-h-[400px]">
@@ -305,13 +479,13 @@ const MarketingManager = () => {
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                         <div className="space-y-6">
                             {banners.map((banner, idx) => (
-                                <div key={banner.id} className="bg-white rounded-[40px] border border-slate-100 shadow-sm p-8 group relative overflow-hidden">
+                                <div key={banner._id || idx} className="bg-white rounded-[40px] border border-slate-100 shadow-sm p-8 group relative overflow-hidden">
                                     <div className="flex items-center justify-between mb-8">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-slate-900 text-sky-400 rounded-xl flex items-center justify-center font-black">0{idx + 1}</div>
                                             <h3 className="text-[13px] font-black text-slate-400 uppercase tracking-widest">Banner Config</h3>
                                         </div>
-                                        <button onClick={() => setBanners(banners.filter(b => b.id !== banner.id))} className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16} /></button>
+                                        <button onClick={() => handleDeleteBanner(banner._id)} className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16} /></button>
                                     </div>
 
                                     <div className="space-y-5">
@@ -326,11 +500,17 @@ const MarketingManager = () => {
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gradient Theme</label>
                                                 <select value={banner.gradient} onChange={(e) => {
                                                     const newB = [...banners]; newB[idx].gradient = e.target.value; setBanners(newB);
-                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3.5 text-[14px] font-bold text-slate-800 outline-none">
-                                                    <option value="from-sky-500 to-sky-700">Sky Professional</option>
-                                                    <option value="from-indigo-500 to-indigo-700">Indigo Premium</option>
-                                                    <option value="from-emerald-500 to-teal-600">Emerald Growth</option>
-                                                    <option value="from-rose-500 to-orange-600">Orange Spark</option>
+                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3.5 text-[14px] font-bold text-slate-800 outline-none custom-scrollbar">
+                                                    <option value="from-sky-500 to-sky-700">Sky Premium (Blue)</option>
+                                                    <option value="from-indigo-500 to-indigo-700">Indigo Royal (Dark Blue/Purple)</option>
+                                                    <option value="from-emerald-500 to-teal-600">Emerald Growth (Green)</option>
+                                                    <option value="from-rose-500 to-orange-600">Orange Spark (Red/Orange)</option>
+                                                    <option value="from-violet-600 to-fuchsia-600">Fuchsia Dream (Purple/Pink)</option>
+                                                    <option value="from-amber-400 to-orange-500">Amber Glow (Yellow/Orange)</option>
+                                                    <option value="from-cyan-400 to-blue-600">Ocean Wave (Cyan/Blue)</option>
+                                                    <option value="from-pink-500 to-rose-600">Rose Petal (Pink/Red)</option>
+                                                    <option value="from-slate-800 to-slate-950">Midnight Stealth (Dark/Black)</option>
+                                                    <option value="from-teal-400 to-emerald-600">Mint Fresh (Teal/Green)</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -346,28 +526,42 @@ const MarketingManager = () => {
                                                 const newB = [...banners]; newB[idx].subtitle = e.target.value; setBanners(newB);
                                             }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] font-bold text-slate-500 h-24 outline-none focus:ring-2 focus:ring-sky-500 resize-none" />
                                         </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Button Text (CTA)</label>
+                                                <input value={banner.ctaText} onChange={(e) => {
+                                                    const newB = [...banners]; newB[idx].ctaText = e.target.value; setBanners(newB);
+                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3.5 text-[14px] font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none" placeholder="e.g. Upgrade Now" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Action Link (Path)</label>
+                                                <input value={banner.path} onChange={(e) => {
+                                                    const newB = [...banners]; newB[idx].path = e.target.value; setBanners(newB);
+                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3.5 text-[14px] font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none" placeholder="e.g. /user/profile" />
+                                            </div>
+                                        </div>
                                     </div>
-                                    
-                                    <button className="w-full mt-8 bg-[#0F172A] text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-xl hover:bg-black transition-all flex items-center justify-center gap-2">
+
+                                    <button onClick={() => handleSyncBanner(banner)} className="w-full mt-8 bg-[#0F172A] text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-xl hover:bg-black transition-all flex items-center justify-center gap-2">
                                         <Save size={16} /> Sync Banner
                                     </button>
                                 </div>
                             ))}
-                            <button onClick={() => setBanners([...banners, { id: Date.now(), tag: 'NEW CAMPAIGN', title: 'New Offer Title', subtitle: 'Describe your offer here...', gradient: 'from-sky-500 to-sky-700' }])} className="w-full py-6 border-2 border-dashed border-slate-200 rounded-[40px] text-slate-400 font-extrabold text-[12px] uppercase tracking-widest hover:border-sky-500 hover:text-sky-500 transition-all flex flex-col items-center gap-2">
+                            <button onClick={handleAddBanner} className="w-full py-6 border-2 border-dashed border-slate-200 rounded-[40px] text-slate-400 font-extrabold text-[12px] uppercase tracking-widest hover:border-sky-500 hover:text-sky-500 transition-all flex flex-col items-center gap-2">
                                 <Plus size={24} /> Add New Promotional Banner
                             </button>
                         </div>
 
                         {/* Banner Preview Section */}
-                        <div className="sticky top-6 max-h-[90vh] overflow-y-auto bg-[#0F172A] rounded-[48px] p-10 shadow-2xl shadow-slate-200 custom-scrollbar">
-                             <div className="flex items-center gap-3 mb-10 sticky top-0 bg-[#0F172A] z-10 pb-4">
+                        <div className="sticky top-6 max-h-[90vh] overflow-y-auto bg-[#0F172A] rounded-[48px] shadow-2xl shadow-slate-200 custom-scrollbar">
+                            <div className="flex items-center gap-3 sticky top-0 bg-[#0F172A] z-50 p-10 pb-6">
                                 <div className="p-3 bg-white/5 rounded-2xl text-sky-400"><MousePointer2 size={24} /></div>
                                 <h3 className="text-xl font-black text-white tracking-tight">User Dashboard Preview</h3>
                             </div>
 
-                            <div className="space-y-6">
+                            <div className="space-y-6 px-10 pb-10">
                                 {banners.map((banner) => (
-                                    <div key={banner.id} className={`bg-gradient-to-r ${banner.gradient} rounded-3xl p-6 relative overflow-hidden group shadow-lg shadow-black/20 scale-95 opacity-80 hover:scale-100 hover:opacity-100 transition-all duration-300 border border-white/5`}>
+                                    <div key={banner._id || banner.tag} className={`bg-gradient-to-r ${banner.gradient} rounded-3xl p-6 relative overflow-hidden group shadow-lg shadow-black/20 scale-95 opacity-80 hover:scale-100 hover:opacity-100 transition-all duration-300 border border-white/5`}>
                                         <div className="relative z-10 text-white">
                                             <span className="text-[9px] font-black uppercase tracking-[0.2em] bg-white/20 px-3 py-1 rounded-full border border-white/10">{banner.tag}</span>
                                             <h2 className="text-2xl font-black tracking-tight mt-3">{banner.title}</h2>
@@ -400,7 +594,7 @@ const MarketingManager = () => {
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-heading Text</label>
                                             <input value={b.subtitle} onChange={(e) => {
-                                                const nb = {...boosters}; nb[type].subtitle = e.target.value; setBoosters(nb);
+                                                const nb = { ...boosters }; nb[type].subtitle = e.target.value; setBoosters(nb);
                                             }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-black text-slate-800 outline-none" />
                                         </div>
 
@@ -409,20 +603,20 @@ const MarketingManager = () => {
                                             {b.benefits.map((text, idx) => (
                                                 <div key={idx} className="flex gap-3">
                                                     <input value={text} onChange={(e) => {
-                                                        const nb = {...boosters}; nb[type].benefits[idx] = e.target.value; setBoosters(nb);
+                                                        const nb = { ...boosters }; nb[type].benefits[idx] = e.target.value; setBoosters(nb);
                                                     }} className="flex-1 bg-white border border-slate-100 rounded-xl px-4 py-3 text-[13px] font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-sky-500 outline-none" />
                                                     <button onClick={() => {
-                                                        const nb = {...boosters}; nb[type].benefits = b.benefits.filter((_, i) => i !== idx); setBoosters(nb);
+                                                        const nb = { ...boosters }; nb[type].benefits = b.benefits.filter((_, i) => i !== idx); setBoosters(nb);
                                                     }} className="w-11 h-11 bg-rose-50 text-rose-400 rounded-xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16} /></button>
                                                 </div>
                                             ))}
                                             <button onClick={() => {
-                                                const nb = {...boosters}; nb[type].benefits.push('New Benefit Point'); setBoosters(nb);
+                                                const nb = { ...boosters }; nb[type].benefits.push('New Benefit Point'); setBoosters(nb);
                                             }} className="w-full py-4 border-2 border-dashed border-slate-100 rounded-2xl text-[11px] font-black uppercase text-slate-400 hover:text-sky-500 hover:border-sky-200 transition-all">+ Add New Point</button>
                                         </div>
                                     </div>
 
-                                    <button className="w-full bg-[#0F172A] text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl">
+                                    <button onClick={() => handleUpdateBooster(type)} className="w-full bg-[#0F172A] text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
                                         <Save size={16} /> Update {b.title} Configuration
                                     </button>
                                 </div>
@@ -446,15 +640,15 @@ const MarketingManager = () => {
                             <div className="space-y-6 pt-4">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Headline</label>
-                                    <input value={lifetime.title} onChange={(e) => setLifetime({...lifetime, title: e.target.value})} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[16px] font-black text-slate-800 outline-none" />
+                                    <input value={lifetime.title} onChange={(e) => setLifetime({ ...lifetime, title: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[16px] font-black text-slate-800 outline-none" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Price Tag (Offer Text)</label>
-                                    <input value={lifetime.priceTag} onChange={(e) => setLifetime({...lifetime, priceTag: e.target.value})} className="w-full bg-sky-50 border border-sky-100 rounded-2xl px-5 py-4 text-[14px] font-black text-sky-600 outline-none" />
+                                    <input value={lifetime.priceTag} onChange={(e) => setLifetime({ ...lifetime, priceTag: e.target.value })} className="w-full bg-sky-50 border border-sky-100 rounded-2xl px-5 py-4 text-[14px] font-black text-sky-600 outline-none" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Subtitle Note (Hindi)</label>
-                                    <input value={lifetime.note} onChange={(e) => setLifetime({...lifetime, note: e.target.value})} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] font-bold text-slate-500 outline-none" />
+                                    <input value={lifetime.note} onChange={(e) => setLifetime({ ...lifetime, note: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] font-bold text-slate-500 outline-none" />
                                 </div>
 
                                 <div className="space-y-3 pt-4">
@@ -462,18 +656,18 @@ const MarketingManager = () => {
                                     {lifetime.features.map((item, idx) => (
                                         <div key={idx} className="flex gap-3">
                                             <input value={item} onChange={(e) => {
-                                                const nf = [...lifetime.features]; nf[idx] = e.target.value; setLifetime({...lifetime, features: nf});
+                                                const nf = [...lifetime.features]; nf[idx] = e.target.value; setLifetime({ ...lifetime, features: nf });
                                             }} className="flex-1 bg-white border border-slate-100 rounded-xl px-4 py-3.5 text-[13px] font-bold text-slate-800 shadow-sm outline-none" />
                                             <button onClick={() => {
-                                                const nf = lifetime.features.filter((_, i) => i !== idx); setLifetime({...lifetime, features: nf});
+                                                const nf = lifetime.features.filter((_, i) => i !== idx); setLifetime({ ...lifetime, features: nf });
                                             }} className="w-12 h-12 bg-rose-50 text-rose-400 rounded-xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={18} /></button>
                                         </div>
                                     ))}
-                                    <button onClick={() => setLifetime({...lifetime, features: [...lifetime.features, 'New Platform Feature']})} className="w-full py-4 border-2 border-dashed border-slate-100 rounded-2xl text-[11px] font-black uppercase text-slate-400 hover:text-indigo-500 transition-all">+ Add New Checkpoint</button>
+                                    <button onClick={() => setLifetime({ ...lifetime, features: [...lifetime.features, 'New Platform Feature'] })} className="w-full py-4 border-2 border-dashed border-slate-100 rounded-2xl text-[11px] font-black uppercase text-slate-400 hover:text-indigo-500 transition-all">+ Add New Checkpoint</button>
                                 </div>
                             </div>
 
-                            <button className="w-full mt-4 bg-[#0F172A] text-white py-5 rounded-[24px] font-black text-[12px] uppercase tracking-widest shadow-2xl shadow-indigo-100 flex items-center justify-center gap-3">
+                            <button onClick={handleDeployLifetimePromo} className="w-full mt-4 bg-[#0F172A] text-white py-5 rounded-[24px] font-black text-[12px] uppercase tracking-widest shadow-2xl shadow-indigo-100 flex items-center justify-center gap-3">
                                 <Save size={20} /> Deploy Lifetime Promotion
                             </button>
                         </div>
@@ -529,22 +723,19 @@ const MarketingManager = () => {
                                 <div className="space-y-6 pt-4 relative">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Card Title</label>
-                                        <input value={projectsData.title} onChange={(e) => setProjectsData({...projectsData, title: e.target.value})} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[15px] font-black text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" />
+                                        <input value={projectsData.title} onChange={(e) => setProjectsData({ ...projectsData, title: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[15px] font-black text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description Text</label>
-                                        <textarea value={projectsData.description} onChange={(e) => setProjectsData({...projectsData, description: e.target.value})} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-bold text-slate-500 h-32 outline-none focus:ring-2 focus:ring-emerald-500 transition-all resize-none shadow-inner" />
+                                        <textarea value={projectsData.description} onChange={(e) => setProjectsData({ ...projectsData, description: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-bold text-slate-500 h-32 outline-none focus:ring-2 focus:ring-emerald-500 transition-all resize-none shadow-inner" />
                                     </div>
-                                    
+
                                     <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 italic text-[10px] text-emerald-700 font-bold">
                                         Note: These changes will reflect immediately on the User "Income Center" page.
                                     </div>
                                 </div>
 
-                                <button onClick={() => {
-                                    contentStorage.updateProjects(projectsData);
-                                    alert('Project data updated successfully!');
-                                }} className="w-full relative mt-4 bg-[#0F172A] text-white py-5 rounded-[24px] font-black text-[12px] uppercase tracking-widest shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all">
+                                <button onClick={() => handleUpdateMarketingKey('income_projects', projectsData, 'Projects Card Info')} className="w-full relative mt-4 bg-[#0F172A] text-white py-5 rounded-[24px] font-black text-[12px] uppercase tracking-widest shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all">
                                     <Save size={20} /> Update Project Card
                                 </button>
                             </div>
@@ -554,7 +745,7 @@ const MarketingManager = () => {
                         <div className="flex flex-col justify-center">
                             <div className="bg-slate-50 p-12 rounded-[60px] border border-slate-200 shadow-inner flex flex-col items-center">
                                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-10 text-center italic">User Panel Live View</p>
-                                
+
                                 <div className="w-[320px] bg-white border border-slate-100 rounded-[2rem] p-5 flex items-center gap-4 shadow-xl ring-8 ring-white relative overflow-hidden group">
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
                                     <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0 border border-emerald-100">

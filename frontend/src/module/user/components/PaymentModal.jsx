@@ -1,107 +1,207 @@
 import React, { useState, useEffect } from 'react';
-import { X, Smartphone, CreditCard, ShieldCheck, Loader2 } from 'lucide-react';
+import { X, ShieldCheck, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import api from '../../shared/services/api';
+import { useUser } from '../context/UserContext';
 
-const PaymentModal = ({ isOpen, onClose, plan, amount, onSuccess }) => {
-    const [status, setStatus] = useState('idle'); // idle, processing, success
+// Dynamically loads the Razorpay checkout script
+const loadRazorpayScript = () =>
+    new Promise((resolve) => {
+        if (document.getElementById('razorpay-script')) {
+            resolve(true);
+            return;
+        }
+        const script = document.createElement('script');
+        script.id = 'razorpay-script';
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+    });
 
-    // Reset status when modal opens
+const PaymentModal = ({ isOpen, onClose, plan, amount, type = 'PLATFORM_UNLOCK', itemId = null, onSuccess }) => {
+    const [status, setStatus] = useState('idle'); // idle | loading | processing | success | error
+    const [errorMsg, setErrorMsg] = useState('');
+    const { userData, refreshUserProfile } = useUser();
+
     useEffect(() => {
-        if (isOpen) setStatus('idle');
+        if (isOpen) {
+            setStatus('idle');
+            setErrorMsg('');
+        }
     }, [isOpen]);
 
     if (!isOpen) return null;
 
-    const handlePay = () => {
-        setStatus('processing');
-        
-        // Simulate network/payment delay (2 seconds)
-        setTimeout(() => {
-            setStatus('success');
-            
-            // Wait 1.5s for user to see success, then trigger callback
-            setTimeout(() => {
-                onSuccess();
-            }, 1000);
-        }, 2000);
+    const handlePay = async () => {
+        setStatus('loading');
+        setErrorMsg('');
+
+        try {
+            // 1. Load Razorpay SDK
+            const loaded = await loadRazorpayScript();
+            if (!loaded) throw new Error('Razorpay SDK could not be loaded. Check your internet connection.');
+
+            // 2. Create server-side order
+            const orderRes = await api.post('/user/data/razorpay/create-order', {
+                type,
+                ideaId: itemId
+            });
+            if (!orderRes.success) throw new Error('Failed to create payment order.');
+
+            const { orderId, keyId } = orderRes;
+
+            // 3. Open Razorpay checkout
+            setStatus('processing');
+
+            const options = {
+                key: keyId,
+                amount: amount * 100, // in paise
+                currency: 'INR',
+                name: 'Dromoney',
+                description: plan,
+                order_id: orderId,
+                prefill: {
+                    name: userData?.name || '',
+                    email: userData?.email || '',
+                    contact: userData?.phone || '',
+                },
+                theme: { color: '#0ea5e9' },
+                handler: async (response) => {
+                    // 4. Verify payment on server
+                    try {
+                        const verifyRes = await api.post('/user/data/razorpay/verify', {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                        });
+
+                        if (verifyRes.success) {
+                            await refreshUserProfile();
+                            setStatus('success');
+                            setTimeout(() => {
+                                onSuccess();
+                            }, 1500);
+                        } else {
+                            throw new Error('Server verification failed.');
+                        }
+                    } catch (err) {
+                        setStatus('error');
+                        setErrorMsg('Payment was received but verification failed. Contact support.');
+                    }
+                },
+                modal: {
+                    ondismiss: () => {
+                        // User closed modal without paying
+                        setStatus('idle');
+                    },
+                },
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', (response) => {
+                setStatus('error');
+                setErrorMsg(response.error?.description || 'Payment failed. Please try again.');
+            });
+            rzp.open();
+
+        } catch (err) {
+            setStatus('error');
+            setErrorMsg(err.message || 'Something went wrong. Please try again.');
+        }
     };
 
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={status === 'idle' ? onClose : undefined}></div>
-            
+            <div
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+                onClick={status === 'idle' ? onClose : undefined}
+            />
+
             {/* Modal Box */}
-            <div className="relative bg-white w-full max-w-[280px] sm:max-w-xs rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                
-                {status === 'idle' && (
+            <div className="relative bg-white w-full max-w-[300px] rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+
+                {/* ── IDLE: Show Pay Button ── */}
+                {(status === 'idle' || status === 'error') && (
                     <>
                         <div className="p-5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
                             <div>
                                 <h3 className="font-black text-slate-800 text-lg uppercase tracking-tight">Checkout</h3>
-                                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold max-w-[120px] truncate">{plan}</p>
+                                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold max-w-[150px] truncate">{plan}</p>
                             </div>
-                            <button onClick={onClose} className="p-2 mb-2 bg-white rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 shadow-sm border border-slate-100 transition-all active:scale-95">
+                            <button onClick={onClose} className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 shadow-sm border border-slate-100 transition-all">
                                 <X size={16} />
                             </button>
                         </div>
 
                         <div className="p-6 text-center border-b border-slate-100 border-dashed bg-gradient-to-b from-slate-50 to-white">
-                             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total Amount</p>
-                             <h2 className="text-4xl font-black text-slate-800 flex items-center justify-center">
-                                 <span className="text-xl text-slate-400 font-bold mr-1 translate-y-0.5">₹</span>{amount}.00
-                             </h2>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total Amount</p>
+                            <h2 className="text-4xl font-black text-slate-800 flex items-center justify-center">
+                                <span className="text-xl text-slate-400 font-bold mr-1 translate-y-0.5">₹</span>{amount}.00
+                            </h2>
+                            <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest mt-2 bg-emerald-50 px-3 py-1 rounded-full inline-block">Lifetime Access</p>
                         </div>
 
-                        <div className="p-5 flex flex-col gap-3">
-                            <button onClick={handlePay} className="w-full flex items-center justify-between p-4 rounded-xl border border-sky-200 bg-sky-50 hover:bg-sky-100 transition-colors group shadow-sm active:scale-[0.98]">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                                        <Smartphone className="text-sky-500" size={18} />
-                                    </div>
-                                    <span className="font-extrabold text-sky-900 text-[13px]">Pay via UPI</span>
-                                </div>
-                                <span className="text-[10px] font-black uppercase text-sky-500 tracking-widest group-hover:translate-x-1 transition-transform">Proceed</span>
-                            </button>
+                        {status === 'error' && (
+                            <div className="mx-5 mt-4 p-3 bg-red-50 rounded-xl border border-red-100 flex items-start gap-2">
+                                <AlertCircle size={14} className="text-red-500 mt-0.5 flex-shrink-0" />
+                                <p className="text-[10px] font-bold text-red-600">{errorMsg}</p>
+                            </div>
+                        )}
 
-                            <button onClick={handlePay} className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors group shadow-sm active:scale-[0.98]">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100">
-                                        <CreditCard className="text-slate-500" size={18} />
-                                    </div>
-                                    <span className="font-bold text-slate-600 text-[13px]">Card / Netbanking</span>
-                                </div>
-                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select</span>
+                        <div className="p-5">
+                            <button
+                                onClick={handlePay}
+                                className="w-full bg-sky-500 hover:bg-sky-600 active:scale-[0.98] text-white font-black py-4 rounded-xl text-[12px] uppercase tracking-widest transition-all shadow-lg shadow-sky-200 flex items-center justify-center gap-2"
+                            >
+                                <ShieldCheck size={16} />
+                                Pay ₹{amount} via Razorpay
                             </button>
+                            <p className="text-center text-[9px] text-slate-400 font-bold mt-3 uppercase tracking-widest">UPI · Card · Netbanking · Wallets</p>
                         </div>
-                        
+
                         <div className="bg-emerald-50 py-2.5 flex items-center justify-center gap-1.5 border-t border-emerald-100">
-                             <ShieldCheck size={14} className="text-emerald-500" />
-                             <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-600">Secure Dummy Gateway</span>
+                            <ShieldCheck size={12} className="text-emerald-500" />
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-600">Secured by Razorpay</span>
                         </div>
                     </>
                 )}
 
-                {status === 'processing' && (
-                    <div className="p-12 flex flex-col items-center justify-center text-center">
-                        <div className="relative">
-                            <div className="w-16 h-16 border-4 border-slate-100 rounded-full"></div>
-                            <div className="w-16 h-16 border-4 border-sky-500 rounded-full border-t-transparent animate-spin absolute inset-0"></div>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <Smartphone size={20} className="text-sky-500 animate-pulse" />
-                            </div>
+                {/* ── LOADING: Creating Order ── */}
+                {status === 'loading' && (
+                    <div className="p-12 flex flex-col items-center justify-center text-center gap-4">
+                        <Loader2 size={36} className="text-sky-500 animate-spin" />
+                        <div>
+                            <p className="font-black text-slate-800 text-[15px]">Preparing Checkout...</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Please wait</p>
                         </div>
-                        <h3 className="text-lg font-black text-slate-800 mt-5 tracking-tight">Processing...</h3>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5">Please don't refresh</p>
                     </div>
                 )}
 
-                {status === 'success' && (
-                    <div className="p-10 flex flex-col items-center justify-center text-center">
-                        <div className="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-5 animate-in zoom-in slide-in-from-bottom-2 duration-300 shadow-inner">
-                             <ShieldCheck size={32} />
+                {/* ── PROCESSING: Razorpay is open (waiting for user to pay) ── */}
+                {status === 'processing' && (
+                    <div className="p-12 flex flex-col items-center justify-center text-center gap-4">
+                        <div className="relative">
+                            <div className="w-16 h-16 border-4 border-slate-100 rounded-full" />
+                            <div className="w-16 h-16 border-4 border-sky-500 rounded-full border-t-transparent animate-spin absolute inset-0" />
                         </div>
-                        <h3 className="text-lg font-black text-emerald-600 tracking-tight">Payment Successful</h3>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1.5">Power up activated!</p>
+                        <div>
+                            <p className="font-black text-slate-800 text-[15px]">Processing...</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Complete payment in popup</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── SUCCESS ── */}
+                {status === 'success' && (
+                    <div className="p-10 flex flex-col items-center justify-center text-center gap-4">
+                        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+                            <CheckCircle2 size={32} className="text-emerald-500" />
+                        </div>
+                        <div>
+                            <p className="font-black text-emerald-600 text-[17px]">Payment Successful!</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Unlocked successfully 🎉</p>
+                        </div>
                     </div>
                 )}
             </div>

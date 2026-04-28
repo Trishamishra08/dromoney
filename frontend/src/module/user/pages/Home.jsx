@@ -3,63 +3,94 @@ import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import {
     IndianRupee, Coins, Users, CreditCard, ChevronRight, Zap,
-    Wallet, Sparkles, Send, Trophy, Gift, Shield, Rocket, CheckCircle2, BarChart2, ClipboardList, ChevronDown, Share2, TrendingUp
+    Wallet, Sparkles, Send, Trophy, Gift, Shield, Rocket, CheckCircle2, BarChart2, ClipboardList, ChevronDown, Share2, TrendingUp,
+    Video, X, DollarSign, ArrowUp, ArrowDown, RotateCcw, QrCode, Smartphone, Receipt, Building, Clock, Lightbulb, Film, PlusSquare, MoreHorizontal
 } from 'lucide-react';
 import PaymentModal from '../components/PaymentModal';
+import api from '../../shared/services/api';
+import UniversalVideoPlayer from '../../shared/components/UniversalVideoPlayer';
 
-const BANNERS = [
+const FALLBACK_BANNERS = [
     {
-        id: 1,
+        _id: '1',
         tag: 'Affiliate Program',
         title: 'Earn ₹200 Per Sale',
         subtitle: 'Share your link & get instant commission on every referral',
-        cta: 'Invite Now',
+        ctaText: 'Invite Now',
         path: '/user/profile',
         gradient: 'from-sky-500 to-sky-700',
-        icon: Users,
-        iconBg: 'bg-white/10',
+        iconName: 'Users',
     },
     {
-        id: 2,
+        _id: '2',
         tag: '3X Booster Active',
         title: 'Multiply Your Coins',
         subtitle: 'Upgrade to Monthly Booster and earn 3x coins on every task',
-        cta: 'Upgrade Now',
+        ctaText: 'Upgrade Now',
         path: '/user/profile',
         gradient: 'from-indigo-500 to-indigo-700',
-        icon: Zap,
-        iconBg: 'bg-white/10',
+        iconName: 'Zap',
     },
     {
-        id: 3,
+        _id: '3',
         tag: 'Live Contest',
         title: 'Win Up To ₹500',
         subtitle: 'Join the Mega Jackpot Night — limited seats, big rewards!',
-        cta: 'Join Event',
+        ctaText: 'Join Event',
         path: '/user/events',
         gradient: 'from-emerald-500 to-teal-600',
-        icon: Trophy,
-        iconBg: 'bg-white/10',
+        iconName: 'Trophy',
     },
 ];
 
+// Mapping helper for dynamic string icon loading
+import * as Icons from 'lucide-react';
+
 const AdBanners = ({ navigate }) => {
     const [active, setActive] = useState(0);
+    const [banners, setBanners] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            setActive(prev => (prev + 1) % BANNERS.length);
-        }, 3000);
-        return () => clearInterval(timer);
+        const loadBanners = async () => {
+            try {
+                const response = await api.get('/public/banners');
+                if (response.success && response.data && response.data.length > 0) {
+                    setBanners(response.data);
+                } else {
+                    setBanners(FALLBACK_BANNERS);
+                }
+            } catch (err) {
+                console.error("Banner fetch error", err);
+                setBanners(FALLBACK_BANNERS);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadBanners();
     }, []);
 
-    const banner = BANNERS[active];
-    const BannerIcon = banner.icon;
+    useEffect(() => {
+        if (banners.length === 0) return;
+        const timer = setInterval(() => {
+            setActive(prev => (prev + 1) % banners.length);
+        }, 3000);
+        return () => clearInterval(timer);
+    }, [banners.length]);
+
+    if (loading || banners.length === 0) {
+        return <div className="h-32 bg-slate-100 rounded-2xl animate-pulse"></div>;
+    }
+
+    const banner = banners[active];
+    // Resolve string icon to component, default to Megaphone if not found
+    const BannerIcon = Icons[banner.iconName] || Icons.Megaphone;
 
     return (
         <div className="relative">
             <div
-                className={`bg-gradient-to-r ${banner.gradient} rounded-2xl p-4 shadow-lg relative overflow-hidden transition-all duration-500 group`}
+                onClick={() => navigate(banner.path || '/user/home')}
+                className={`cursor-pointer bg-gradient-to-r ${banner.gradient || 'from-sky-500 to-sky-700'} rounded-2xl p-4 shadow-lg relative overflow-hidden transition-all duration-500 group`}
             >
                 {/* Background Icon */}
                 <div className="absolute -right-4 -bottom-4 opacity-10">
@@ -73,7 +104,7 @@ const AdBanners = ({ navigate }) => {
                     <h2 className="text-xl font-black tracking-tight mt-2 leading-none">{banner.title}</h2>
                     <p className="text-[10px] font-bold text-white/70 mt-1 mb-3 leading-tight max-w-[65%]">{banner.subtitle}</p>
                     <div className="inline-flex items-center gap-1.5 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl transition-all active:scale-95">
-                        <span className="text-[9px] font-black uppercase tracking-widest">{banner.cta}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest">{banner.ctaText || 'View More'}</span>
                         <ChevronRight size={12} />
                     </div>
                 </div>
@@ -81,7 +112,7 @@ const AdBanners = ({ navigate }) => {
 
             {/* Dot Indicators */}
             <div className="flex items-center justify-center gap-1.5 mt-2">
-                {BANNERS.map((_, i) => (
+                {banners.map((_, i) => (
                     <button
                         key={i}
                         onClick={() => setActive(i)}
@@ -115,18 +146,96 @@ const XIcon = () => (
 );
 
 const Home = () => {
-    const { userData, addNotification } = useUser();
-    const { earnings, coins, referrals, futureFund, boosterDaysLeft, isBoosterActive } = userData;
+    const { userData, addNotification, refreshUserProfile } = useUser();
+    const { earnings, coins, referrals, futureFund, isPaid } = userData;
     const navigate = useNavigate();
 
     // Custom States for Booster Cards
     const [isSupportExpanded, setIsSupportExpanded] = useState(false);
     const [isTaskExpanded, setIsTaskExpanded] = useState(false);
-    const [isFutureFundExpanded, setIsFutureFundExpanded] = useState(false);
+    const [introConfig, setIntroConfig] = useState(null);
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false);
     const [paymentConfig, setPaymentConfig] = useState({ isOpen: false, plan: '', amount: 0 });
+    const [lifetimePromo, setLifetimePromo] = useState(null);
+    const [boosters, setBoosters] = useState({
+        support: { title: '₹11 Support Booster', subtitle: 'Boost participation & win more!', benefits: [] },
+        task: { title: '₹49 Task Booster', subtitle: 'Increase coin value 3X now!', benefits: [] }
+    });
+    const [footerPolicies, setFooterPolicies] = useState([
+        { label: 'Privacy Policy', path: 'privacy' },
+        { label: 'Terms & Conditions', path: 'terms' },
+        { label: 'Guidelines', path: 'guidelines' }
+    ]);
+
+    const fetchHomeData = async () => {
+        const keys = ['lifetime_promo', 'menu_privacy', 'menu_terms', 'menu_guidelines', 'platform_intro_video'];
+        try {
+            const res = await api.get(`/public/content/bulk?keys=${keys.join(',')}`);
+            if (res.success && res.data) {
+                const data = res.data;
+                
+                // 1. Lifetime Promo
+                if (data['lifetime_promo'] && data['lifetime_promo'].data) {
+                    setLifetimePromo(data['lifetime_promo'].data);
+                }
+
+                // 2. Intro Video Config
+                if (data['platform_intro_video'] && data['platform_intro_video'].data) {
+                    setIntroConfig(data['platform_intro_video'].data);
+                }
+                
+                // 3. Footer Policies
+                const policyKeys = ['menu_privacy', 'menu_terms', 'menu_guidelines'];
+                const policies = policyKeys.map(key => {
+                    const item = data[key];
+                    if (item && item.data) {
+                        return { 
+                            label: item.data.title || item.title, 
+                            path: key.replace('menu_', '') 
+                        };
+                    }
+                    // Fallback
+                    const label = key === 'menu_privacy' ? 'Privacy Policy' : key === 'menu_terms' ? 'Terms & Conditions' : 'Guidelines';
+                    return { label, path: key.replace('menu_', '') };
+                });
+                setFooterPolicies(policies);
+            }
+        } catch (err) {
+            console.error('Error fetching home bulk data:', err);
+        }
+    };
+
+    const fetchBoosters = async () => {
+        try {
+            const res = await api.get('/public/boosters');
+            if (res.success && res.data) {
+                const results = { ...boosters };
+                res.data.forEach(item => {
+                    if (item.type === 'support' || item.type === 'task') {
+                        results[item.type] = item;
+                    }
+                });
+                setBoosters(results);
+            }
+        } catch (err) {
+            console.error('Error fetching boosters:', err);
+        }
+    };
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        fetchHomeData();
+        fetchBoosters();
+    }, []);
 
     const handleBuy = (plan, amount) => {
-        setPaymentConfig({ isOpen: true, plan, amount });
+        if (!isPaid) {
+            // Must buy ₹499 first — show the main 499 plan modal
+            setPaymentConfig({ isOpen: true, plan: 'Lifetime Access Plan', amount: 499 });
+        } else {
+            // User has already paid — boosters not yet active, show a toast
+            addNotification("Coming Soon!", "Booster packs will be available soon.", "info");
+        }
     };
 
     const handleCopy = () => {
@@ -138,95 +247,160 @@ const Home = () => {
         <div className="flex flex-col animate-in fade-in duration-700 min-h-full">
             {/* Main Content Area */}
             <div className="flex flex-col gap-4 p-4 pb-2">
-                {/* --- 3 Promotional Ad Banners (Auto-Scroll) --- */}
-                <AdBanners navigate={navigate} />
-
-
-                {/* --- Earnings StatCards --- */}
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white border border-sky-100 rounded-2xl p-4 shadow-sm relative overflow-hidden group hover:border-sky-300 transition-all">
-                        <p className="text-[9px] font-black text-sky-500 uppercase tracking-widest mb-1 leading-none">Today's Earnings</p>
-                        <h2 className="text-2xl font-black text-sky-900 leading-none">₹{earnings.today}</h2>
-                        <div className="absolute right-0 bottom-0 text-sky-900 opacity-5 translate-x-2 translate-y-2 group-hover:scale-110 transition-transform">
-                            <IndianRupee size={56} />
+                {/* --- Wallet Card (Replacing Earnings StatCards) --- */}
+                <div className="bg-gradient-to-r from-teal-800 to-emerald-700 rounded-[28px] p-6 shadow-xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="flex justify-between items-start mb-2 relative z-10">
+                        <div className="flex items-center gap-2 text-teal-50">
+                            <Wallet size={16} />
+                            <span className="text-[12px] font-medium">Your wallet Balance</span>
+                        </div>
+                        <div className="w-10 h-10 flex items-center justify-center text-teal-50/80 border border-teal-50/20 rounded-xl cursor-pointer hover:bg-white/10 transition-colors" onClick={() => navigate('/user/wallet')}>
+                            <QrCode size={20} />
                         </div>
                     </div>
-                    <div className="bg-sky-600 rounded-2xl p-4 shadow-lg shadow-sky-200 relative overflow-hidden group">
-                        <p className="text-[9px] font-black text-sky-100 uppercase tracking-widest mb-1 leading-none">Total Earnings</p>
-                        <h2 className="text-2xl font-black text-white leading-none">₹{earnings.total}</h2>
-                        <div className="absolute right-0 bottom-0 text-white opacity-10 translate-x-2 translate-y-2 group-hover:scale-110 transition-transform">
-                            <CreditCard size={56} />
-                        </div>
+                    
+                    <h2 className="text-3xl font-bold text-white mb-6 tracking-tight relative z-10">$ {Number(earnings.total || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</h2>
+                    
+                    <div className="flex justify-between items-center relative z-10 px-1">
+                        {[
+                            { icon: DollarSign, label: 'Balance', action: () => navigate('/user/income') },
+                            { icon: Wallet, label: 'Add Money', action: () => navigate('/user/wallet') },
+                            { icon: ArrowUp, label: 'Send', action: () => navigate('/user/history') },
+                            { icon: ArrowDown, label: 'Receive', action: () => navigate('/user/history') },
+                            { icon: RotateCcw, label: 'History', action: () => navigate('/user/history') },
+                        ].map((action, i) => (
+                            <div key={i} onClick={action.action} className="flex flex-col items-center gap-2 cursor-pointer group/btn w-[48px]">
+                                <div className="w-11 h-11 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-teal-50 transition-all group-hover/btn:bg-white/20">
+                                    <action.icon size={18} strokeWidth={2.5} />
+                                </div>
+                                <span className="text-[9px] text-teal-100 font-medium group-hover/btn:text-white transition-colors text-center w-full">{action.label}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* --- Future Fund Preview Card (Moved up as requested) --- */}
-                <div 
-                    onClick={() => navigate('/user/income#fund')}
-                    className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all relative group cursor-pointer active:scale-[0.98]"
-                >
-                    <div className="p-5">
-                        <div className="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 className="text-[15px] font-black text-slate-800 tracking-tight flex items-center gap-1.5 uppercase">
-                                    Future Fund
-                                </h3>
-                                <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5">Eligibility Active</p>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                                <div className="bg-sky-50 text-sky-600 font-extrabold text-[11px] px-3 py-1.5 rounded-xl border border-sky-100 group-hover:scale-105 transition-transform">
-                                    {futureFund.progress}%
+                {/* --- Other Services --- */}
+                <div className="mt-2 mb-2">
+                    <h3 className="text-[12px] font-bold text-slate-600 mb-3 ml-1">Other Services</h3>
+                    <div className="grid grid-cols-4 gap-y-4 gap-x-2 bg-white rounded-[24px] p-4 shadow-sm border border-slate-50">
+                        {[
+                            { icon: Share2, label: 'Refer', color: 'bg-emerald-50 text-emerald-500', path: '/user/income-info#refer' },
+                            { icon: ClipboardList, label: 'Task', color: 'bg-amber-50 text-amber-500', path: '/user/income-info#task' },
+                            { icon: TrendingUp, label: 'Fund', color: 'bg-pink-50 text-pink-500', path: '/user/income-info#fund' },
+                            { icon: Sparkles, label: 'Events', color: 'bg-purple-50 text-purple-500', path: '/user/income-info#events' },
+                            { icon: Lightbulb, label: 'Electricity', color: 'bg-rose-50 text-rose-500', path: '/user/home' },
+                            { icon: Film, label: 'Movie', color: 'bg-indigo-50 text-indigo-500', path: '/user/home' },
+                            { icon: PlusSquare, label: 'Add Money', color: 'bg-teal-50 text-teal-500', path: '/user/wallet' },
+                            { icon: MoreHorizontal, label: 'Others', color: 'bg-yellow-50 text-yellow-500', path: '/user/home' }
+                        ].map((service, i) => (
+                            <button
+                                key={i}
+                                onClick={() => navigate(service.path)}
+                                className="flex flex-col items-center gap-2 group transition-all"
+                            >
+                                <div className={`w-12 h-12 ${service.color} rounded-2xl flex items-center justify-center shadow-sm group-hover:-translate-y-1 transition-transform`}>
+                                    <service.icon size={20} strokeWidth={2} />
+                                </div>
+                                <span className="text-[10px] font-medium text-slate-600">{service.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* --- Transactions --- */}
+                <div className="mt-2 mb-4">
+                    <h3 className="text-[12px] font-bold text-slate-800 mb-3 ml-1">Transactions</h3>
+                    <div className="bg-white rounded-[24px] p-4 shadow-sm space-y-4 border border-slate-50">
+                        {[
+                            { name: 'Alex Macculam', type: 'Send Money', amount: '-$66.02', date: '25-12-2022', time: '6:00pm', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80', isNegative: true },
+                            { name: 'Mac Dinner', type: 'Cashout', amount: '-$120.02', date: '01-01-2023', time: '8:00pm', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&q=80', isNegative: true },
+                            { name: 'Brandon King', type: 'Add Money', amount: '+$250.00', date: '02-01-2023', time: '10:00am', image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150&q=80', isNegative: false },
+                        ].map((tx, i) => (
+                            <div key={i} className={`flex items-center justify-between ${i !== 2 ? 'border-b border-slate-50 pb-4' : ''}`}>
+                                <div className="flex items-center gap-3">
+                                    <img src={tx.image} alt={tx.name} className="w-10 h-10 rounded-full object-cover shadow-sm" />
+                                    <div>
+                                        <h4 className="text-[13px] font-bold text-slate-800 leading-tight mb-0.5">{tx.name}</h4>
+                                        <p className="text-[10px] text-blue-500 font-medium leading-none">{tx.type}</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <h4 className={`text-[13px] font-bold leading-tight mb-0.5 ${tx.isNegative ? 'text-slate-800' : 'text-emerald-500'}`}>{tx.amount}</h4>
+                                    <p className="text-[9px] text-slate-400 font-medium leading-none">{tx.date} {tx.time}</p>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="w-full h-2.5 bg-slate-50 rounded-full relative overflow-hidden border border-slate-100 p-0.5">
-                                <div
-                                    className="h-full bg-gradient-to-r from-emerald-400 via-sky-400 to-sky-600 rounded-full transition-all duration-1000 ease-out shadow-inner"
-                                    style={{ width: `${futureFund.progress}%` }}
-                                ></div>
-                            </div>
-                            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-[#2D9AFF]">
-                                <span>Track Progress</span>
-                                <ChevronRight size={14} />
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* --- Quick Actions Grid (Updated paths to hash navigation) --- */}
-                <div className="grid grid-cols-4 gap-2 mb-2">
-                    {[
-                        { icon: Share2, label: 'Refer', color: 'bg-blue-50 text-blue-600', path: '/user/income-info#refer' },
-                        { icon: ClipboardList, label: 'Task', color: 'bg-emerald-50 text-emerald-600', path: '/user/income-info#task' },
-                        { icon: TrendingUp, label: 'Fund', color: 'bg-sky-50 text-sky-600', path: '/user/income-info#fund' },
-                        { icon: Sparkles, label: 'Events', color: 'bg-indigo-50 text-indigo-600', path: '/user/income-info#events' }
-                    ].map((action, i) => (
-                        <button
-                            key={i}
-                            onClick={() => navigate(action.path)}
-                            className="flex flex-col items-center gap-2 group transition-all"
-                        >
-                            <div className={`w-14 h-14 ${action.color} rounded-2xl flex items-center justify-center shadow-sm group-hover:-translate-y-1 transition-all border border-white ring-4 ring-transparent hover:ring-sky-50`}>
-                                <action.icon size={24} />
-                            </div>
-                            <span className="text-[10px] font-black uppercase tracking-tight text-slate-500 opacity-80">{action.label}</span>
-                        </button>
-                    ))}
+                {/* --- 3 Promotional Ad Banners (Auto-Scroll) --- */}
+                <div className="mb-4">
+                    <AdBanners navigate={navigate} />
                 </div>
 
+                {/* Video Modal */}
+                {isVideoPlaying && introConfig && (
+                    <div className="fixed inset-0 z-[1000] bg-black/95 flex flex-col animate-in fade-in duration-300">
+                        <div className="p-6 flex items-center justify-between border-b border-white/10">
+                            <h4 className="text-white font-black uppercase tracking-widest text-sm">{introConfig.title}</h4>
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsVideoPlaying(false);
+                                }}
+                                className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="flex-1 flex items-center justify-center p-4">
+                            <UniversalVideoPlayer 
+                                url={introConfig.videoUrl} 
+                                className="w-full max-h-[70vh] shadow-2xl"
+                            />
+                        </div>
+                        <div className="p-8 text-center">
+                            <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{introConfig.subtitle}</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* --- Platform Intro Video Card --- */}
+                {introConfig && introConfig.isActive && (
+                    <div 
+                        onClick={() => setIsVideoPlaying(true)}
+                        className="bg-slate-900 rounded-[2rem] overflow-hidden shadow-xl relative group cursor-pointer active:scale-[0.98] transition-all border border-slate-800 mb-4"
+                    >
+                        <div className="absolute inset-0">
+                            <img src={introConfig.thumbnailUrl || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80'} className="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-700" alt="Intro"/>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+                        </div>
+
+                        <div className="relative z-10 p-6 flex flex-col items-center text-center">
+                            <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 mb-4 group-hover:scale-110 transition-all shadow-xl">
+                                <Video size={28} className="text-white fill-white/20" />
+                            </div>
+                            <h3 className="text-lg font-black text-white tracking-tight uppercase leading-none">
+                                {introConfig.title}
+                            </h3>
+                            <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest mt-2">
+                                {introConfig.subtitle}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* --- ₹11 Support Booster Section --- */}
-                <div className="bg-[#FFFBEB] border border-amber-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all">
+                <div className="bg-[#FFFBEB] border border-amber-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all mb-4">
                     <div className="p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-amber-50">
                                 <Coins className="text-amber-500" size={24} />
                             </div>
                             <div>
-                                <h4 className="text-[14px] font-black text-amber-900 tracking-tight leading-none">₹11 Support Booster</h4>
-                                <p className="text-[10px] font-bold text-amber-600/70 mt-1">Boost participation & win more!</p>
+                                <h4 className="text-[14px] font-black text-amber-900 tracking-tight leading-none">{boosters.support.title}</h4>
+                                <p className="text-[10px] font-bold text-amber-600/70 mt-1">{boosters.support.subtitle}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -247,16 +421,12 @@ const Home = () => {
                     {isSupportExpanded && (
                         <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-300">
                             <div className="bg-white/50 rounded-2xl p-3 border border-amber-50 space-y-2.5">
-                                {[
-                                    { icon: Sparkles, text: '2X Winning Chance' },
-                                    { icon: Trophy, text: 'Priority Event Support' },
-                                    { icon: Shield, text: 'Support Badge Profile' }
-                                ].map((benefit, i) => (
+                                {boosters.support.benefits.map((text, i) => (
                                     <div key={i} className="flex items-center gap-2">
                                         <div className="w-5 h-5 bg-amber-100 rounded-full flex items-center justify-center">
-                                            <benefit.icon size={10} className="text-amber-600" />
+                                            <CheckCircle2 size={10} className="text-amber-600" />
                                         </div>
-                                        <span className="text-[11px] font-bold text-amber-900/80">{benefit.text}</span>
+                                        <span className="text-[11px] font-bold text-amber-900/80">{text}</span>
                                     </div>
                                 ))}
                             </div>
@@ -268,15 +438,15 @@ const Home = () => {
                 </div>
 
                 {/* --- ₹49 Task Booster Section --- */}
-                <div className="bg-sky-50/50 border border-sky-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all">
+                <div className="bg-sky-50/50 border border-sky-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all mb-4">
                     <div className="p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-sky-50">
                                 <Zap className="text-sky-500" size={24} />
                             </div>
                             <div>
-                                <h4 className="text-[14px] font-black text-sky-900 tracking-tight leading-none">₹49 Task Booster</h4>
-                                <p className="text-[10px] font-bold text-sky-600/70 mt-1">Increase coin value 3X now!</p>
+                                <h4 className="text-[14px] font-black text-sky-900 tracking-tight leading-none">{boosters.task.title}</h4>
+                                <p className="text-[10px] font-bold text-sky-600/70 mt-1">{boosters.task.subtitle}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -297,16 +467,12 @@ const Home = () => {
                     {isTaskExpanded && (
                         <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-300">
                             <div className="bg-white/50 rounded-2xl p-3 border border-sky-50 space-y-2.5">
-                                {[
-                                    { icon: Zap, text: '3X Coin Multiplier' },
-                                    { icon: ClipboardList, text: 'Instant Task Approval' },
-                                    { icon: Rocket, text: 'Withdrawal Priority' }
-                                ].map((benefit, i) => (
+                                {boosters.task.benefits.map((text, i) => (
                                     <div key={i} className="flex items-center gap-2">
                                         <div className="w-5 h-5 bg-sky-100 rounded-full flex items-center justify-center">
-                                            <benefit.icon size={10} className="text-sky-600" />
+                                            <CheckCircle2 size={10} className="text-sky-600" />
                                         </div>
-                                        <span className="text-[11px] font-bold text-sky-900/80">{benefit.text}</span>
+                                        <span className="text-[11px] font-bold text-sky-900/80">{text}</span>
                                     </div>
                                 ))}
                             </div>
@@ -317,48 +483,39 @@ const Home = () => {
                     )}
                 </div>
 
-                {/* --- Future Fund Section was here, moved up --- */}
-
-
-                {/* --- Future Fund Section was here, moved up --- */}
-
-
-
                 {/* --- Lifetime Service Info --- */}
-                <div className="w-full bg-gradient-to-br from-slate-900 via-slate-800 to-sky-900 rounded-2xl p-6 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                {lifetimePromo && (
+                    <div className="w-full bg-gradient-to-br from-slate-900 via-slate-800 to-sky-900 rounded-2xl p-6 shadow-2xl relative overflow-hidden group mb-4">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 
-                    <div className="relative z-10 flex flex-col gap-5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
-                                <Rocket size={20} className="text-sky-400" />
-                            </div>
-                            <h3 className="text-lg font-black text-white tracking-tight uppercase">Lifetime Access</h3>
-                        </div>
-
-                        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
-                            <p className="text-[13px] font-black text-sky-400 italic leading-none">👉 “₹499 buy course '' One Time</p>
-                            <p className="text-[11px] font-bold text-white/70 mt-2 leading-tight">उसके बाद लाइफ टाइम सर्विस अनलॉक रहेगी ।</p>
-                        </div>
-
-                        <div className="space-y-3 pl-1">
-                            <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">इसके बाद यूज़र:</p>
-                            {[
-                                "सभी earning features use कर सकता है",
-                                "tasks complete कर सकता है",
-                                "events में भाग ले सकता है"
-                            ].map((text, i) => (
-                                <div key={i} className="flex items-center gap-3 group/item">
-                                    <div className="w-5 h-5 bg-sky-500/20 rounded-full flex items-center justify-center border border-sky-500/30">
-                                        <CheckCircle2 size={10} className="text-sky-400" />
-                                    </div>
-                                    <span className="text-[12px] font-black text-white/90 tracking-tight leading-none">{text}</span>
+                        <div className="relative z-10 flex flex-col gap-5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
+                                    <Rocket size={20} className="text-sky-400" />
                                 </div>
-                            ))}
+                                <h3 className="text-lg font-black text-white tracking-tight uppercase">{lifetimePromo.title}</h3>
+                            </div>
+
+                            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
+                                <p className="text-[13px] font-black text-sky-400 italic leading-none">{lifetimePromo.priceTag}</p>
+                                <p className="text-[11px] font-bold text-white/70 mt-2 leading-tight">{lifetimePromo.note}</p>
+                            </div>
+
+                            <div className="space-y-3 pl-1">
+                                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">इसके बाद यूज़र:</p>
+                                {lifetimePromo.features.map((text, i) => (
+                                    <div key={i} className="flex items-center gap-3 group/item">
+                                        <div className="w-5 h-5 bg-sky-500/20 rounded-full flex items-center justify-center border border-sky-500/30">
+                                            <CheckCircle2 size={10} className="text-sky-400" />
+                                        </div>
+                                        <span className="text-[12px] font-black text-white/90 tracking-tight leading-none">{text}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* --- Integrated Professional Footer (Connected to Navbar) --- */}
@@ -392,13 +549,27 @@ const Home = () => {
                 <div className="grid grid-cols-2 gap-y-4 gap-x-8 pt-6 border-t border-slate-50 mb-6">
                     <div className="flex flex-col gap-2.5">
                         <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-1 opacity-40">Policies</p>
-                        <button onClick={() => navigate('/user/info/privacy')} className="text-[10px] font-black text-slate-400 hover:text-sky-500 text-left transition-colors uppercase tracking-tight leading-none italic">Privacy Policy</button>
-                        <button onClick={() => navigate('/user/info/refund')} className="text-[10px] font-black text-slate-400 hover:text-sky-500 text-left transition-colors uppercase tracking-tight leading-none italic">Refund Policy</button>
+                        {footerPolicies.slice(0, 2).map((p, idx) => (
+                            <button 
+                                key={idx}
+                                onClick={() => navigate(`/user/info/${p.path}`)} 
+                                className="text-[10px] font-black text-slate-400 hover:text-sky-500 text-left transition-colors uppercase tracking-tight leading-none italic"
+                            >
+                                {p.label}
+                            </button>
+                        ))}
                     </div>
                     <div className="flex flex-col gap-2.5">
                         <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-1 opacity-40">Company</p>
-                        <button onClick={() => navigate('/user/info/terms')} className="text-[10px] font-black text-slate-400 hover:text-sky-500 text-left transition-colors uppercase tracking-tight leading-none italic">Terms & Conditions</button>
-                        <button onClick={() => navigate('/user/info/guidelines')} className="text-[10px] font-black text-slate-400 hover:text-sky-500 text-left transition-colors uppercase tracking-tight leading-none italic">Guidelines</button>
+                        {footerPolicies.slice(2).map((p, idx) => (
+                            <button 
+                                key={idx}
+                                onClick={() => navigate(`/user/info/${p.path}`)} 
+                                className="text-[10px] font-black text-slate-400 hover:text-sky-500 text-left transition-colors uppercase tracking-tight leading-none italic"
+                            >
+                                {p.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
@@ -412,9 +583,10 @@ const Home = () => {
                 onClose={() => setPaymentConfig({ ...paymentConfig, isOpen: false })}
                 plan={paymentConfig.plan}
                 amount={paymentConfig.amount}
-                onSuccess={() => {
+                onSuccess={async () => {
                     setPaymentConfig({ ...paymentConfig, isOpen: false });
-                    addNotification("Success!", `${paymentConfig.plan} activated.`, "success");
+                    await refreshUserProfile();
+                    addNotification("Unlocked!", "Platform access granted. Welcome!", "success");
                 }}
             />
         </div>

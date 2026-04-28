@@ -1,106 +1,201 @@
-import React, { useState } from 'react';
-import {
-    Monitor, ShieldCheck, Save, Edit3,
-    Zap, Star, Grid, Layout,
-    Shield, RefreshCcw, BookOpen,
-    CheckCircle2, Navigation, List,
-    Plus, Trash2, Layers, AlignLeft,
-    ExternalLink, FileText
+import React, { useState, useEffect } from 'react';
+import { 
+    Save, Plus, Trash2, Layout, FileText, 
+    Shield, ShieldCheck, BookOpen, AlertCircle
 } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
+import api from '../../shared/services/api';
+import { useAdmin } from '../context/AdminContext';
 
 const LayoutManager = () => {
+    const { addNotification } = useAdmin();
     const [activeTab, setActiveTab] = useState('navbar');
 
     // ── Navbar Content (Sections & Steps) ──
     const [navbarSections, setNavbarSections] = useState([
         {
-            id: 1, label: 'Referral System', headline: 'EARN ₹200 REWARD',
+            id: 1, label: 'Referral System', headline: 'EARN ₹200 REWARD', dbKey: 'menu_layout_refer',
             steps: [
                 { title: 'SHARE YOUR LINK', desc: 'अपना referral link दोस्तों के साथ share करें।' },
                 { title: 'EARN ₹200 INSTANT', desc: 'हर सफल registration पर आपको ₹200 का instant reward मिलेगा।' },
-                { title: 'DIRECT WALLET CREDIT', desc: 'आपका reward amount सीधे आपके wallet में add कर दिया जायेगा।' }
+                { title: 'DIRECT WALLET CREDIT', desc: 'आपका reward amount सीधे आपके wallet में add kar diya jayega।' }
             ]
         },
         {
-            id: 2, label: 'Daily Tasks', headline: 'COLLECT REWARD COINS',
+            id: 2, label: 'Daily Tasks', headline: 'COLLECT REWARD COINS', dbKey: 'menu_layout_tasks',
             steps: [
                 { title: 'COMPLETE TASKS', desc: 'रोजाना simple tasks को पूरा करें और reward coins earn करें।' },
-                { title: 'REDEEM FOR CASH', desc: 'इन coins को आप बाद में real cash में convert कर सकते हैं।' }
+                { title: 'REDEEM FOR CASH', desc: 'इन coins को आप बाद में real cash में convert kar sakte hain।' }
             ]
         },
         {
-            id: 3, label: 'Future Fund', headline: 'PASSIVE INCOME SECURITY',
+            id: 3, label: 'Future Fund', headline: 'PASSIVE INCOME SECURITY', dbKey: 'menu_layout_fund',
             steps: [
                 { title: 'PLATFORM STAKE', desc: 'एक बार eligible होने पर, आपको platform के profits में हिस्सा मिलेगा।' },
-                { title: 'MONTHLY PAYOUTS', desc: 'Profit share हर महीने आपके wallet में auto-credit होगा।' }
+                { title: 'MONTHLY PAYOUTS', desc: 'Profit share har mahine aapke wallet mein auto-credit hoga.' }
             ]
         },
         {
-            id: 4, label: 'Events & Contests', headline: 'WIN BIG PRIZES',
+            id: 4, label: 'Events & Contests', headline: 'WIN BIG PRIZES', dbKey: 'menu_layout_events',
             steps: [
-                { title: 'WEEKLY CONTESTS', desc: 'हर हफ्ते नए Exciting Events live होते हैं, जो limited time के लिए होते हैं।' },
-                { title: 'MEGA JACKPOTS', desc: 'Contests में भाग लेकर आप ₹500 तक का instant cash और exciting prizes जीत सकते हैं।' },
-                { title: 'LEADERBOARD REWARDS', desc: 'Top earners को special bonuses और verification badges दिए जाते हैं।' }
+                { title: 'WEEKLY CONTESTS', desc: 'Har hafte naye Exciting Events live hote hain, jo limited time ke liye hote hain.' },
+                { title: 'MEGA JACKPOTS', desc: 'Contests mein bhag lekar aap ₹500 tak ka instant cash aur exciting prizes jeet sakte hain।' },
+                { title: 'LEADERBOARD REWARDS', desc: 'Top earners ko special bonuses aur verification badges diye jaate hain।' }
             ]
         },
     ]);
 
-    // ── Footer Management (Paths + Policy CMS Merged) ──
     const [footerPolicies, setFooterPolicies] = useState([
         {
-            id: 1, label: 'Privacy Policy', path: '/user/info/privacy',
-            content: "Dummy privacy policy text data for dynamic rendering in future...",
-            icon: Shield, color: 'text-sky-500'
+            id: 1, label: 'Privacy Policy', path: '/user/info/privacy', dbKey: 'menu_privacy',
+            content: "", icon: Shield, color: 'text-sky-500'
         },
         {
-            id: 2, label: 'Refund Policy', path: '/user/info/refund',
-            content: "Dummy refund policy text data for dynamic rendering in future...",
-            icon: RefreshCcw, color: 'text-indigo-500'
+            id: 3, label: 'Terms & Conditions', path: '/user/info/terms', dbKey: 'menu_terms',
+            content: "", icon: ShieldCheck, color: 'text-amber-500'
         },
         {
-            id: 3, label: 'Terms & Conditions', path: '/user/info/terms',
-            content: "Dummy terms & conditions text data for dynamic rendering in future...",
-            icon: ShieldCheck, color: 'text-amber-500'
-        },
-        {
-            id: 4, label: 'User Guidelines', path: '/user/info/guidelines',
-            content: "Dummy platform guidelines text data for dynamic rendering in future...",
-            icon: BookOpen, color: 'text-emerald-500'
+            id: 4, label: 'User Guidelines', path: '/user/info/guidelines', dbKey: 'menu_guidelines',
+            content: "", icon: BookOpen, color: 'text-emerald-500'
         },
     ]);
 
-    // ── Handlers ──
-    const addStep = (sIdx) => {
-        const newSections = [...navbarSections];
-        newSections[sIdx].steps.push({ title: 'NEW STEP', desc: 'Add instruction...' });
-        setNavbarSections(newSections);
+    const fetchNavbarSections = async () => {
+        const keys = navbarSections.map(s => s.dbKey).join(',');
+        try {
+            const res = await api.get(`/public/content/bulk?keys=${keys}`);
+            if (res.success && res.data) {
+                const data = res.data;
+                const updated = navbarSections.map(s => {
+                    const item = data[s.dbKey];
+                    if (item && item.data) {
+                        return {
+                            ...s,
+                            label: item.title || s.label,
+                            headline: item.data.headline || s.headline,
+                            steps: item.data.steps || s.steps
+                        };
+                    }
+                    return s;
+                });
+                setNavbarSections(updated);
+            }
+        } catch (err) {
+            console.error('Error fetching navbar sections bulk:', err);
+        }
     };
 
-    const deleteStep = (sIdx, stepIdx) => {
-        const newSections = [...navbarSections];
-        newSections[sIdx].steps.splice(stepIdx, 1);
-        setNavbarSections(newSections);
+    const handleUpdateSection = async (section) => {
+        try {
+            const payload = {
+                key: section.dbKey,
+                title: section.label,
+                description: section.headline,
+                data: {
+                    headline: section.headline,
+                    steps: section.steps
+                }
+            };
+            const res = await api.post('/admin/content', payload);
+            if (res.success) {
+                addNotification("Success", `${section.label} updated successfully!`, "success");
+            }
+        } catch (err) {
+            console.error('Error updating section:', err);
+            addNotification("Error", "Failed to update section.", "error");
+        }
+    };
+
+    const fetchFooterPolicies = async () => {
+        const nf = [...footerPolicies];
+        const keys = nf.map(p => p.dbKey).join(',');
+        try {
+            const res = await api.get(`/public/content/bulk?keys=${keys}`);
+            if (res.success && res.data) {
+                const data = res.data;
+                nf.forEach(policy => {
+                    const item = data[policy.dbKey];
+                    if (item && item.data) {
+                        const fullText = item.data.sections ? item.data.sections.map(s => `${s.title}: ${s.text}`).join('\n\n') : item.data.content || "";
+                        policy.content = fullText;
+                        policy.label = item.data.title || policy.label;
+                    }
+                });
+                setFooterPolicies(nf);
+            }
+        } catch (err) {
+            console.error(`Error fetching footer policies bulk:`, err);
+        }
+    };
+
+    const handleUpdatePolicy = async (policy) => {
+        try {
+            const draftSections = policy.content.split('\n\n').map(p => {
+                const parts = p.split(': ');
+                return {
+                    title: parts[0] || 'Detail',
+                    text: parts[1] || p
+                };
+            });
+
+            const payload = {
+                key: policy.dbKey,
+                title: policy.label,
+                data: {
+                    title: policy.label,
+                    subtitle: 'Legal Policy',
+                    sections: draftSections
+                }
+            };
+            const res = await api.post('/admin/content', payload);
+            if (res.success) {
+                addNotification("Success", `${policy.label} updated successfully!`, "success");
+            }
+        } catch (err) {
+            console.error(err);
+            addNotification("Error", "Failed to update policy.", "error");
+        }
+    };
+
+    useEffect(() => {
+        fetchNavbarSections();
+        fetchFooterPolicies();
+    }, []);
+
+    const addStep = (sectionIdx) => {
+        const ns = [...navbarSections];
+        ns[sectionIdx].steps.push({ title: 'New Step', desc: 'Step instructions...' });
+        setNavbarSections(ns);
+    };
+
+    const deleteStep = (sectionIdx, stepIdx) => {
+        const ns = [...navbarSections];
+        ns[sectionIdx].steps.splice(stepIdx, 1);
+        setNavbarSections(ns);
     };
 
     return (
-        <div className="p-6 animate-in fade-in duration-700 bg-slate-50/50 min-h-screen">
-            <PageHeader title="Layout & Content CM" subtitle="Manage app sections, footer paths, and legal page content" />
+        <div className="p-4 lg:p-8 max-w-7xl mx-auto min-h-screen bg-slate-50/50">
+            {/* Header Area */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-12">
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight uppercase italic">Layout Manager</h1>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <Layout size={14} className="text-sky-500" /> System UI & Navigation CMS
+                    </p>
+                </div>
 
-            {/* Simplified Tab Navigation */}
-            <div className="flex gap-2 mb-10 mt-6 bg-white p-2 rounded-[28px] border border-slate-100 shadow-sm w-fit mx-auto md:mx-0">
-                <button
-                    onClick={() => setActiveTab('navbar')}
-                    className={`flex items-center gap-3 px-8 py-3.5 rounded-[22px] font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'navbar' ? 'bg-[#0F172A] text-white shadow-xl shadow-slate-200' : 'text-slate-400 hover:bg-slate-50'}`}
-                >
-                    <Layers size={14} /> Section Content
-                </button>
-                <button
-                    onClick={() => setActiveTab('footer')}
-                    className={`flex items-center gap-3 px-8 py-3.5 rounded-[22px] font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'footer' ? 'bg-[#0F172A] text-white shadow-xl shadow-slate-200' : 'text-slate-400 hover:bg-slate-50'}`}
-                >
-                    <Navigation size={14} /> Footer & Policies
-                </button>
+                <div className="bg-white p-1.5 rounded-[22px] border border-slate-100 shadow-sm flex gap-1">
+                    <button 
+                        onClick={() => setActiveTab('navbar')}
+                        className={`px-8 py-3.5 rounded-[18px] text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'navbar' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+                        Section Content
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('footer')}
+                        className={`px-8 py-3.5 rounded-[18px] text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'footer' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+                        Footer & Policies
+                    </button>
+                </div>
             </div>
 
             {/* TAB: SECTION CONTENT (NAVBAR) */}
@@ -120,7 +215,10 @@ const LayoutManager = () => {
                                         }} className="text-[12px] font-black text-sky-600 uppercase tracking-[0.2em] bg-transparent border-none p-0 outline-none w-full" />
                                     </div>
                                 </div>
-                                <button className="flex items-center gap-2 bg-[#0F172A] text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-black transition-all">
+                                <button 
+                                    onClick={() => handleUpdateSection(section)}
+                                    className="flex items-center gap-2 bg-[#0F172A] text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-black transition-all"
+                                >
                                     <Save size={16} /> Update Section
                                 </button>
                             </div>
@@ -164,7 +262,6 @@ const LayoutManager = () => {
                         {footerPolicies.map((item, idx) => (
                             <div key={item.id} className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden p-8 group">
                                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
-                                    {/* Left: Metadata & Link */}
                                     <div className="flex-1 space-y-6">
                                         <div className="flex items-center gap-4">
                                             <div className={`p-4 rounded-2xl bg-slate-50 ${item.color}`}><item.icon size={28} /></div>
@@ -181,12 +278,14 @@ const LayoutManager = () => {
                                                 }} className="w-full bg-white border border-slate-100 rounded-xl px-5 py-4 text-[13px] font-black text-slate-800 outline-none shadow-sm focus:ring-2 focus:ring-sky-500" />
                                             </div>
                                         </div>
-                                        <button className="hidden lg:flex items-center gap-3 bg-[#0F172A] text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-sky-600 transition-all w-full justify-center">
+                                        <button 
+                                            onClick={() => handleUpdatePolicy(item)}
+                                            className="lg:flex items-center gap-3 bg-[#0F172A] text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-sky-600 transition-all w-full justify-center"
+                                        >
                                             <Save size={16} /> Update {item.label} Data
                                         </button>
                                     </div>
 
-                                    {/* Right: Content Editor (The specific content that appears on click) */}
                                     <div className="flex-[1.5] space-y-3">
                                         <div className="flex items-center justify-between px-2">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><FileText size={14} /> Page Content Editor</label>
@@ -200,9 +299,6 @@ const LayoutManager = () => {
                                             className="w-full bg-slate-50 border border-slate-100 rounded-[32px] p-8 text-[13px] font-bold text-slate-700 h-[220px] outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all resize-none shadow-inner"
                                             placeholder={`Write full text for ${item.label}...`}
                                         />
-                                        <button className="lg:hidden flex items-center gap-3 bg-[#0F172A] text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-sky-600 transition-all w-full justify-center">
-                                            <Save size={16} /> Update {item.label}
-                                        </button>
                                     </div>
                                 </div>
                             </div>

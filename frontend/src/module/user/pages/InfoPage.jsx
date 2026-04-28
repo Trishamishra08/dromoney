@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Info, HelpCircle, Sparkles, Headset, Building2, CheckCircle2, Shield, IndianRupee, Rocket } from 'lucide-react';
-import { contentStorage } from '../../shared/services/contentStorage';
+import api from '../../shared/services/api';
 
 const InfoPage = () => {
     const { type } = useParams();
     const navigate = useNavigate();
     const [pageData, setPageData] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     // Keep UI styles mapped statically so the pages always look premium
     const STYLE_MAP = {
@@ -23,18 +24,45 @@ const InfoPage = () => {
 
     useEffect(() => {
         window.scrollTo(0, 0);
-        const pages = contentStorage.getPages();
-        if (pages[type]) {
-            setPageData(pages[type]);
-        } else {
-            // Fallback for paths that are not defined
-            setPageData({
-                title: 'Information',
-                subtitle: 'Page Details',
-                sections: [{ title: 'Info', text: 'This section is currently being updated.' }]
-            });
-        }
+        const fetchPageData = async () => {
+            setLoading(true);
+            try {
+                const dbKey = `menu_${type.replace(/-/g, '_')}`;
+                const res = await api.get(`/public/content/${dbKey}`);
+                if (res.success && res.data && res.data.data) {
+                    const d = res.data.data;
+                    setPageData({
+                        title: d.title || res.data.title,
+                        subtitle: d.subtitle || res.data.description,
+                        sections: Array.isArray(d) ? d : (d.sections || [])
+                    });
+                } else {
+                    setPageData({
+                        title: 'Information',
+                        subtitle: 'Page Details',
+                        sections: [{ title: 'Info', text: 'This section is currently being updated.' }]
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                setPageData({
+                    title: 'Error',
+                    subtitle: 'Connection Failed',
+                    sections: [{ title: 'Problem', text: 'Failed to synchronize with server.' }]
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPageData();
     }, [type]);
+
+    if (loading) {
+        return <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
+            <div className="w-10 h-10 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin"></div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Optimizing View...</p>
+        </div>;
+    }
 
     if (!pageData) return null;
 

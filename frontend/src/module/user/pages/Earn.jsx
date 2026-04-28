@@ -22,6 +22,9 @@ const ICON_MAP = {
     MessageSquare: { el: MessageSquare, bg: 'bg-cyan-100', color: 'text-cyan-500' },
     Link: { el: Link2, bg: 'bg-indigo-100', color: 'text-indigo-500' },
     Camera: { el: Camera, bg: 'bg-pink-100', color: 'text-pink-500' },
+    Zap: { el: Zap, bg: 'bg-purple-100', color: 'text-purple-500' },
+    Rocket: { el: Rocket, bg: 'bg-rose-100', color: 'text-rose-500' },
+    TrendingUp: { el: TrendingUp, bg: 'bg-emerald-100', color: 'text-emerald-500' },
 };
 
 const Earn = () => {
@@ -54,7 +57,30 @@ const Earn = () => {
             // Do not open if already completed
             return;
         }
-        navigate(`/user/task/${task.id}`);
+        
+        // SWITCH ROUTE BASED ON TYPE
+        switch (task.type) {
+            case 'Quiz':
+                navigate(`/user/task-quiz/${task.id}`);
+                break;
+            case 'Spin':
+                navigate(`/user/lucky-draw/${task.id}`);
+                break;
+            case 'Memory':
+                navigate(`/user/memory-master/${task.id}`);
+                break;
+            case 'Treasure':
+                navigate(`/user/treasure-chest/${task.id}`);
+                break;
+            case 'Scratch':
+                navigate(`/user/scratch-card/${task.id}`);
+                break;
+            case 'Tapper':
+                navigate(`/user/speed-tapper/${task.id}`);
+                break;
+            default:
+                navigate(`/user/task/${task.id}`);
+        }
     };
 
     return (

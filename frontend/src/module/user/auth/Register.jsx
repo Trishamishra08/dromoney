@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Loader2, User, Mail, Gift, Phone, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { useUser } from '../context/UserContext';
 
 const Register = () => {
     const navigate = useNavigate();
+    const { register } = useUser();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({ name: '', email: '', referral: '', phone: '' });
     const [otpSent, setOtpSent] = useState(false);
@@ -18,13 +20,22 @@ const Register = () => {
         }, 1500);
     };
 
-    const handleVerifyOTP = (e) => {
+    const handleVerifyOTP = async (e) => {
         e.preventDefault();
         if (otp.length < 4) return;
+        
         setLoading(true);
-        setTimeout(() => {
-            navigate('/user/auth/kyc');
-        }, 1500);
+        const success = await register({
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            referralCode: formData.referral
+        });
+        setLoading(false);
+
+        if (success.success) {
+            navigate('/user/home');
+        }
     };
 
     return (
@@ -114,19 +125,19 @@ const Register = () => {
                                 <div className="absolute inset-0 bg-sky-500/10 rounded-full animate-ping opacity-20"></div>
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-white">Double-Check!</h3>
-                                <p className="text-[11px] text-slate-500 font-bold mt-1 uppercase tracking-widest">Entering OTP sent to +91 {formData.phone}</p>
+                                <h3 className="text-xl font-black text-white">Verification</h3>
+                                <p className="text-[11px] text-slate-500 font-bold mt-1 uppercase tracking-widest">Simulated OTP for +91 {formData.phone}</p>
                             </div>
 
                             <input
                                 type="text"
-                                placeholder="• • • •"
+                                placeholder="Any 4 Digits"
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
                                 className="w-full bg-slate-950/50 text-white font-black tracking-[0.8em] text-center px-5 py-5 rounded-2xl border border-sky-500/30 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all placeholder:text-slate-800 text-2xl shadow-[0_0_20px_rgba(14,165,233,0.05)]"
                                 required
                             />
-                            <button type="button" onClick={() => setOtpSent(false)} className="text-[10px] font-black text-slate-400 uppercase hover:text-sky-500 transition-colors tracking-widest">Wrong Number?</button>
+                            <button type="button" onClick={() => setOtpSent(false)} className="text-[10px] font-black text-slate-400 uppercase hover:text-sky-500 transition-colors tracking-widest">Change Information?</button>
                         </div>
                     )}
 
@@ -137,7 +148,7 @@ const Register = () => {
                     >
                         {loading ? <Loader2 size={20} className="animate-spin" /> : (
                             <>
-                                {otpSent ? 'Create My Account' : 'Verify My Identity'}
+                                {otpSent ? 'Create My Account' : 'Confirm & Continue'}
                                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                             </>
                         )}

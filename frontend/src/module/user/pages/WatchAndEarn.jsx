@@ -2,18 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Clock, Coins, ChevronRight, MonitorPlay, Sparkles, TrendingUp, CheckCircle2 } from 'lucide-react';
 
-import { adStorage } from '../../shared/services/adStorage';
+import api from '../../shared/services/api';
+import { Loader2 } from 'lucide-react';
+import { useUser } from '../context/UserContext';
 
 const WatchAndEarn = () => {
     const navigate = useNavigate();
+    const { userData } = useUser();
     const [viewAds, setViewAds] = useState([]);
-    const [watchedAds, setWatchedAds] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [watchedCount, setWatchedCount] = useState(0);
 
     useEffect(() => {
-        const saved = JSON.parse(localStorage.getItem('dromoney_watched_ads') || '[]');
-        setWatchedAds(saved);
-        setViewAds(adStorage.getAds());
+        fetchAds();
     }, []);
+
+    const fetchAds = async () => {
+        try {
+            const res = await api.get('/public/ads');
+            if (res.success) {
+                setViewAds(res.data);
+                setWatchedCount(res.data.filter(a => a.isWatched).length);
+            }
+        } catch (err) {
+            console.error('Error fetching ads:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
+                <p className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em] animate-pulse">Initializing Campaigns...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="pb-24 animate-in fade-in duration-500">
@@ -33,8 +58,14 @@ const WatchAndEarn = () => {
                             Watch simple ads to get daily extra coins!
                         </p>
                     </div>
-                    <div className="w-14 h-14 bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl flex items-center justify-center shadow-inner">
-                        <MonitorPlay size={32} className="text-white drop-shadow-lg" />
+                     <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-inner">
+                            <Coins size={14} className="text-yellow-300 fill-yellow-300" />
+                            <span className="text-[12px] font-black text-white">{userData.coins.total}</span>
+                        </div>
+                        <div className="w-14 h-14 bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl flex items-center justify-center shadow-inner">
+                            <MonitorPlay size={32} className="text-white drop-shadow-lg" />
+                        </div>
                     </div>
                 </div>
 
@@ -45,7 +76,7 @@ const WatchAndEarn = () => {
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-indigo-200 uppercase tracking-tighter">Your Progress</p>
-                            <p className="text-sm font-black text-white">{watchedAds.length}/10 <span className="text-[10px] font-bold opacity-60 ml-1">Ads Watched</span></p>
+                            <p className="text-sm font-black text-white">{watchedCount}/{viewAds.length} <span className="text-[10px] font-bold opacity-60 ml-1">Ads Watched</span></p>
                         </div>
                     </div>
                     <div className="flex -space-x-2">
@@ -62,22 +93,25 @@ const WatchAndEarn = () => {
             <div className="px-4 space-y-4">
                 <div className="flex items-center justify-between px-2">
                     <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Available Ad Slots</h2>
-                    <span className="text-[10px] font-bold text-sky-500 bg-sky-50 px-2 py-0.5 rounded-full">Updates in 12h</span>
+                    <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <div className="w-1 h-1 bg-emerald-500 rounded-full animate-ping"></div>
+                        {viewAds.filter(a => !a.isWatched).length} Ads Live Now
+                    </span>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4">
                     {viewAds.map((ad) => {
-                        const isWatched = watchedAds.includes(ad.id);
+                        const isWatched = ad.isWatched;
                         return (
                             <button 
-                                key={ad.id}
+                                key={ad._id}
                                 disabled={isWatched}
-                                onClick={() => navigate(`/user/ad-player/${ad.id}`)}
+                                onClick={() => navigate(`/user/ad-player/${ad._id}`)}
                                 className={`w-full text-left bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex transition-all active:scale-[0.97] group ${isWatched ? 'opacity-70 grayscale-[0.5]' : 'hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5'}`}
                             >
                                 {/* Thumbnail Section */}
                                 <div className="w-28 h-28 relative shrink-0">
-                                    <img src={ad.thumbnail} alt={ad.title} className="w-full h-full object-cover" />
+                                    <img src={ad.thumbnailUrl} alt={ad.title} className="w-full h-full object-cover" />
                                     <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/60 to-transparent"></div>
                                     <div className="absolute bottom-1.5 left-2 flex items-center gap-1 text-white">
                                         <PlayCircle size={10} className="fill-white" />
@@ -107,7 +141,7 @@ const WatchAndEarn = () => {
                                         <div className="flex items-center gap-3">
                                             <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">
                                                 <Coins size={12} className="text-amber-500 fill-amber-500" />
-                                                <span className="text-[11px] font-black text-amber-600">+{ad.coins}</span>
+                                                <span className="text-[11px] font-black text-amber-600">+{ad.coinsReward}</span>
                                             </div>
                                             <div className="flex items-center gap-1 text-slate-400">
                                                 <Clock size={10} />

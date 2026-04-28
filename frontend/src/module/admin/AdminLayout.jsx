@@ -22,8 +22,52 @@ const navItems = [
     { path: '/admin/watch-and-earn', label: 'Watch & Earn', icon: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="15" x="2" y="3" rx="2" /><path d="m10 8 5 3-5 3V8z" /></svg> },
 ];
 
+const Toast = ({ notification, onRemove }) => {
+    return (
+        <div className="w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in slide-in-from-right-10 duration-500 relative group">
+            <div className="p-4 flex gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    notification.type === 'success' ? 'bg-emerald-50 text-emerald-500' : 
+                    notification.type === 'error' ? 'bg-rose-50 text-rose-500' : 'bg-sky-50 text-sky-500'
+                }`}>
+                    {notification.type === 'success' ? (
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5" /></svg>
+                    ) : notification.type === 'error' ? (
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><line x1="15" x2="9" y1="9" y2="15" /><line x1="9" x2="15" y1="9" y2="15" /></svg>
+                    ) : (
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="16" y2="12" /><line x1="12" x2="12.01" y1="8" y2="8" /></svg>
+                    )}
+                </div>
+                <div className="flex-1">
+                    <h4 className="text-[13px] font-black text-slate-800 uppercase tracking-tight">{notification.title}</h4>
+                    <p className="text-[11px] font-bold text-slate-400 mt-0.5 leading-tight">{notification.message}</p>
+                </div>
+                <button onClick={() => onRemove(notification.id)} className="text-slate-300 hover:text-slate-500 transition-colors">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                </button>
+            </div>
+            {/* Progress Bar */}
+            <div className="h-1 w-full bg-slate-50 absolute bottom-0 left-0">
+                <div 
+                    className={`h-full transition-all linear duration-[5000ms] ${
+                        notification.type === 'success' ? 'bg-emerald-500' : 
+                        notification.type === 'error' ? 'bg-rose-500' : 'bg-sky-500'
+                    }`}
+                    style={{ animation: 'deplete 5s linear forwards' }}
+                ></div>
+            </div>
+            <style>{`
+                @keyframes deplete {
+                    from { width: 100%; }
+                    to { width: 0%; }
+                }
+            `}</style>
+        </div>
+    );
+};
+
 const AdminLayout = () => {
-    const { adminLogout } = useAdmin();
+    const { adminLogout, notifications, removeNotification } = useAdmin();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -32,13 +76,6 @@ const AdminLayout = () => {
         adminLogout();
         navigate('/admin/login');
     };
-
-    const adminNotifications = [
-        { id: 1, title: 'Withdrawal Request', message: 'Rahul Sharma requested ₹1,200 payout', time: '5m ago', type: 'wallet' },
-        { id: 2, title: 'KYC Verification', message: 'New KYC document uploaded by Priya', time: '12m ago', type: 'security' },
-        { id: 3, title: 'Low Inventory', message: 'Only 5 referral vouchers remaining', time: '1h ago', type: 'alert' },
-        { id: 4, title: 'System Backup', message: 'Weekly database backup completed', time: '4h ago', type: 'info' }
-    ];
 
     return (
         <div className="fixed inset-0 flex bg-slate-50 font-sans overflow-hidden">
@@ -60,15 +97,19 @@ const AdminLayout = () => {
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                        {adminNotifications.map((notif) => (
+                        {notifications.length > 0 ? notifications.map((notif) => (
                             <div key={notif.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100/50 hover:bg-white hover:shadow-xl hover:shadow-slate-100/40 transition-all cursor-pointer group">
                                 <div className="flex justify-between items-start mb-2">
                                     <h4 className="text-[13px] font-black text-slate-800 group-hover:text-sky-600 transition-colors uppercase tracking-tight">{notif.title}</h4>
-                                    <span className="text-[9px] font-black text-slate-400 bg-white px-2 py-1 rounded-lg border border-slate-100 shrink-0 ml-3">{notif.time}</span>
+                                    <span className="text-[9px] font-black text-slate-400 bg-white px-2 py-1 rounded-lg border border-slate-100 shrink-0 ml-3">Just now</span>
                                 </div>
                                 <p className="text-[11px] font-bold text-slate-500 leading-relaxed">{notif.message}</p>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="text-center py-20">
+                                <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">No recent activity</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -139,6 +180,13 @@ const AdminLayout = () => {
                 >
                     <Outlet />
                 </main>
+            </div>
+
+            {/* ── Floating Toasts (Right Side) ── */}
+            <div className="fixed top-24 right-5 z-[150] flex flex-col gap-3">
+                {notifications.map(notif => (
+                    <Toast key={notif.id} notification={notif} onRemove={removeNotification} />
+                ))}
             </div>
         </div>
     );

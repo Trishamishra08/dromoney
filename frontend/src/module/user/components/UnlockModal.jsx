@@ -4,7 +4,7 @@ import { useUser } from '../context/UserContext';
 import PaymentModal from './PaymentModal';
 
 const UnlockModal = ({ isOpen, onClose }) => {
-    const { unlockPlatform } = useUser();
+    const { refreshUserProfile } = useUser();
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
     if (!isOpen) return null;
@@ -13,8 +13,8 @@ const UnlockModal = ({ isOpen, onClose }) => {
         setIsPaymentOpen(true);
     };
 
-    const handlePaymentSuccess = () => {
-        unlockPlatform();
+    const handlePaymentSuccess = async () => {
+        await refreshUserProfile();
         setIsPaymentOpen(false);
         onClose();
     };

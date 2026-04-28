@@ -3,12 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Play, Pause, RefreshCw, Coins, CheckCircle2, AlertTriangle, FastForward, ShieldCheck, MonitorPlay } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 
-import { adStorage } from '../../shared/services/adStorage';
+import api from '../../shared/services/api';
+import UniversalVideoPlayer from '../../shared/components/UniversalVideoPlayer';
 
 const AdPlayer = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { addCoins } = useUser();
+    const { addCoins, userData } = useUser();
     const [ad, setAd] = useState(null);
     const [timeLeft, setTimeLeft] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -17,18 +18,21 @@ const AdPlayer = () => {
     const videoRef = useRef(null);
 
     useEffect(() => {
-        const found = adStorage.getAdById(id);
-        if (found) {
-            setAd(found);
-            setTimeLeft(found.duration);
-            // Check if already watched today
-            const watched = JSON.parse(localStorage.getItem('dromoney_watched_ads') || '[]');
-            if (watched.includes(found.id)) {
-                setIsCompleted(true);
+        const fetchAd = async () => {
+            try {
+                const res = await api.get(`/public/ads/${id}`);
+                if (res.success) {
+                    setAd(res.data);
+                    setTimeLeft(res.data.duration);
+                    if (res.data.isWatched) {
+                        setIsCompleted(true);
+                    }
+                }
+            } catch (err) {
+                setError(err.response?.data?.message || "Ad not found");
             }
-        } else {
-            setError("Ad not found");
-        }
+        };
+        fetchAd();
     }, [id]);
 
     useEffect(() => {
@@ -44,30 +48,28 @@ const AdPlayer = () => {
     }, [isPlaying, timeLeft, isCompleted]);
 
     const handlePlayPause = () => {
-        if (!isPlaying) {
-            videoRef.current?.play().catch(e => {
-                // Autoplay might be blocked
-                console.log("Play blocked, user must interact");
-            });
-            setIsPlaying(true);
-        } else {
-            videoRef.current?.pause();
-            setIsPlaying(false);
-        }
+        setIsPlaying(!isPlaying);
     };
 
-    const handleComplete = () => {
+    const { refreshUserProfile } = useUser();
+    const [claiming, setClaiming] = useState(false);
+
+    const handleComplete = async () => {
+        if (claiming || isCompleted) return;
+        
         setIsPlaying(false);
-        setIsCompleted(true);
+        setClaiming(true);
         
-        // Save to reward system
-        addCoins(ad.coins, `Watch & Earn: ${ad.title}`);
-        
-        // Persist completion
-        const watched = JSON.parse(localStorage.getItem('dromoney_watched_ads') || '[]');
-        if (!watched.includes(ad.id)) {
-            watched.push(ad.id);
-            localStorage.setItem('dromoney_watched_ads', JSON.stringify(watched));
+        try {
+            const res = await api.post('/user/data/ads/reward', { adId: id });
+            if (res.success) {
+                setIsCompleted(true);
+                await refreshUserProfile();
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || "Failed to claim reward");
+        } finally {
+            setClaiming(false);
         }
     };
 
@@ -81,22 +83,25 @@ const AdPlayer = () => {
                 <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 active:scale-90 transition-all">
                     <ChevronLeft size={24} />
                 </button>
-                <div className="bg-amber-500/20 backdrop-blur-md border border-amber-500/30 px-3 py-1.5 rounded-full flex items-center gap-2">
-                    <Coins size={14} className="text-amber-400 fill-amber-400" />
-                    <span className="text-[11px] font-black text-white uppercase tracking-widest">Reward: {ad.coins} Coins</span>
+                <div className="flex items-center gap-2">
+                    <div className="bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-full flex items-center gap-2">
+                        <Coins size={14} className="text-yellow-400 fill-yellow-400" />
+                        <span className="text-[11px] font-black text-white">{userData.coins.total}</span>
+                    </div>
+                    <div className="bg-amber-500/20 backdrop-blur-md border border-amber-500/30 px-3 py-1.5 rounded-full flex items-center gap-2">
+                        <Coins size={14} className="text-amber-400 fill-amber-400" />
+                        <span className="text-[11px] font-black text-white uppercase tracking-widest">Reward: {ad.coinsReward} Coins</span>
+                    </div>
                 </div>
             </header>
 
             {/* Video Player Section */}
             <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-                <video 
-                    ref={videoRef}
-                    src={ad.videoUrl} 
+                <UniversalVideoPlayer 
+                    url={ad.videoUrl} 
                     className="w-full h-auto max-h-screen object-contain"
-                    playsInline
                     onEnded={handleComplete}
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
+                    autoPlay={false}
                 />
 
                 {/* Overlays */}
@@ -154,11 +159,7 @@ const AdPlayer = () => {
                             </div>
                             <div className="flex-1">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">Total Earnings</p>
-                                <p className="text-sm font-black text-slate-800">Earn <span className="text-indigo-600">+{ad.coins} coins</span> after {ad.duration}s</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-lg font-black text-indigo-600 tracking-tighter">₹{(ad.coins * 0.1).toFixed(1)}</p>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase">Est. Value</p>
+                                <p className="text-sm font-black text-slate-800">Earn <span className="text-indigo-600">+{ad.coinsReward} coins</span> after {ad.duration}s</p>
                             </div>
                         </div>
 
@@ -180,9 +181,9 @@ const AdPlayer = () => {
                         </div>
                         
                         <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between max-w-xs mx-auto">
-                            <div className="text-left">
+                            <div className="text-center w-full">
                                 <p className="text-[10px] font-black text-emerald-600 uppercase">Received</p>
-                                <p className="text-xl font-black text-emerald-800 tracking-tighter">+{ad.coins} <span className="text-sm">Coins</span></p>
+                                <p className="text-2xl font-black text-emerald-800 tracking-tighter">+{ad.coinsReward} <span className="text-sm">Coins</span></p>
                             </div>
                             <button onClick={() => navigate('/user/watch')} className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-200 transition-all active:scale-95">
                                 Next Ad

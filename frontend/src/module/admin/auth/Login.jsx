@@ -14,10 +14,20 @@ const AdminLogin = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
 
-    const handleSubmit = (e) => {
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = adminLogin(email, password);
-        if (success) navigate('/admin/dashboard');
+        setError('');
+        setLoading(true);
+        const result = await adminLogin(email, password);
+        setLoading(false);
+        if (result.success) {
+            navigate('/admin/dashboard');
+        } else {
+            setError(result.error);
+        }
     };
 
     const infoItems = [
@@ -66,10 +76,10 @@ const AdminLogin = () => {
                     </div>
 
                     {/* Error */}
-                    {loginError && (
+                    {error && (
                         <div className="mb-5 flex items-center gap-3 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600">
                             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>
-                            <p className="text-[13px] font-bold">{loginError}</p>
+                            <p className="text-[13px] font-bold">{error}</p>
                         </div>
                     )}
 
@@ -85,7 +95,7 @@ const AdminLogin = () => {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="dromoney@gmail.com"
+                                    placeholder="admin@dromoney.com"
                                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-[15px] font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all"
                                     required
                                 />
@@ -120,11 +130,18 @@ const AdminLogin = () => {
                             </div>
                         </div>
 
+                        <div className="bg-sky-50/50 p-4 rounded-2xl border border-sky-100 flex gap-3">
+                            <AlertCircle size={18} className="text-sky-500 shrink-0" />
+                            <p className="text-[11px] font-bold text-sky-700 leading-relaxed">
+                                Dev Hint: Use <span className="underline">dromoney@gmail.com</span> with password <span className="underline">dromoney</span> to access the panel.
+                            </p>
+                        </div>
+
                         <button
                             type="submit"
-                            className="w-full bg-slate-950 hover:bg-black text-white py-4 rounded-2xl text-[14px] font-black uppercase tracking-[0.15em] shadow-xl shadow-slate-200 transition-all active:scale-95 mt-4 group flex items-center justify-center gap-2"
+                            className="w-full bg-slate-950 hover:bg-black text-white py-4 rounded-2xl text-[14px] font-black uppercase tracking-[0.15em] shadow-xl shadow-slate-200 transition-all active:scale-95 group flex items-center justify-center gap-2"
                         >
-                            Submit Application <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                            Sign In to Dashboard <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
                         </button>
                     </form>
                 </div>

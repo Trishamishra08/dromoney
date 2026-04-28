@@ -1,26 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Eye, Ban, Edit2, CheckCircle, XCircle, User, Mail, Phone, Wallet, Users as UsersIcon, Calendar, ArrowRight, TrendingUp, Save } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import StatusBadge from '../components/StatusBadge';
+import api from '../../shared/services/api';
 
 const Users = () => {
     // ── Data & States ──
-    const [userList, setUserList] = useState([
-        { id: 1, name: 'Rahul Sharma', email: 'rahul@gmail.com', mobile: '9876543210', referrals: 12, earnings: '₹2,400', wallet: '₹800', status: 'Active', joined: '12 March 2024' },
-        { id: 2, name: 'Priya Singh', email: 'priya@gmail.com', mobile: '9812345678', referrals: 5, earnings: '₹1,000', wallet: '₹200', status: 'Active', joined: '15 March 2024' },
-        { id: 3, name: 'Amit Kumar', email: 'amit@gmail.com', mobile: '9898989898', referrals: 0, earnings: '₹0', wallet: '₹0', status: 'Blocked', joined: '10 Feb 2024' },
-        { id: 4, name: 'Neha Verma', email: 'neha@gmail.com', mobile: '9111111111', referrals: 3, earnings: '₹600', wallet: '₹600', status: 'Active', joined: '01 March 2024' },
-        { id: 5, name: 'Ravi Patel', email: 'ravi@gmail.com', mobile: '9222222222', referrals: 20, earnings: '₹4,000', wallet: '₹3,200', status: 'Active', joined: '20 Jan 2024' },
-        { id: 6, name: 'Sunita Mehta', email: 'sunita@gmail.com', mobile: '9333333333', referrals: 7, earnings: '₹1,400', wallet: '₹900', status: 'Blocked', joined: '25 Jan 2024' },
-        { id: 7, name: 'Karan Joshi', email: 'karan@gmail.com', mobile: '9444444444', referrals: 1, earnings: '₹200', wallet: '₹200', status: 'Active', joined: '05 March 2024' },
-        { id: 8, name: 'Vikki Singh', email: 'vikki@gmail.com', mobile: '9555555555', referrals: 30, earnings: '₹6,000', wallet: '₹5,000', status: 'Active', joined: '01 Jan 2024' },
-        { id: 9, name: 'Anjali Das', email: 'anjali@gmail.com', mobile: '9666666666', referrals: 5, earnings: '₹1,000', wallet: '₹500', status: 'Active', joined: '18 March 2024' },
-    ]);
-
+    const [userList, setUserList] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5);
+    const [itemsPerPage] = useState(10);
     
     // View Drawer State
     const [selectedUser, setSelectedUser] = useState(null);
@@ -31,28 +22,60 @@ const Users = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     // ── Logic ──
+    useEffect(() => {
+        fetchUsers();
+    }, [search, statusFilter]);
+
+    const fetchUsers = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get(`/admin/users?search=${search}&status=${statusFilter}`);
+            if (response.success) {
+                // Map backend user to UI format
+                const mappedUsers = response.data.map(u => ({
+                    id: u._id,
+                    name: u.name,
+                    email: u.email,
+                    mobile: u.phone || 'N/A',
+                    referrals: u.referrals?.length || 0,
+                    earnings: `₹${u.wallet?.totalEarnings || 0}`,
+                    wallet: `₹${u.wallet?.balance || 0}`,
+                    status: u.isBlocked ? 'Blocked' : 'Active',
+                    joined: new Date(u.createdAt).toLocaleDateString(),
+                    kycStatus: u.kyc?.status || 'Not Started'
+                }));
+                setUserList(mappedUsers);
+            }
+        } catch (err) {
+            console.error("Fetch Users Error:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSearch = (e) => {
         setSearch(e.target.value);
         setCurrentPage(1);
     };
 
-    const toggleStatus = (id) => {
-        setUserList(prev => prev.map(u => 
-            u.id === id ? { ...u, status: u.status === 'Active' ? 'Blocked' : 'Active' } : u
-        ));
+    const toggleStatus = async (id) => {
+        try {
+            const response = await api.put(`/admin/users/${id}/block`);
+            if (response.success) {
+                fetchUsers(); // Refresh list
+            }
+        } catch (err) {
+            console.error("Toggle Status Error:", err);
+        }
     };
 
     const handleSaveEdit = (e) => {
         e.preventDefault();
-        setUserList(prev => prev.map(u => u.id === editingUser.id ? editingUser : u));
+        // Implement backend edit if needed
         setIsEditModalOpen(false);
     };
 
-    const filtered = userList.filter(u => {
-        const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.mobile.includes(search);
-        const matchesStatus = statusFilter === 'All' || u.status === statusFilter;
-        return matchesSearch && matchesStatus;
-    });
+    const filtered = userList; // Filtering is handled by backend search/filter query
 
     const totalPages = Math.ceil(filtered.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;

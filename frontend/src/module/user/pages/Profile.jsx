@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import api from '../../shared/services/api';
 import { User, ShieldCheck, Rocket, Zap, MessageCircle, LogOut, ChevronRight, Copy, Share2, Plus, Sparkles, Headset, MessageSquare } from 'lucide-react';
 import UnlockModal from '../components/UnlockModal';
 import PaymentModal from '../components/PaymentModal';
@@ -11,22 +12,22 @@ import FeedbackModal from '../components/FeedbackModal';
 
 const Profile = () => {
     const navigate = useNavigate();
-    const { userData, addNotification, upgradeBooster, updateProfileImage } = useUser();
-    const { name, id, referrals, isBoosterActive, isPaid, profileImage } = userData;
+    const { userData, addNotification, upgradeBooster, updateProfileImage, logout } = useUser();
+    const { name, id, referrals, isBoosterActive, isPaid, profileImage, kycStatus } = userData;
+    const [isUploading, setIsUploading] = useState(false);
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [paymentConfig, setPaymentConfig] = useState({ isOpen: false, plan: '', amount: 0 });
     const [isKycOpen, setIsKycOpen] = useState(false);
     const [isReferralsOpen, setIsReferralsOpen] = useState(false);
-    const [isContactOpen, setIsContactOpen] = useState(false);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
-    const handleAction = (title, type = 'info') => {
+    const handleAction = (title) => {
         if (!isPaid) {
             setIsUnlockOpen(true);
             return;
         }
 
-        if (title === 'Contact Us' || title === 'Help & Support') {
+        if (title === 'Help & Support') {
             navigate('/user/help');
             return;
         }
@@ -36,7 +37,7 @@ const Profile = () => {
             return;
         }
 
-        if (title === 'Security & Kyc' || title === 'KYC Status') {
+        if (title === 'KYC Status') {
             setIsKycOpen(true);
             return;
         }
@@ -45,68 +46,60 @@ const Profile = () => {
             setIsReferralsOpen(true);
             return;
         }
-
-        if (title === 'Monthly Booster' || title === 'Subscription') {
-            setPaymentConfig({ 
-                isOpen: true, 
-                plan: 'Monthly Booster', 
-                amount: 49 
-            });
-            return;
-        }
-
-        addNotification("Feature Coming Soon!", `${title} integration is in progress.`, "info");
     };
 
-    const handlePaymentSuccess = () => {
-        upgradeBooster('monthly');
-        setPaymentConfig({ ...paymentConfig, isOpen: false });
-    };
-
-    const handleImageChange = (e) => {
+    const handleImageChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Optimistic UI update
             const reader = new FileReader();
-            reader.onloadend = () => {
-                updateProfileImage(reader.result);
-                addNotification("Success!", "Profile photo updated.", "success");
-            };
+            reader.onloadend = () => updateProfileImage(reader.result);
             reader.readAsDataURL(file);
-        }
-    };
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(referrals.link);
-        addNotification("Copied!", "Referral link copied to clipboard.", "success");
+            // Real backend update
+            setIsUploading(true);
+            try {
+                const uploadFormData = new FormData();
+                uploadFormData.append('photo', file);
+                const res = await api.patch('/user/data/photo', uploadFormData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                if (res.success) {
+                    updateProfileImage(res.data); // Update global state with Cloudinary URL
+                    addNotification("Success!", "Profile photo updated.", "success");
+                }
+            } catch (err) {
+                addNotification("Sync Error", "Photo failed to sync.", "warning");
+            } finally {
+                setIsUploading(false);
+            }
+        }
     };
 
     const sections = [
-        { id: 1, title: 'KYC Status', status: 'Verified', action: 'View' },
+        { id: 1, title: 'KYC Status', status: kycStatus || 'Not Started', action: 'View' },
         { id: 2, title: 'My Referrals', status: `${referrals.count} Total active`, action: 'View' },
-        { id: 4, title: 'Help & Support', status: '24/7 technical assistance', type: 'link' },
-        { id: 5, title: 'App Feedback', status: 'Tell us how to improve', type: 'link' },
+        { id: 4, title: 'Help & Support', status: '24/7 technical assistance' },
+        { id: 5, title: 'App Feedback', status: 'Tell us how to improve' },
     ];
 
     return (
         <div className="flex flex-col gap-6 p-5 bg-[#F8FAFC] animate-in fade-in duration-700">
             <UnlockModal isOpen={isUnlockOpen} onClose={() => setIsUnlockOpen(false)} />
-            <PaymentModal 
-                isOpen={paymentConfig.isOpen} 
-                onClose={() => setPaymentConfig({ ...paymentConfig, isOpen: false })}
-                plan={paymentConfig.plan}
-                amount={paymentConfig.amount}
-                onSuccess={handlePaymentSuccess}
-            />
             <KycModal isOpen={isKycOpen} onClose={() => setIsKycOpen(false)} />
             <ReferralsModal isOpen={isReferralsOpen} onClose={() => setIsReferralsOpen(false)} referralCount={referrals.count} />
-            <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
             <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
-            {/* --- Profile Header (Improved size and visibility) --- */}
             <div className="flex flex-col items-center mt-0 mb-2 text-center">
                 <label className="relative cursor-pointer group mb-3">
                     <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                     <div className="relative w-20 h-20 bg-white rounded-full flex items-center justify-center ring-4 ring-white shadow-xl shadow-slate-200/50 overflow-hidden transition-transform group-active:scale-95">
+                        {isUploading ? (
+                            <div className="absolute inset-0 bg-white/80 z-10 flex items-center justify-center">
+                                <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                        ) : null}
+                        
                         {profileImage ? (
                             <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
@@ -125,7 +118,6 @@ const Profile = () => {
                 </div>
             </div>
 
-            {/* --- Unified Settings List (UI Style: Image 2) --- */}
             <div className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden shadow-xl shadow-slate-200/50">
                 {sections.map((item, idx) => (
                     <button 
@@ -151,9 +143,11 @@ const Profile = () => {
                 ))}
             </div>
 
-            {/* --- Premium Logout Button --- */}
             <div className="mt-4 flex flex-col items-center pb-2">
-                <button className="bg-white border border-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white px-10 py-4 rounded-full flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] shadow-lg shadow-rose-100/50 transition-all active:scale-95 group">
+                <button 
+                    onClick={logout}
+                    className="bg-white border border-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white px-10 py-4 rounded-full flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] shadow-lg shadow-rose-100/50 transition-all active:scale-95 group"
+                >
                     <LogOut size={18} /> Logout Account
                 </button>
             </div>

@@ -64,7 +64,7 @@ const INCOME_OPTIONS = [
     },
     {
         id: 6,
-        title: 'Future Features',
+        title: 'Future and Option',
         subtitle: 'Upcoming earning opportunities',
         icon: Sparkles,
         bg: 'bg-slate-100',
@@ -75,182 +75,103 @@ const INCOME_OPTIONS = [
     },
 ];
 
+import api from '../../shared/services/api';
+
 const Income = () => {
     const navigate = useNavigate();
-    const { userData, unlockPlatform } = useUser();
-    const { isPaid } = userData;
+    const { userData, unlockPlatform, addNotification, loading: userLoading, refreshUserProfile } = useUser();
+    const { isPaid, kycStatus: userKycStatus } = userData;
 
     // --- State Management ---
-    const [kycStatus, setKycStatus] = useState(() => localStorage.getItem('hk_kyc_status') || null);
+    const [kycStatus, setKycStatus] = useState(userKycStatus || 'Not Started');
     const [aadhaarNum, setAadhaarNum] = useState('');
     const [kycPhoto, setKycPhoto] = useState(null);
+    const [rawFile, setRawFile] = useState(null);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [projectsData, setProjectsData] = useState({ title: 'Drowmoney Projects', description: '' });
+    const [projectsData, setProjectsData] = useState({ title: 'Dromoney Projects', description: 'Loading latest projects...' });
 
     useEffect(() => {
-        setProjectsData(contentStorage.getProjects());
-    }, []);
+        fetchProjects();
+        setKycStatus(userKycStatus);
+    }, [userKycStatus]);
+
+    const fetchProjects = async () => {
+        try {
+            const res = await api.get('/public/content/income_projects');
+            if (res.success) {
+                // Prioritize nested data if exists (for dynamic CMS compatibility)
+                if (res.data.data) {
+                    setProjectsData(res.data.data);
+                } else {
+                    setProjectsData(res.data);
+                }
+            }
+        } catch (err) {
+            console.error("Content fetch failed:", err);
+        }
+    };
 
     const handlePhotoChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            setRawFile(file);
             setKycPhoto(URL.createObjectURL(file));
         }
     };
 
-    const handleKycSubmit = () => {
-        if (!aadhaarNum || !kycPhoto) return;
+    const handleKycSubmit = async () => {
+        if (!aadhaarNum || !rawFile) return;
         setLoading(true);
-        setTimeout(() => {
+        try {
+            const formData = new FormData();
+            formData.append('documentNumber', aadhaarNum);
+            formData.append('document', rawFile);
+
+            const res = await api.patch('/user/data/kyc', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            if (res.success) {
+                setKycStatus('Pending');
+                addNotification("Submitted!", "KYC is now in review.", "success");
+            }
+        } catch (err) {
+            addNotification("Error", err, "error");
+        } finally {
             setLoading(false);
-            setKycStatus('pending');
-            localStorage.setItem('hk_kyc_status', 'pending');
-        }, 1500);
+        }
     };
 
-    // Helper for testing: Force approve KYC
-    const forceApproveKyc = () => {
-        setKycStatus('approved');
-        localStorage.setItem('hk_kyc_status', 'approved');
-    };
-
-    const handlePaymentSuccess = () => {
-        unlockPlatform();
+    const handlePaymentSuccess = async () => {
+        await refreshUserProfile();
         setIsPaymentOpen(false);
+        addNotification("Unlocked!", "Full platform access granted!", "success");
     };
 
     const handleCardClick = (route) => {
         if (route) navigate(route);
     };
 
-    // ── LAYER 1: KYC Input (Redesigned for Full Page Feel) ──────────────────────
-    if (kycStatus === null) {
-        return (
-            <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-700 pb-28">
-                {/* Visual Header Background */}
-                <div className="bg-gradient-to-b from-sky-50 to-white px-6 pt-10 pb-8 text-center">
-                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-sky-100 border border-sky-50 relative">
-                        <Fingerprint size={40} className="text-sky-500" />
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center">
-                            <ShieldCheck size={12} className="text-white" />
-                        </div>
-                    </div>
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">Verify Your <span className="text-sky-500">Identity</span></h2>
-                    <p className="text-[11px] font-bold text-slate-400 mt-2 uppercase tracking-[0.2em]">Mandatory KYC for Income Access</p>
-                </div>
+    const status = (userKycStatus || 'Not Started').toLowerCase();
 
-                <div className="px-8 space-y-8 mt-4">
-                    {/* Aadhaar Input */}
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center px-1">
-                            <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Aadhaar Card Number</label>
-                            <span className="text-[9px] font-bold text-sky-500 bg-sky-50 px-2 py-0.5 rounded-full">Secure 256-bit</span>
-                        </div>
-                        <div className="relative group">
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-sky-500 transition-colors">
-                                <ShieldCheck size={20} />
-                            </div>
-                            <input
-                                type="text"
-                                maxLength={12}
-                                placeholder="0000 0000 0000"
-                                value={aadhaarNum}
-                                onChange={(e) => setAadhaarNum(e.target.value.replace(/\D/g, ''))}
-                                className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 pl-12 pr-4 text-sm font-black focus:bg-white focus:border-sky-500 focus:ring-0 transition-all placeholder:text-slate-300 tracking-[0.1em]"
-                            />
-                        </div>
-                    </div>
+    useEffect(() => {
+        if (userLoading) return; // Wait for profile sync before redirecting
+        if (status === 'pending' || status === 'rejected') {
+            navigate('/user/auth/pending');
+        } else if (status === 'not started') {
+             navigate('/user/auth/kyc');
+        }
+    }, [status, navigate, userLoading]);
 
-                    {/* Photo Upload Area (Smaller as requested) */}
-                    <div className="space-y-3">
-                        <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest px-1">Upload Original Photo</label>
-                        <div className="relative group">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handlePhotoChange}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                            />
-                            <div className={`w-full h-40 rounded-[2rem] border-2 border-dashed transition-all overflow-hidden relative flex flex-col items-center justify-center
-                                ${kycPhoto ? 'border-sky-500 bg-white' : 'border-slate-200 bg-slate-50 group-hover:border-sky-300 group-hover:bg-sky-50/50'}`}>
-
-                                {kycPhoto ? (
-                                    <>
-                                        <img src={kycPhoto} alt="KYC Preview" className="w-full h-full object-cover" />
-                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4 flex justify-between items-center translate-y-full group-hover:translate-y-0 transition-transform">
-                                            <span className="text-white text-[10px] font-black uppercase tracking-widest">Document Selected</span>
-                                            <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-white text-[9px] font-bold">Tap to change</div>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-2 group-hover:scale-110 transition-transform">
-                                            <UploadCloud size={24} className="text-slate-300 group-hover:text-sky-500" />
-                                        </div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Tap to Upload Document<br /><span className="text-[8px] opacity-60 font-medium lowercase">(jpeg, png up to 5mb)</span></p>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="pt-4">
-                        <button
-                            onClick={handleKycSubmit}
-                            disabled={!aadhaarNum || !kycPhoto || loading}
-                            className={`w-full py-5 rounded-3xl text-sm font-black uppercase tracking-[0.2em] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95
-                                ${!aadhaarNum || !kycPhoto
-                                    ? 'bg-slate-100 text-slate-300'
-                                    : 'bg-sky-500 text-white shadow-sky-200 hover:bg-sky-600'}`}
-                        >
-                            {loading ? <Loader2 size={24} className="animate-spin" /> : 'Request Verification'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
+    if (userLoading || status === 'pending' || status === 'rejected' || status === 'not started') {
+        return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="animate-spin text-sky-500" /></div>;
     }
 
-    // ── LAYER 2: Pending Approval (With 10s Auto-Simulator) ─────────────────────
-    const PendingLayer = () => {
-        useEffect(() => {
-            const timer = setTimeout(() => {
-                forceApproveKyc();
-            }, 10000); // 10 seconds auto-approval
-            return () => clearTimeout(timer);
-        }, []);
 
-        return (
-            <div className="flex flex-col items-center justify-center p-10 min-h-screen bg-white animate-in zoom-in-95 duration-700">
-                <div className="relative w-32 h-32 mb-10">
-                    <div className="absolute inset-0 bg-sky-50 rounded-[3rem] rotate-12 animate-pulse"></div>
-                    <div className="absolute inset-0 bg-white rounded-[3rem] shadow-xl shadow-sky-100 border border-sky-50 flex items-center justify-center transform group-hover:rotate-6 transition-transform">
-                        <Clock size={52} className="text-sky-500 animate-spin-slow" />
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 bg-amber-400 text-slate-900 text-[10px] font-black px-3 py-1 rounded-full shadow-lg rotate-12">
-                        WAITING
-                    </div>
-                </div>
-
-                <div className="text-center max-w-xs">
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">Analyzing <span className="text-sky-500">Data...</span></h2>
-                    <p className="text-sm font-bold text-slate-400 mt-4 leading-relaxed">
-                        "Your documents are in the secure admin queue. Verification usually finishes in <span className="text-sky-600 font-black">5 minutes</span>."
-                    </p>
-                    <div className="mt-8 flex flex-col items-center gap-2">
-                        <Loader2 size={20} className="text-sky-300 animate-spin" />
-                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Simulator: Auto-Approving in 10s</span>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    if (kycStatus === 'pending') return <PendingLayer />;
 
     // ── LAYER 3: Approved but not Paid ──────────────────────────────────────
-    if (kycStatus === 'approved' && !isPaid) {
+    if ((status === 'approved' || status === 'verified') && !isPaid) {
         return (
             <>
                 {isPaymentOpen && (

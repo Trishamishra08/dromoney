@@ -23,9 +23,13 @@ import PromoteBrand from './module/user/pages/PromoteBrand';
 import WatchAndEarn from './module/user/pages/WatchAndEarn';
 import AdPlayer from './module/user/pages/AdPlayer';
 import QuizView from './module/user/pages/QuizView';
+import TaskQuizView from './module/user/pages/TaskQuizView';
 import LuckyDrawView from './module/user/pages/LuckyDrawView';
 import GoldPredictionView from './module/user/pages/GoldPredictionView';
 import MemoryMasterView from './module/user/pages/MemoryMasterView';
+import ScratchCardView from './module/user/pages/ScratchCardView';
+import SpeedTapperView from './module/user/pages/SpeedTapperView';
+import TreasureChestView from './module/user/pages/TreasureChestView';
 
 // Auth Pages
 import AuthLayout from './module/user/auth/AuthLayout';
@@ -52,9 +56,53 @@ import Promotions from './module/admin/pages/Promotions';
 import WatchAndEarnAdmin from './module/admin/pages/WatchAndEarnAdmin';
 import LayoutManager from './module/admin/pages/LayoutManager';
 import MarketingManager from './module/admin/pages/MarketingManager';
-import { AdminProvider } from './module/admin/context/AdminContext';
+import { AdminProvider, useAdmin } from './module/admin/context/AdminContext';
 
-import { UserProvider } from './module/user/context/UserContext';
+import { UserProvider, useUser } from './module/user/context/UserContext';
+
+import { Loader2 } from 'lucide-react';
+
+// Protected Route Component
+const ProtectedUserRoute = ({ children }) => {
+  const { isAuthenticated, userData, loading } = useUser();
+  
+  if (!isAuthenticated) return <Navigate to="/user/auth/login" replace />;
+  
+  // Show loader while fetching user profile on initial load
+  if (loading || !userData) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center gap-4">
+        <div className="relative">
+          <div className="w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-2 h-2 bg-sky-500 rounded-full animate-ping"></div>
+          </div>
+        </div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">Syncing Securely...</p>
+      </div>
+    );
+  }
+  
+  return children;
+};
+
+// Protected Admin Route Component
+const ProtectedAdminRoute = ({ children }) => {
+  const { isAuthenticated, adminData, loading } = useAdmin();
+  
+  if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
+  
+  if (loading || !adminData) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Authenticating Operator...</p>
+      </div>
+    );
+  }
+  
+  return children;
+};
 
 function App() {
   return (
@@ -62,10 +110,10 @@ function App() {
       <UserProvider>
         <Router>
           <Routes>
-            {/* Redirecting root to /user/auth/login first instead of home immediately */}
+            {/* Redirecting root to login */}
             <Route path="/" element={<Navigate to="/user/auth/login" replace />} />
 
-            {/* Auth Module Routes */}
+            {/* Auth Module Routes (Always Public) */}
             <Route path="/user/auth" element={<AuthLayout />}>
               <Route index element={<Navigate to="login" replace />} />
               <Route path="login" element={<Login />} />
@@ -74,8 +122,8 @@ function App() {
               <Route path="pending" element={<PendingApproval />} />
             </Route>
 
-            {/* User Module Routes */}
-            <Route path="/user" element={<UserLayout />}>
+            {/* User Module Routes (Protected) */}
+            <Route path="/user" element={<ProtectedUserRoute><UserLayout /></ProtectedUserRoute>}>
               <Route path="home" element={<Home />} />
               <Route path="earn" element={<Earn />} />
               <Route path="income" element={<Income />} />
@@ -93,20 +141,25 @@ function App() {
               <Route path="future-fund" element={<FutureFund />} />
             </Route>
 
-            {/* Immersive User Routes (No Bottom Nav) */}
-            <Route path="/user/task/:id" element={<TaskRunner />} />
-            <Route path="/user/promote-brand" element={<PromoteBrand />} />
-            <Route path="/user/ad-player/:id" element={<AdPlayer />} />
-            <Route path="/user/quiz/:id" element={<QuizView />} />
-            <Route path="/user/lucky-draw/:id" element={<LuckyDrawView />} />
-            <Route path="/user/gold-prediction/:id" element={<GoldPredictionView />} />
-            <Route path="/user/memory-master/:id" element={<MemoryMasterView />} />
-            <Route path="/user/contest/:id" element={<ContestView />} />
+            {/* Immersive User Routes (Protected) */}
+            <Route path="/user/task/:id" element={<ProtectedUserRoute><TaskRunner /></ProtectedUserRoute>} />
+            <Route path="/user/promote-brand" element={<ProtectedUserRoute><PromoteBrand /></ProtectedUserRoute>} />
+            <Route path="/user/ad-player/:id" element={<ProtectedUserRoute><AdPlayer /></ProtectedUserRoute>} />
+            <Route path="/user/quiz/:id" element={<ProtectedUserRoute><QuizView /></ProtectedUserRoute>} />
+            <Route path="/user/task-quiz/:id" element={<ProtectedUserRoute><TaskQuizView /></ProtectedUserRoute>} />
+            <Route path="/user/lucky-draw/:id" element={<ProtectedUserRoute><LuckyDrawView /></ProtectedUserRoute>} />
+            <Route path="/user/gold-prediction/:id" element={<ProtectedUserRoute><GoldPredictionView /></ProtectedUserRoute>} />
+            <Route path="/user/memory-master/:id" element={<ProtectedUserRoute><MemoryMasterView /></ProtectedUserRoute>} />
+            <Route path="/user/scratch-card/:id" element={<ProtectedUserRoute><ScratchCardView /></ProtectedUserRoute>} />
+            <Route path="/user/speed-tapper/:id" element={<ProtectedUserRoute><SpeedTapperView /></ProtectedUserRoute>} />
+            <Route path="/user/treasure-chest/:id" element={<ProtectedUserRoute><TreasureChestView /></ProtectedUserRoute>} />
+            <Route path="/user/contest/:id" element={<ProtectedUserRoute><ContestView /></ProtectedUserRoute>} />
+            <Route path="/user/contest/:id" element={<ProtectedUserRoute><ContestView /></ProtectedUserRoute>} />
 
-            {/* Admin Module Routes */}
+            {/* Admin Module Routes (Protected) */}
             <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminLayout />}>
+            <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>}>
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="kyc" element={<KYC />} />
               <Route path="users" element={<Users />} />

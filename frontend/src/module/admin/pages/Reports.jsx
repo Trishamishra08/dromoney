@@ -6,37 +6,96 @@ import {
     MessageCircle, ExternalLink, ShieldAlert
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
+import api from '../../shared/services/api';
 
 const Reports = () => {
     const [activeTab, setActiveTab] = useState('feedback');
+    const [loading, setLoading] = useState(false);
 
-    // ── Dummy Feedback Data (Image 1) ──
-    const [feedbacks, setFeedbacks] = useState([
-        { id: 1, user: 'Rahul.S', stars: 5, message: 'App is amazing, very smooth!', time: '2h ago' },
-        { id: 2, user: 'Priya_24', stars: 4, message: 'I wish the app had a Dark Mode option in settings.', time: '5h ago' },
-        { id: 3, user: 'Arun_Dev', stars: 3, message: 'Sometime task verification takes too long.', time: '1d ago' },
-    ]);
+    // ── Real Data States ──
+    const [feedbacks, setFeedbacks] = useState([]);
+    const [reports, setReports] = useState([]);
+    const [guides, setGuides] = useState([]);
 
-    // ── Dummy Problem Reports (Image 3) ──
-    const [problemReports, setProblemReports] = useState([
-        { id: 1, user: 'Sumit_88', type: 'Bug', message: 'Payout button is greyed out even if I have ₹500 balance.', time: '1h ago', status: 'Pending' },
-        { id: 2, user: 'Aditi.M', type: 'UI', message: 'Navbar icons are overlapping on smaller screens.', time: '3h ago', status: 'Investigating' },
-    ]);
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [fRes, rRes, gRes] = await Promise.all([
+                api.get('/admin/feedbacks'),
+                api.get('/admin/reports'),
+                api.get('/public/content/menu_help_guides')
+            ]);
+            
+            if (fRes.success) setFeedbacks(fRes.data);
+            if (rRes.success) setReports(rRes.data);
+            
+            if (gRes.success && gRes.data && gRes.data.data) {
+                setGuides(gRes.data.data.sections || []);
+            }
+        } catch (err) {
+            console.error('Data fetch error:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    // ── Help Guide CMS Data (Image 2) ──
-    const [guides, setGuides] = useState([
-        { q: 'How to complete daily tasks?', a: 'Go to the Earn section, select a task, follow the instructions, and submit. Coins are credited instantly.' },
-        { q: 'How to request for payout?', a: 'Visit the Wallet section, enter your UPI/Bank details, and click Withdraw. Processing takes 24-48 hours.' },
-        { q: 'Setting up your affiliate link', a: 'Go to Profile, copy your unique link, and share it. You earn ₹200 on every successful referral sale.' }
-    ]);
+    const handleUpdateReportStatus = async (id, status) => {
+        try {
+            const res = await api.patch(`/admin/reports/${id}/status`, { status });
+            if (res.success) {
+                setReports(reports.map(r => r._id === id ? { ...r, status } : r));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleSyncGuides = async () => {
+        try {
+            const res = await api.post('/admin/content', {
+                key: 'menu_help_guides',
+                title: 'Help Guide',
+                description: 'Basic Platform Usage',
+                data: {
+                    title: 'Help Guide',
+                    subtitle: 'Basic Platform Usage',
+                    sections: guides
+                }
+            });
+            if (res.success) alert("Help Guides synced successfully!");
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleDeleteFeedback = async (id) => {
+        if (!window.confirm("Mark as read? This will remove it from the active list.")) return;
+        try {
+            const res = await api.patch(`/admin/feedbacks/${id}/read`);
+            if (res.success) {
+                setFeedbacks(feedbacks.filter(f => f._id !== id));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchData();
+    }, []);
 
     // ── Handlers ──
     const addGuide = () => setGuides([...guides, { q: 'New Question?', a: 'New answer description here...' }]);
-    const deleteGuide = (idx) => setGuides(guides.filter((_, i) => i !== idx));
+    const deleteGuide = (idx) => setGuides(guides.filter((_, i) => idx !== i));
     const updateGuide = (idx, field, val) => {
         const newGuides = [...guides];
         newGuides[idx][field] = val;
         setGuides(newGuides);
+    };
+
+    const formatTime = (dateStr) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     return (
@@ -65,73 +124,118 @@ const Reports = () => {
                 {/* ── TAB 1: USER FEEDBACKS ── */}
                 {activeTab === 'feedback' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {feedbacks.map(f => (
-                            <div key={f.id} className="bg-white rounded-[40px] border border-slate-100 p-8 shadow-sm hover:shadow-xl hover:shadow-slate-100 transition-all relative group overflow-hidden">
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-sky-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-sky-500/10 transition-colors"></div>
-                                <div className="flex items-center justify-between mb-6 relative z-10">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-11 h-11 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black shadow-lg"><User size={18} /></div>
-                                        <div>
-                                            <h4 className="text-[14px] font-black text-slate-800 tracking-tight leading-none uppercase">{f.user}</h4>
-                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Submitted {f.time}</p>
+                        {feedbacks.filter(f => f.status === 'Unread').map(f => (
+                            <div key={f._id} className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm hover:shadow-xl hover:shadow-slate-100 transition-all relative group overflow-hidden">
+                                {/* Subtle Background Element */}
+                                <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/10 transition-colors"></div>
+                                
+                                {/* Card Header */}
+                                <div className="flex flex-col gap-4 relative z-10">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-slate-900 border border-slate-800 text-white rounded-xl flex items-center justify-center font-black shadow-lg overflow-hidden shrink-0">
+                                                {f.user?.profileImage ? (
+                                                    <img 
+                                                        src={`http://localhost:5000/uploads/${f.user.profileImage}`} 
+                                                        className="w-full h-full object-cover" 
+                                                        alt="User"
+                                                        onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.classList.add('hidden'); }} 
+                                                    />
+                                                ) : null}
+                                                <User size={16} />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h4 className="text-[13px] font-black text-slate-800 tracking-tight leading-none uppercase truncate max-w-[120px]">{f.user?.name || 'Anonymous'}</h4>
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 opacity-70">{formatTime(f.createdAt)}</p>
+                                            </div>
                                         </div>
+
+                                        {/* Mark as Read - Now more visible and not overlapping */}
+                                        <button 
+                                            onClick={() => handleDeleteFeedback(f._id)} 
+                                            className="w-8 h-8 bg-emerald-50 text-emerald-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-emerald-500 hover:text-white shadow-sm border border-emerald-100"
+                                            title="Mark as Read"
+                                        >
+                                            <CheckCircle2 size={16} />
+                                        </button>
                                     </div>
-                                    <div className="flex gap-0.5">
+
+                                    {/* Star Rating Section */}
+                                    <div className="flex gap-0.5 bg-slate-50 w-fit px-3 py-1.5 rounded-full border border-slate-100">
                                         {[...Array(5)].map((_, i) => (
-                                            <Star key={i} size={13} className={i < f.stars ? 'text-amber-400 fill-amber-400' : 'text-slate-200'} />
+                                            <Star key={i} size={11} className={i < f.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'} />
                                         ))}
                                     </div>
                                 </div>
-                                <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-50 relative z-10 min-h-[100px]">
-                                    <p className="text-[13px] font-bold text-slate-600 leading-relaxed italic">"{f.message}"</p>
+
+                                {/* Message Body */}
+                                <div className="mt-4 bg-slate-50/50 rounded-2xl p-4 border border-slate-50 relative z-10">
+                                    <p className="text-[12px] font-bold text-slate-600 leading-relaxed italic line-clamp-4 group-hover:line-clamp-none transition-all">
+                                        "{f.message}"
+                                    </p>
                                 </div>
-                                <button className="absolute top-6 right-6 w-9 h-9 bg-rose-50 text-rose-400 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-slate-100 hover:bg-rose-500 hover:text-white">
-                                    <Trash2 size={14} />
-                                </button>
                             </div>
                         ))}
+                        {feedbacks.length === 0 && !loading && (
+                            <div className="col-span-full py-20 text-center">
+                                <MessageSquare size={48} className="text-slate-200 mx-auto mb-4" />
+                                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No active feedbacks found.</p>
+                            </div>
+                        )}
                     </div>
                 )}
 
                 {/* ── TAB 2: PROBLEM REPORTS ── */}
                 {activeTab === 'problems' && (
                     <div className="grid grid-cols-1 gap-6 max-w-5xl mx-auto">
-                        {problemReports.map(pr => (
-                            <div key={pr.id} className="bg-white rounded-[40px] border border-slate-100 p-8 shadow-sm flex flex-col md:flex-row gap-8 relative group overflow-hidden">
+                        {reports.map(pr => (
+                            <div key={pr._id} className="bg-white rounded-[40px] border border-slate-100 p-8 shadow-sm flex flex-col md:flex-row gap-8 relative group overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                                {/* Header / User Info */}
                                 <div className="flex flex-col gap-4 min-w-[200px] border-b md:border-b-0 md:border-r border-slate-100 pb-6 md:pb-0 md:pr-8">
                                     <div className="flex items-center gap-3 mb-2">
-                                        <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center shadow-inner"><AlertCircle size={24} /></div>
+                                        <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center shadow-inner overflow-hidden shrink-0">
+                                            {pr.user?.profileImage ? (
+                                                <img src={`http://localhost:5000/uploads/${pr.user.profileImage}`} className="w-full h-full object-cover" alt="" />
+                                            ) : (
+                                                <AlertCircle size={24} />
+                                            )}
+                                        </div>
                                         <div>
-                                            <h4 className="text-[15px] font-black text-slate-800 tracking-tight uppercase">{pr.user}</h4>
-                                            <span className="text-[10px] font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">{pr.type} Report</span>
+                                            <h4 className="text-[15px] font-black text-slate-800 tracking-tight uppercase truncate max-w-[120px]">{pr.user?.name || 'User'}</h4>
+                                            <span className="text-[10px] font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">Report</span>
                                         </div>
                                     </div>
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2 text-slate-400">
                                             <Clock size={12} strokeWidth={3} />
-                                            <span className="text-[10px] font-black uppercase tracking-widest leading-none">{pr.time} Report</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest leading-none">{formatTime(pr.createdAt)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
-                                            <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">{pr.status}</span>
+                                            <div className={`w-2 h-2 rounded-full ${pr.status === 'Resolved' ? 'bg-emerald-500' : pr.status === 'Rejected' ? 'bg-rose-500' : 'bg-amber-400 animate-pulse'}`}></div>
+                                            <span className={`text-[10px] font-black uppercase tracking-widest ${pr.status === 'Resolved' ? 'text-emerald-600' : pr.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600'}`}>{pr.status}</span>
                                         </div>
                                     </div>
                                 </div>
-                                {/* Message Content */}
                                 <div className="flex-1 space-y-4 pt-2">
                                     <h5 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Issue Description</h5>
                                     <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 italic text-[14px] font-bold text-slate-600 leading-relaxed shadow-inner">
                                         {pr.message}
                                     </div>
-                                    <div className="flex gap-3 justify-end pt-2">
-                                        <button className="flex items-center gap-2 text-slate-400 hover:text-rose-500 text-[11px] font-black uppercase tracking-widest transition-all">Reject Claim</button>
-                                        <button className="flex items-center gap-2 bg-[#0F172A] text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">Mark as Resolved</button>
-                                    </div>
+                                    {pr.status === 'Pending' && (
+                                        <div className="flex gap-3 justify-end pt-2">
+                                            <button onClick={() => handleUpdateReportStatus(pr._id, 'Rejected')} className="flex items-center gap-2 text-slate-400 hover:text-rose-500 text-[11px] font-black uppercase tracking-widest transition-all">Reject Claim</button>
+                                            <button onClick={() => handleUpdateReportStatus(pr._id, 'Resolved')} className="flex items-center gap-2 bg-[#0F172A] text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">Mark as Resolved</button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}
+                        {reports.length === 0 && !loading && (
+                             <div className="col-span-full py-20 text-center">
+                                <ShieldAlert size={48} className="text-slate-200 mx-auto mb-4" />
+                                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No active problem reports.</p>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -161,7 +265,10 @@ const Reports = () => {
                                             <textarea value={guide.a} onChange={(e) => updateGuide(i, 'a', e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] font-bold text-slate-500 h-28 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-400 transition-all shadow-sm resize-none" />
                                         </div>
                                     </div>
-                                    <button className="w-full mt-8 bg-[#0F172A] text-white py-4 rounded-3xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-indigo-600 transition-all flex items-center justify-center gap-2">
+                                    <button 
+                                        onClick={handleSyncGuides}
+                                        className="w-full mt-8 bg-[#0F172A] text-white py-4 rounded-3xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-indigo-600 transition-all flex items-center justify-center gap-2"
+                                    >
                                         <Save size={16} /> Sync {i + 1}
                                     </button>
                                 </div>

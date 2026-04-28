@@ -20,8 +20,8 @@ export const adStorage = {
         if (!saved) {
             // Initial default ads
             const defaults = [
-                { id: '1', title: 'Summer Sale Promo', coins: 50, duration: 30, thumbnail: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400&q=80', videoUrl: 'https://vjs.zencdn.net/v/oceans.mp4' },
-                { id: '2', title: 'New App Launch', coins: 40, duration: 15, thumbnail: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&q=80', videoUrl: 'https://vjs.zencdn.net/v/oceans.mp4' }
+                { id: '1', title: 'Summer Sale Promo', coins: 50, duration: 30, thumbnail: 'https://res.cloudinary.com/dncw1hfix/image/upload/v1776323211/dromoney/ad_thumb_1.jpg', videoUrl: 'https://res.cloudinary.com/dncw1hfix/video/upload/v1776323214/dromoney/promo_video.mp4' },
+                { id: '2', title: 'New App Launch', coins: 40, duration: 15, thumbnail: 'https://res.cloudinary.com/dncw1hfix/image/upload/v1776323212/dromoney/ad_thumb_2.jpg', videoUrl: 'https://res.cloudinary.com/dncw1hfix/video/upload/v1776323214/dromoney/promo_video.mp4' }
             ];
             localStorage.setItem(ADS_KEY, JSON.stringify(defaults));
             return defaults;

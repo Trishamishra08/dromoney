@@ -1,23 +1,53 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, ShieldAlert, UploadCloud, Image as ImageIcon } from 'lucide-react';
+import api from '../../shared/services/api';
+import { useUser } from '../context/UserContext';
 
 const KycSetup = () => {
     const navigate = useNavigate();
+    const { userData, addNotification, refreshUserProfile, loading: userLoading } = useUser();
     const [loading, setLoading] = useState(false);
     const [aadhaar, setAadhaar] = useState('');
-    const [pan, setPan] = useState('');
     const [aadhaarFile, setAadhaarFile] = useState(null);
-    const [panFile, setPanFile] = useState(null);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setTimeout(() => {
-            // Store KYC status to localStorage to persist across reloads
-            localStorage.setItem('kycStatus', 'pending');
+    const kycStatus = (userData?.kycStatus || '').toLowerCase();
+
+    React.useEffect(() => {
+        if (userLoading) return;
+        if (kycStatus === 'pending') {
             navigate('/user/auth/pending');
-        }, 1500);
+        } else if (kycStatus === 'approved' || kycStatus === 'verified') {
+            navigate('/user/income');
+        }
+    }, [kycStatus, navigate, userLoading]);
+
+    if (userLoading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin text-amber-500" /></div>;
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!aadhaarFile) return addNotification("Error", "Please upload Aadhaar image", "error");
+        
+        setLoading(true);
+        const formData = new FormData();
+        formData.append('documentNumber', aadhaar);
+        formData.append('document', aadhaarFile);
+
+        try {
+            const res = await api.patch('/user/data/kyc', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            if (res.success) {
+                await refreshUserProfile();
+                addNotification("Success", "KYC submitted successfully!", "success");
+                navigate('/user/auth/pending');
+            }
+        } catch (err) {
+            console.error(err);
+            addNotification("Error", err.response?.data?.message || "Failed to submit KYC", "error");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -75,47 +105,7 @@ const KycSetup = () => {
                     </div>
                 </div>
 
-                <div>
-                    <label className="block text-[10px] uppercase font-black tracking-widest text-slate-400 mb-2">PAN Card Number</label>
-                    <input 
-                        type="text" 
-                        placeholder="ABCDE1234F"
-                        value={pan}
-                        onChange={(e) => setPan(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10))}
-                        className="w-full bg-slate-950 text-white font-black tracking-[0.2em] uppercase px-4 py-3.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all placeholder:text-slate-600 text-sm placeholder:tracking-normal placeholder:font-normal shadow-inner"
-                        required
-                    />
-                    {/* PAN Photo Upload */}
-                    <div className="mt-3 relative border-2 border-dashed border-slate-700/50 hover:border-amber-500/50 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-950/30 transition-colors cursor-pointer group">
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            onChange={(e) => setPanFile(e.target.files[0])}
-                            required
-                        />
-                        {!panFile ? (
-                            <>
-                                <UploadCloud size={20} className="text-slate-500 group-hover:text-amber-500 mb-2 transition-colors" />
-                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center mt-1">Tap to Upload PAN</span>
-                                <span className="text-[8px] text-slate-600 mt-1 uppercase tracking-widest">JPG, PNG up to 5MB</span>
-                            </>
-                        ) : (
-                            <div className="relative w-full h-28 rounded-lg overflow-hidden group-hover:opacity-80 transition-opacity border border-slate-700/50">
-                                <img 
-                                    src={URL.createObjectURL(panFile)} 
-                                    alt="PAN Preview" 
-                                    className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <ImageIcon size={20} className="text-white mb-1" />
-                                    <span className="text-[9px] text-emerald-400 font-bold truncate max-w-[200px] px-2">{panFile.name}</span>
-                                    <span className="text-[8px] text-slate-300 uppercase tracking-widest mt-1">Tap to change</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                {/* Removed PAN Card Section */}
 
                 <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl mt-2">
                     <p className="text-[10px] text-slate-400 leading-relaxed font-bold text-center">
@@ -126,7 +116,7 @@ const KycSetup = () => {
 
                 <button 
                     type="submit"
-                    disabled={aadhaar.length < 12 || pan.length < 10 || !aadhaarFile || !panFile || loading}
+                    disabled={aadhaar.length < 12 || !aadhaarFile || loading}
                     className="w-full bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 disabled:opacity-50 disabled:bg-slate-900 disabled:text-slate-600 font-black uppercase text-[11px] tracking-[0.2em] py-4 rounded-xl transition-all flex items-center justify-center gap-2 mt-2 shadow-[0_4px_15px_rgba(245,158,11,0.1)]"
                 >
                     {loading ? <Loader2 size={16} className="animate-spin" /> : 'Submit Document'}

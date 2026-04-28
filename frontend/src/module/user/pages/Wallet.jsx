@@ -93,7 +93,7 @@ const Wallet = () => {
                             </p>
                             <h2 className="text-3xl font-black text-white tracking-tighter flex items-center gap-0.5 transition-transform group-hover:scale-[1.02]" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
                                 <IndianRupee size={24} className="translate-y-0.5 opacity-80" />
-                                {wallet.balance.toLocaleString('en-IN')}
+                                {Number(wallet.balance).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </h2>
                         </div>
 
@@ -234,7 +234,7 @@ const Wallet = () => {
 
                                 <div className="text-right">
                                     <p className={`text-[15px] font-black tracking-tighter leading-none ${tx.type === 'credit' ? 'text-emerald-500' : 'text-slate-900'}`}>
-                                        {tx.type === 'credit' ? '+' : '-'}{activeTab === 'cash' ? '₹' : ''}{tx.amount.toLocaleString()} {activeTab === 'coins' ? 'C' : ''}
+                                        {tx.type === 'credit' ? '+' : '-'}{activeTab === 'cash' ? '₹' : ''}{Number(tx.amount).toLocaleString('en-IN', { maximumFractionDigits: 2 })} {activeTab === 'coins' ? 'C' : ''}
                                     </p>
                                     {activeTab === 'cash' && (
                                         <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-lg tracking-widest uppercase inline-block mt-2 ${tx.status === 'Success' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>

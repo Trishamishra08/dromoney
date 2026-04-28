@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, MessageSquare, Star, Loader2, CheckCircle2 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
+import api from '../../shared/services/api';
 
 const FeedbackModal = ({ isOpen, onClose }) => {
     const { addNotification } = useUser();
@@ -11,22 +12,37 @@ const FeedbackModal = ({ isOpen, onClose }) => {
 
     if (!isOpen) return null;
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (rating === 0) {
             addNotification("Rating Required", "Please select a star rating first.", "warning");
             return;
         }
 
+        if (!feedback.trim()) {
+            addNotification("Comment Required", "Please share a few words about your experience.", "warning");
+            return;
+        }
+
         setStatus('submitting');
         
-        // Mock network delay then close
-        setTimeout(() => {
+        try {
+            const res = await api.post('/user/data/feedback', {
+                rating,
+                message: feedback
+            });
+
+            if (res.success) {
+                setStatus('idle');
+                setRating(0);
+                setFeedback('');
+                addNotification("Success!", "Feedback received. Thank you!", "success");
+                onClose();
+            }
+        } catch (err) {
+            console.error(err);
             setStatus('idle');
-            setRating(0);
-            setFeedback('');
-            addNotification("Success!", "Feedback received.", "success");
-            onClose();
-        }, 1500);
+            addNotification("Error", "Failed to send feedback. Please try again.", "error");
+        }
     };
 
     return (

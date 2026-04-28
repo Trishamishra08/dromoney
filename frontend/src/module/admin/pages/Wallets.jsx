@@ -1,32 +1,84 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Eye, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import StatusBadge from '../components/StatusBadge';
 import AdminStatCard from '../components/AdminStatCard';
 import { Wallet, IndianRupee, Clock, AlertCircle } from 'lucide-react';
-
-const withdrawals = [
-    { id: 'W001', user: 'Ravi Patel', amount: '₹3,200', method: 'UPI', upiId: 'ravi@upi', date: '10 Apr', status: 'Pending' },
-    { id: 'W002', user: 'Rahul Sharma', amount: '₹800', method: 'Bank', upiId: 'HDFC 4512', date: '09 Apr', status: 'Approved' },
-    { id: 'W003', user: 'Neha Verma', amount: '₹600', method: 'UPI', upiId: 'neha@upi', date: '09 Apr', status: 'Pending' },
-    { id: 'W004', user: 'Sunita Mehta', amount: '₹900', method: 'Bank', upiId: 'SBI 2341', date: '08 Apr', status: 'Rejected' },
-    { id: 'W005', user: 'Karan Joshi', amount: '₹200', method: 'UPI', upiId: 'karan@upi', date: '07 Apr', status: 'Approved' },
-];
+import api from '../../shared/services/api';
 
 const Wallets = () => {
-    const [list, setList] = useState(withdrawals);
-    const approve = id => setList(prev => prev.map(w => w.id === id ? { ...w, status: 'Approved' } : w));
-    const reject = id => setList(prev => prev.map(w => w.id === id ? { ...w, status: 'Rejected' } : w));
+    const [list, setList] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
+    
+    // Modal State
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+
+    useEffect(() => {
+        fetchWithdrawals();
+    }, []);
+
+    const fetchWithdrawals = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get('/admin/withdrawals');
+            if (response.success) {
+                const data = response.data.map(w => ({
+                    id: w._id,
+                    user: w.user?.name || 'Unknown',
+                    walletBalance: w.user?.wallet?.balance || 0, // Extracting the balance
+                    amount: `₹${w.amount}`,
+                    method: w.method,
+                    upiId: w.upiId,
+                    date: new Date(w.createdAt).toLocaleDateString(),
+                    status: w.status
+                }));
+                setList(data);
+                
+                // Calculate simple stats
+                const s = { total: 0, approved: 0, pending: 0, rejected: 0 };
+                response.data.forEach(x => {
+                    s.total += x.amount;
+                    if (x.status === 'Approved') s.approved += x.amount;
+                    if (x.status === 'Pending') s.pending += x.amount;
+                    if (x.status === 'Rejected') s.rejected += x.amount;
+                });
+                setStats(s);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAction = async (id, status) => {
+        try {
+            const response = await api.put(`/admin/withdrawals/${id}`, { status });
+            if (response.success) fetchWithdrawals();
+        } catch (err) {
+            alert(err);
+        }
+    };
+
+    const approve = id => handleAction(id, 'Approved');
+    const reject = id => handleAction(id, 'Rejected');
+
+    const openBalanceModal = (user) => {
+        setSelectedUser(user);
+        setShowModal(true);
+    };
 
     return (
         <div className="p-6 animate-in fade-in duration-500">
             <PageHeader title="Wallet & Withdrawals" subtitle="Review and process withdrawal requests" />
 
             <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-                <AdminStatCard label="Total Requested" value="₹5,700" change="5 requests" icon={Wallet} color="bg-slate-700" />
-                <AdminStatCard label="Approved" value="₹1,000" change="2 payments" icon={IndianRupee} color="bg-emerald-500" />
-                <AdminStatCard label="Pending" value="₹3,800" change="2 waiting" icon={Clock} color="bg-amber-500" />
-                <AdminStatCard label="Rejected" value="₹900" change="1 rejected" icon={AlertCircle} color="bg-rose-500" />
+                <AdminStatCard label="Total Value" value={`₹${stats.total}`} change={`${list.length} requests`} icon={Wallet} color="bg-slate-700" />
+                <AdminStatCard label="Approved" value={`₹${stats.approved}`} change="Success" icon={IndianRupee} color="bg-emerald-500" />
+                <AdminStatCard label="Pending" value={`₹${stats.pending}`} change="Awaiting" icon={Clock} color="bg-amber-500" />
+                <AdminStatCard label="Rejected" value={`₹${stats.rejected}`} change="Declined" icon={AlertCircle} color="bg-rose-500" />
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -53,7 +105,17 @@ const Wallets = () => {
                                     <td className="px-5 py-4"><StatusBadge status={w.status} /></td>
                                     <td className="px-5 py-4">
                                         <div className="flex gap-2">
+                                            {/* Wallet Icon for Balance Popup */}
+                                            <button 
+                                                onClick={() => openBalanceModal(w)}
+                                                className="w-7 h-7 bg-amber-50 hover:bg-amber-100 text-amber-500 rounded-lg flex items-center justify-center transition-colors shadow-sm border border-amber-100"
+                                                title="View Wallet Balance"
+                                            >
+                                                <Wallet size={13} />
+                                            </button>
+
                                             <button className="w-7 h-7 bg-sky-50 hover:bg-sky-100 text-sky-500 rounded-lg flex items-center justify-center transition-colors"><Eye size={13} /></button>
+                                            
                                             {w.status === 'Pending' && (
                                                 <>
                                                     <button onClick={() => approve(w.id)} className="w-7 h-7 bg-emerald-50 hover:bg-emerald-100 text-emerald-500 rounded-lg flex items-center justify-center transition-colors"><CheckCircle size={13} /></button>
@@ -68,6 +130,45 @@ const Wallets = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Wallet Balance Modal */}
+            {showModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[40px] w-full max-w-sm p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+                        {/* Background Decor */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                        
+                        <div className="relative z-10 text-center">
+                            <div className="w-20 h-20 bg-amber-50 rounded-[28px] flex items-center justify-center mx-auto mb-6 border border-amber-100 shadow-inner">
+                                <Wallet size={32} className="text-amber-500" />
+                            </div>
+                            
+                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">{selectedUser?.user}'s Account</h3>
+                            <h2 className="text-3xl font-black text-slate-900 mb-8 tracking-tight flex items-center justify-center gap-2">
+                                <span className="text-slate-300 text-xl font-bold">₹</span>
+                                {selectedUser?.walletBalance?.toLocaleString()}
+                            </h2>
+                            
+                            <div className="bg-slate-50 rounded-3xl p-6 mb-8 border border-slate-100">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Withdrawal</span>
+                                    <span className="text-xs font-black text-rose-500">{selectedUser?.amount}</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                    <div className="h-full bg-amber-500 rounded-full" style={{ width: '60%' }}></div>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={() => setShowModal(false)}
+                                className="w-full bg-[#0F172A] text-white py-4 rounded-[22px] font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all"
+                            >
+                                Close Balance View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

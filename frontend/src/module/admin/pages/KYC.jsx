@@ -1,32 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Eye, XCircle, User, Calendar, ShieldCheck, Download, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import StatusBadge from '../components/StatusBadge';
+import api from '../../shared/services/api';
+import { useAdmin } from '../context/AdminContext';
 
 const KYC = () => {
-    // ── Simplified Dummy Data ──
-    const [kycRequests, setKycRequests] = useState([
-        { id: 1, name: 'Rahul Sharma', mobile: '9876543210', aadharNumber: '1234 5678 9012', timestamp: '12 March 2024', status: 'Pending', aadharImage: 'aadhar_mock.jpg' },
-        { id: 2, name: 'Priya Singh', mobile: '9812345678', aadharNumber: '4455 6677 8899', timestamp: '15 March 2024', status: 'Approved', aadharImage: 'aadhar_mock.jpg' },
-        { id: 3, name: 'Amit Kumar', mobile: '9898989898', aadharNumber: '1122 3344 5566', timestamp: '10 Feb 2024', status: 'Rejected', aadharImage: 'aadhar_mock.jpg', reason: 'Mismatch in Name' },
-        { id: 4, name: 'Neha Verma', mobile: '9111111111', aadharNumber: '9988 7766 5544', timestamp: '01 March 2024', status: 'Pending', aadharImage: 'aadhar_mock.jpg' },
-        { id: 5, name: 'Ravi Patel', mobile: '9222222222', aadharNumber: '5566 4433 2211', timestamp: '20 Jan 2024', status: 'Approved', aadharImage: 'aadhar_mock.jpg' },
-        { id: 6, name: 'Sunita Mehta', mobile: '9333333333', aadharNumber: '3344 5566 7788', timestamp: '25 Jan 2024', status: 'Pending', aadharImage: 'aadhar_mock.jpg' },
-    ]);
-
+    const { addNotification } = useAdmin();
+    const [kycRequests, setKycRequests] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5);
+    const [itemsPerPage] = useState(10);
     const [selectedKyc, setSelectedKyc] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // ── Logic ──
-    const handleAction = (id, newStatus) => {
-        setKycRequests(prev => prev.map(req =>
-            req.id === id ? { ...req, status: newStatus } : req
-        ));
-        setIsModalOpen(false);
+    useEffect(() => {
+        fetchKycRequests();
+    }, [search, statusFilter]);
+
+    const fetchKycRequests = async () => {
+        setLoading(true);
+        try {
+            const endpoint = statusFilter === 'Pending' ? '/admin/kyc/pending' : `/admin/users?search=${search}&status=${statusFilter === 'All' ? '' : statusFilter}`;
+            const response = await api.get(endpoint);
+            
+            if (response.success) {
+                const kycUsers = response.data
+                    .filter(u => u.kyc && u.kyc.status !== 'Not Started')
+                    .map(u => ({
+                        id: u._id,
+                        name: u.name,
+                        mobile: u.phone,
+                        aadharNumber: u.kyc.documentNumber || 'N/A',
+                        timestamp: new Date(u.updatedAt || u.createdAt || Date.now()).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        }),
+                        status: u.kyc.status,
+                        aadharImage: u.kyc.documentImage,
+                        reason: u.kyc.rejectionReason
+                    }));
+                setKycRequests(kycUsers);
+            }
+        } catch (err) {
+            console.error("KYC Fetch error:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAction = async (id, newStatus) => {
+        let reason = '';
+        if (newStatus === 'Rejected') {
+            reason = window.prompt("Enter rejection reason (e.g., Image not clear):");
+            if (reason === null) return; // Cancel
+        }
+
+        try {
+            const response = await api.put(`/admin/users/${id}/kyc`, { 
+                status: newStatus,
+                rejectionReason: reason
+            });
+            if (response.success) {
+                addNotification("Success", `KYC ${newStatus} Successfully`, "success");
+                fetchKycRequests();
+                setIsModalOpen(false);
+            }
+        } catch (err) {
+            console.error(err);
+            addNotification("Error", err.response?.data?.message || "Action Failed", "error");
+        }
     };
 
     const filtered = kycRequests.filter(req => {
@@ -203,13 +249,21 @@ const KYC = () => {
 
                                 {/* Premium Photo Preview */}
                                 <div className="aspect-[1.5/1] bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center relative overflow-hidden group shadow-inner">
+                                    {selectedKyc.aadharImage ? (
+                                        <img 
+                                            src={selectedKyc.aadharImage} 
+                                            alt="Aadhar Card" 
+                                            className="w-full h-full object-contain p-2"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <ImageIcon size={40} className="text-slate-300" />
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em]">No Image Available</p>
+                                        </div>
+                                    )}
                                     <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4 backdrop-blur-[2px]">
-                                        <button className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-900 shadow-2xl hover:scale-110 active:scale-95 transition-all"><Download size={20} /></button>
-                                        <button className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-900 shadow-2xl hover:scale-110 active:scale-95 transition-all"><ExternalLink size={20} /></button>
-                                    </div>
-                                    <div className="flex flex-col items-center gap-2">
-                                        <ImageIcon size={40} className="text-slate-300" />
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em]">Document Preview</p>
+                                        <a href={selectedKyc.aadharImage} download target="_blank" rel="noreferrer" className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-900 shadow-2xl hover:scale-110 active:scale-95 transition-all"><Download size={20} /></a>
+                                        <a href={selectedKyc.aadharImage} target="_blank" rel="noreferrer" className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-900 shadow-2xl hover:scale-110 active:scale-95 transition-all"><ExternalLink size={20} /></a>
                                     </div>
                                 </div>
                             </div>
