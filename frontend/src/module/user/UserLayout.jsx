@@ -29,12 +29,12 @@ const UserLayout = () => {
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden">
             {/* --- New Dromoney Fixed Top Header --- */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-slate-50/80 backdrop-blur-md px-4 py-3 flex items-center justify-between max-w-md mx-auto border-b border-slate-100">
+            <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md px-4 py-3 flex items-center justify-between max-w-md mx-auto border-b border-slate-100/50 shadow-sm">
                 {/* Left Side: Profile (Compact) */}
-                <div className="flex items-center active:scale-95 transition-transform cursor-pointer" onClick={() => setIsMenuOpen(true)}>
-                    <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden bg-slate-200">
+                <div className="flex items-center active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/profile')}>
+                    <div className="w-10 h-10 rounded-full border-[1.5px] border-slate-100 shadow-inner overflow-hidden bg-slate-50">
                         <img 
-                            src={userData?.profileImage || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80"} 
+                            src={userData?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80"} 
                             alt="Profile" 
                             className="w-full h-full object-cover" 
                         />
@@ -42,11 +42,11 @@ const UserLayout = () => {
                 </div>
 
                 {/* Center: Logo */}
-                <div className="flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
-                    <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-teal-100">
-                        <svg className="w-5 h-5 text-white -rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.5-1 1.3-2.1c.42-.6.44-1.37.04-2.13L3 3l5.3 2.34c.76.4 1.53.38 2.13-.04C11.5 4.5 12.5 4 12.5 4L12 9z" /></svg>
+                <div className="flex items-center gap-2 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
+                    <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20">
+                        <svg className="w-4.5 h-4.5 text-white -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.5-1 1.3-2.1c.42-.6.44-1.37.04-2.13L3 3l5.3 2.34c.76.4 1.53.38 2.13-.04C11.5 4.5 12.5 4 12.5 4L12 9z" /></svg>
                     </div>
-                    <span className="text-[15px] font-black text-slate-800 tracking-tighter uppercase">Dromoney</span>
+                    <span className="text-[16px] font-semibold text-slate-800 tracking-tight">Dromoney</span>
                 </div>
 
                 {/* Right Side: Actions */}
@@ -54,20 +54,28 @@ const UserLayout = () => {
                     {/* Wallet Icon */}
                     <button
                         onClick={() => navigate('/user/wallet')}
-                        className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-slate-600 border border-slate-100 shadow-sm active:scale-95 transition-all"
+                        className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-teal-600 active:scale-90 transition-all"
                     >
-                        <WalletIcon size={18} strokeWidth={2.5} />
+                        <WalletIcon size={18} strokeWidth={2} />
                     </button>
 
                     {/* Bell Icon */}
                     <button
                         onClick={() => setIsNotifOpen(true)}
-                        className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-slate-600 border border-slate-100 shadow-sm relative active:scale-95 transition-all"
+                        className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-teal-600 relative active:scale-90 transition-all"
                     >
-                        <Bell size={18} strokeWidth={2.5} />
+                        <Bell size={18} strokeWidth={2} />
                         {notifications.length > 0 && (
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+                            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white"></span>
                         )}
+                    </button>
+
+                    {/* Sidebar Menu Icon */}
+                    <button
+                        onClick={() => setIsMenuOpen(true)}
+                        className="w-8 h-8 flex items-center justify-center text-slate-700 hover:text-teal-600 active:scale-90 transition-all ml-0.5"
+                    >
+                        <Menu size={22} strokeWidth={2} />
                     </button>
                 </div>
             </header>
