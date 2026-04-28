@@ -29,28 +29,28 @@ const UserLayout = () => {
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden">
             {/* --- New Dromoney Fixed Top Header --- */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md px-4 py-3 flex items-center justify-between max-w-md mx-auto border-b border-slate-100/50 shadow-sm">
+            <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md px-4 py-3 flex items-center justify-between max-w-md mx-auto border-b border-slate-100 shadow-sm">
                 {/* Left Side: Profile (Compact) */}
-                <div className="flex items-center active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/profile')}>
-                    <div className="w-10 h-10 rounded-full border-[1.5px] border-slate-100 shadow-inner overflow-hidden bg-slate-50">
+                <div className="flex items-center active:scale-95 transition-transform cursor-pointer z-10" onClick={() => navigate('/user/profile')}>
+                    <div className="w-9 h-9 rounded-full border border-slate-200 shadow-sm overflow-hidden bg-slate-50">
                         <img 
-                            src={userData?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80"} 
+                            src={userData?.profileImage || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80"} 
                             alt="Profile" 
                             className="w-full h-full object-cover" 
                         />
                     </div>
                 </div>
 
-                {/* Center: Logo */}
-                <div className="flex items-center gap-2 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
-                    <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20">
-                        <svg className="w-4.5 h-4.5 text-white -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.5-1 1.3-2.1c.42-.6.44-1.37.04-2.13L3 3l5.3 2.34c.76.4 1.53.38 2.13-.04C11.5 4.5 12.5 4 12.5 4L12 9z" /></svg>
+                {/* Center: Logo (Absolute Centered) */}
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
+                    <div className="w-7 h-7 bg-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20">
+                        <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                     </div>
-                    <span className="text-[16px] font-semibold text-slate-800 tracking-tight">Dromoney</span>
+                    <span className="text-[15px] font-bold text-slate-800 tracking-tight uppercase">Dromoney</span>
                 </div>
 
                 {/* Right Side: Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 z-10">
                     {/* Wallet Icon */}
                     <button
                         onClick={() => navigate('/user/wallet')}
@@ -78,6 +78,7 @@ const UserLayout = () => {
                         <Menu size={22} strokeWidth={2} />
                     </button>
                 </div>
+            </header>
             </header>
 
             {/* --- Notification Drawer (Right Side) --- */}

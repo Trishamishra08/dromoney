@@ -245,15 +245,41 @@ const Home = () => {
 
     return (
         <div className="flex flex-col animate-in fade-in duration-700 min-h-full">
-            {/* Main Content Area */}
-            <div className="flex flex-col gap-4 p-4 pb-2">
-                {/* --- Wallet Card (Replacing Earnings StatCards) --- */}
-                <div className="bg-gradient-to-r from-teal-800 to-emerald-700 rounded-[28px] p-6 shadow-xl relative overflow-hidden group">
+            {/* --- 1. Platform Intro Video Card (Top, Full Width, Sharp Corners) --- */}
+            {introConfig && introConfig.isActive && (
+                <div 
+                    onClick={() => setIsVideoPlaying(true)}
+                    className="w-full bg-slate-900 overflow-hidden shadow-xl relative group cursor-pointer active:brightness-90 transition-all border-b border-slate-800"
+                >
+                    <div className="absolute inset-0">
+                        <img src={introConfig.thumbnailUrl || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80'} className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-1000" alt="Intro"/>
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+                    </div>
+
+                    <div className="relative z-10 p-10 flex flex-col items-center text-center">
+                        <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 mb-6 group-hover:scale-110 transition-all shadow-2xl">
+                            <Video size={32} className="text-white fill-white/20" />
+                        </div>
+                        <h3 className="text-2xl font-black text-white tracking-tight uppercase leading-tight max-w-[280px]">
+                            {introConfig.title}
+                        </h3>
+                        <p className="text-[11px] font-bold text-sky-400 uppercase tracking-[0.25em] mt-3">
+                            {introConfig.subtitle}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Main Content Area (With Padding) */}
+            <div className="flex flex-col gap-5 p-4 pb-4">
+                
+                {/* --- 2. Wallet Card --- */}
+                <div className="bg-gradient-to-br from-teal-800 to-emerald-700 rounded-2xl p-5 shadow-lg relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                    <div className="flex justify-between items-start mb-2 relative z-10">
+                    <div className="flex justify-between items-start mb-1 relative z-10">
                         <div className="flex items-center gap-2 text-teal-50">
                             <Wallet size={16} />
-                            <span className="text-[12px] font-medium">Your wallet Balance</span>
+                            <span className="text-[11px] font-medium opacity-80 uppercase tracking-widest">Your wallet Balance</span>
                         </div>
                         <div className="w-10 h-10 flex items-center justify-center text-teal-50/80 border border-teal-50/20 rounded-xl cursor-pointer hover:bg-white/10 transition-colors" onClick={() => navigate('/user/wallet')}>
                             <QrCode size={20} />
@@ -262,7 +288,7 @@ const Home = () => {
                     
                     <h2 className="text-3xl font-bold text-white mb-6 tracking-tight relative z-10">$ {Number(earnings.total || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</h2>
                     
-                    <div className="flex justify-between items-center relative z-10 px-1">
+                    <div className="flex justify-between items-center relative z-10">
                         {[
                             { icon: DollarSign, label: 'Balance', action: () => navigate('/user/income') },
                             { icon: Wallet, label: 'Add Money', action: () => navigate('/user/wallet') },
@@ -270,20 +296,20 @@ const Home = () => {
                             { icon: ArrowDown, label: 'Receive', action: () => navigate('/user/history') },
                             { icon: RotateCcw, label: 'History', action: () => navigate('/user/history') },
                         ].map((action, i) => (
-                            <div key={i} onClick={action.action} className="flex flex-col items-center gap-2 cursor-pointer group/btn w-[48px]">
+                            <div key={i} onClick={action.action} className="flex flex-col items-center gap-1.5 cursor-pointer group/btn w-[54px]">
                                 <div className="w-11 h-11 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-teal-50 transition-all group-hover/btn:bg-white/20">
                                     <action.icon size={18} strokeWidth={2.5} />
                                 </div>
-                                <span className="text-[9px] text-teal-100 font-medium group-hover/btn:text-white transition-colors text-center w-full">{action.label}</span>
+                                <span className="text-[9px] text-teal-100 font-bold uppercase group-hover/btn:text-white transition-colors text-center w-full">{action.label}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* --- Other Services --- */}
-                <div className="mt-2 mb-2">
-                    <h3 className="text-[12px] font-bold text-slate-600 mb-3 ml-1">Other Services</h3>
-                    <div className="grid grid-cols-4 gap-y-4 gap-x-2 bg-white rounded-[24px] p-4 shadow-sm border border-slate-50">
+                {/* --- 3. Other Services --- */}
+                <div>
+                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Marketplace & Services</h3>
+                    <div className="grid grid-cols-4 gap-y-4 gap-x-2 bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
                         {[
                             { icon: Share2, label: 'Refer', color: 'bg-emerald-50 text-emerald-500', path: '/user/income-info#refer' },
                             { icon: ClipboardList, label: 'Task', color: 'bg-amber-50 text-amber-500', path: '/user/income-info#task' },
@@ -299,19 +325,22 @@ const Home = () => {
                                 onClick={() => navigate(service.path)}
                                 className="flex flex-col items-center gap-2 group transition-all"
                             >
-                                <div className={`w-12 h-12 ${service.color} rounded-2xl flex items-center justify-center shadow-sm group-hover:-translate-y-1 transition-transform`}>
-                                    <service.icon size={20} strokeWidth={2} />
+                                <div className={`w-12 h-12 ${service.color} rounded-xl flex items-center justify-center shadow-sm group-hover:-translate-y-1 transition-transform`}>
+                                    <service.icon size={20} strokeWidth={2.2} />
                                 </div>
-                                <span className="text-[10px] font-medium text-slate-600">{service.label}</span>
+                                <span className="text-[10px] font-bold text-slate-600">{service.label}</span>
                             </button>
                         ))}
                     </div>
                 </div>
 
-                {/* --- Transactions --- */}
-                <div className="mt-2 mb-4">
-                    <h3 className="text-[12px] font-bold text-slate-800 mb-3 ml-1">Transactions</h3>
-                    <div className="bg-white rounded-[24px] p-4 shadow-sm space-y-4 border border-slate-50">
+                {/* --- 4. Recent Transactions --- */}
+                <div>
+                    <div className="flex justify-between items-center mb-3 px-1">
+                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Recent Activity</h3>
+                        <button onClick={() => navigate('/user/history')} className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:underline">View All</button>
+                    </div>
+                    <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4 border border-slate-100">
                         {[
                             { name: 'Alex Macculam', type: 'Send Money', amount: '-$66.02', date: '25-12-2022', time: '6:00pm', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80', isNegative: true },
                             { name: 'Mac Dinner', type: 'Cashout', amount: '-$120.02', date: '01-01-2023', time: '8:00pm', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&q=80', isNegative: true },
@@ -322,74 +351,145 @@ const Home = () => {
                                     <img src={tx.image} alt={tx.name} className="w-10 h-10 rounded-full object-cover shadow-sm" />
                                     <div>
                                         <h4 className="text-[13px] font-bold text-slate-800 leading-tight mb-0.5">{tx.name}</h4>
-                                        <p className="text-[10px] text-blue-500 font-medium leading-none">{tx.type}</p>
+                                        <p className="text-[10px] text-blue-500 font-bold uppercase tracking-tight leading-none">{tx.type}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <h4 className={`text-[13px] font-bold leading-tight mb-0.5 ${tx.isNegative ? 'text-slate-800' : 'text-emerald-500'}`}>{tx.amount}</h4>
-                                    <p className="text-[9px] text-slate-400 font-medium leading-none">{tx.date} {tx.time}</p>
+                                    <h4 className={`text-[13px] font-black leading-tight mb-0.5 ${tx.isNegative ? 'text-slate-800' : 'text-emerald-500'}`}>{tx.amount}</h4>
+                                    <p className="text-[9px] text-slate-400 font-bold leading-none">{tx.date} • {tx.time}</p>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* --- 3 Promotional Ad Banners (Auto-Scroll) --- */}
-                <div className="mb-4">
+                {/* --- 5. Promotional Ad Banners --- */}
+                <div>
                     <AdBanners navigate={navigate} />
                 </div>
 
-                {/* Video Modal */}
-                {isVideoPlaying && introConfig && (
-                    <div className="fixed inset-0 z-[1000] bg-black/95 flex flex-col animate-in fade-in duration-300">
-                        <div className="p-6 flex items-center justify-between border-b border-white/10">
-                            <h4 className="text-white font-black uppercase tracking-widest text-sm">{introConfig.title}</h4>
-                            <button 
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsVideoPlaying(false);
-                                }}
-                                className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"
-                            >
-                                <X size={24} />
-                            </button>
-                        </div>
-                        <div className="flex-1 flex items-center justify-center p-4">
-                            <UniversalVideoPlayer 
-                                url={introConfig.videoUrl} 
-                                className="w-full max-h-[70vh] shadow-2xl"
-                            />
-                        </div>
-                        <div className="p-8 text-center">
-                            <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{introConfig.subtitle}</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* --- Platform Intro Video Card --- */}
-                {introConfig && introConfig.isActive && (
-                    <div 
-                        onClick={() => setIsVideoPlaying(true)}
-                        className="bg-slate-900 rounded-[2rem] overflow-hidden shadow-xl relative group cursor-pointer active:scale-[0.98] transition-all border border-slate-800 mb-4"
-                    >
-                        <div className="absolute inset-0">
-                            <img src={introConfig.thumbnailUrl || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80'} className="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-700" alt="Intro"/>
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-                        </div>
-
-                        <div className="relative z-10 p-6 flex flex-col items-center text-center">
-                            <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 mb-4 group-hover:scale-110 transition-all shadow-xl">
-                                <Video size={28} className="text-white fill-white/20" />
+                {/* --- 6. Booster Sections --- */}
+                <div className="space-y-4">
+                    {/* Support Booster */}
+                    <div className="bg-[#FFFBEB] border border-amber-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+                        <div className="p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-sm border border-amber-50">
+                                    <Coins className="text-amber-500" size={24} />
+                                </div>
+                                <div>
+                                    <h4 className="text-[14px] font-black text-amber-900 tracking-tight leading-none">{boosters.support.title}</h4>
+                                    <p className="text-[10px] font-bold text-amber-600/70 mt-1 uppercase tracking-tight">{boosters.support.subtitle}</p>
+                                </div>
                             </div>
-                            <h3 className="text-lg font-black text-white tracking-tight uppercase leading-none">
-                                {introConfig.title}
-                            </h3>
-                            <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest mt-2">
-                                {introConfig.subtitle}
-                            </p>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setIsSupportExpanded(!isSupportExpanded)}
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isSupportExpanded ? 'bg-amber-200 text-amber-900 rotate-180' : 'bg-white text-slate-300'}`}
+                                >
+                                    <ChevronDown size={18} strokeWidth={2.5} />
+                                </button>
+                                <button
+                                    onClick={() => handleBuy('Support Booster', 11)}
+                                    className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight active:scale-95 transition-all"
+                                >
+                                    Buy Now
+                                </button>
+                            </div>
+                        </div>
+                        {isSupportExpanded && (
+                            <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-300">
+                                <div className="bg-white/50 rounded-xl p-3 border border-amber-50 space-y-2.5">
+                                    {boosters.support.benefits.map((text, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <div className="w-4 h-4 bg-amber-100 rounded-full flex items-center justify-center">
+                                                <CheckCircle2 size={10} className="text-amber-600" />
+                                            </div>
+                                            <span className="text-[11px] font-bold text-amber-900/80 tracking-tight">{text}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Task Booster */}
+                    <div className="bg-sky-50 border border-sky-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+                        <div className="p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-sm border border-sky-50">
+                                    <Zap className="text-sky-500" size={24} />
+                                </div>
+                                <div>
+                                    <h4 className="text-[14px] font-black text-sky-900 tracking-tight leading-none">{boosters.task.title}</h4>
+                                    <p className="text-[10px] font-bold text-sky-600/70 mt-1 uppercase tracking-tight">{boosters.task.subtitle}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setIsTaskExpanded(!isTaskExpanded)}
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isTaskExpanded ? 'bg-sky-200 text-sky-900 rotate-180' : 'bg-white text-slate-300'}`}
+                                >
+                                    <ChevronDown size={18} strokeWidth={2.5} />
+                                </button>
+                                <button
+                                    onClick={() => handleBuy('Task Booster', 49)}
+                                    className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight active:scale-95 transition-all"
+                                >
+                                    Buy Now
+                                </button>
+                            </div>
+                        </div>
+                        {isTaskExpanded && (
+                            <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-300">
+                                <div className="bg-white/50 rounded-xl p-3 border border-sky-50 space-y-2.5">
+                                    {boosters.task.benefits.map((text, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <div className="w-4 h-4 bg-sky-100 rounded-full flex items-center justify-center">
+                                                <CheckCircle2 size={10} className="text-sky-600" />
+                                            </div>
+                                            <span className="text-[11px] font-bold text-sky-900/80 tracking-tight">{text}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* --- 7. Lifetime Promo --- */}
+                {lifetimePromo && (
+                    <div className="w-full bg-slate-900 rounded-2xl p-6 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+
+                        <div className="relative z-10 flex flex-col gap-5 text-center">
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/10 shadow-xl">
+                                    <Rocket size={24} className="text-sky-400" />
+                                </div>
+                                <h3 className="text-xl font-black text-white tracking-tight uppercase">{lifetimePromo.title}</h3>
+                            </div>
+
+                            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5">
+                                <p className="text-[14px] font-black text-sky-400 italic leading-none">{lifetimePromo.priceTag}</p>
+                                <p className="text-[11px] font-bold text-white/60 mt-3 leading-tight">{lifetimePromo.note}</p>
+                            </div>
+
+                            <div className="space-y-4 pt-2">
+                                {lifetimePromo.features.map((text, i) => (
+                                    <div key={i} className="flex items-center justify-center gap-3 group/item">
+                                        <div className="w-5 h-5 bg-sky-500/20 rounded-full flex items-center justify-center border border-sky-500/30">
+                                            <CheckCircle2 size={10} className="text-sky-400" />
+                                        </div>
+                                        <span className="text-[12px] font-black text-white/90 tracking-tight leading-none uppercase">{text}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
+            </div>
 
                 {/* --- ₹11 Support Booster Section --- */}
                 <div className="bg-[#FFFBEB] border border-amber-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all mb-4">
@@ -519,6 +619,7 @@ const Home = () => {
             </div>
 
             {/* --- Integrated Professional Footer (Connected to Navbar) --- */}
+            {/* Footer */}
             <footer className="bg-white border-t border-slate-100 p-5 pt-6 pb-4 mt-auto">
                 <div className="flex justify-between items-start mb-6">
                     <div className="flex flex-col gap-2">
@@ -535,7 +636,7 @@ const Home = () => {
 
                     <div className="flex gap-2.5">
                         <div className="w-9 h-9 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all cursor-pointer active:scale-95 shadow-sm">
-                            <InstagramIcon />
+                            <FacebookIcon />
                         </div>
                         <div className="w-9 h-9 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all cursor-pointer active:scale-95 shadow-sm">
                             <FacebookIcon />
