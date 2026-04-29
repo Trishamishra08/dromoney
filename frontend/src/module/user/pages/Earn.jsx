@@ -57,7 +57,7 @@ const Earn = () => {
             // Do not open if already completed
             return;
         }
-        
+
         // SWITCH ROUTE BASED ON TYPE
         switch (task.type) {
             case 'Quiz':
@@ -84,7 +84,7 @@ const Earn = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#F4F7FB]">
+        <div className="flex flex-col min-h-screen bg-[#f0f9f4] font-sans">
             <UnlockModal isOpen={isUnlockOpen} onClose={() => setIsUnlockOpen(false)} />
 
             {/* ── Header ── */}
@@ -107,100 +107,107 @@ const Earn = () => {
             <div className="flex-1 overflow-y-auto pb-4">
 
                 {/* Daily Tasks Summary Card */}
-                <div className="mx-4 mt-4 bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+                <div className="mx-0 mt-0 bg-white px-5 py-3 border-b border-slate-100 flex items-center justify-between">
                     <div>
-                        <p className="text-[13px] font-black text-slate-800">
+                        <p className="text-[12px] font-bold text-slate-800 tracking-tight">
                             Daily Tasks Avld{' '}
-                            <span className="text-slate-400 font-bold">Available: {totalCount}</span>
+                            <span className="text-slate-400 font-medium">({totalCount} Total)</span>
                         </p>
-                        <div className="flex items-center gap-3 mt-1">
-                            <span className="text-[11px] font-bold text-slate-500">
-                                Completed: <span className="text-emerald-500 font-black">{completedCount}</span>
+                        <div className="flex items-center gap-3 mt-0.5">
+                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                                Done: <span className="text-emerald-500 font-bold">{completedCount}</span>
                             </span>
-                            <span className="text-[11px] font-bold text-slate-500">
-                                Remaining: <span className="text-orange-500 font-black">{remainingCount}</span>
+                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                                Left: <span className="text-orange-500 font-bold">{remainingCount}</span>
                             </span>
                         </div>
                     </div>
                     {/* Coin Bag Illustration */}
-                    <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl border border-amber-100">
+                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-xl border border-amber-100">
                         💰
                     </div>
                 </div>
 
                 {/* ── Task List ── */}
-                <div className="flex flex-col gap-0 mt-4">
+                <div className="flex flex-col gap-0 mt-2">
                     {tasks.map((task) => {
+                        const COLORS = [
+                            { bg: 'bg-blue-500', icon: 'text-white' },
+                            { bg: 'bg-rose-500', icon: 'text-white' },
+                            { bg: 'bg-orange-500', icon: 'text-white' },
+                            { bg: 'bg-purple-500', icon: 'text-white' },
+                            { bg: 'bg-emerald-500', icon: 'text-white' },
+                        ];
+                        const colorSet = COLORS[task.id % COLORS.length];
                         const iconConfig = ICON_MAP[task.icon] || ICON_MAP['Monitor'];
                         const IconEl = iconConfig.el;
-                        const isHighlighted = task.actionType === 'highlighted';
                         const isCompleted = completedTasks.includes(task.id);
 
                         return (
                             <div
                                 key={task.id}
                                 onClick={() => handleTaskClick(task)}
-                                className={`bg-white border-b border-slate-100 px-4 py-3.5 flex items-center gap-3 transition-colors ${isCompleted ? 'opacity-60 cursor-default' : 'active:bg-slate-50 cursor-pointer hover:bg-slate-50'}`}
+                                className={`bg-white border-b border-slate-50 px-5 py-2.5 flex items-center gap-3.5 transition-all ${isCompleted ? 'opacity-60 cursor-default' : 'active:bg-slate-50 cursor-pointer'}`}
                             >
-                                {/* Icon */}
-                                <div className={`w-11 h-11 ${iconConfig.bg} rounded-xl flex items-center justify-center shrink-0 ${isCompleted ? 'grayscale opacity-50' : ''}`}>
-                                    {isCompleted ? <CheckCircle2 size={20} className="text-emerald-500" /> : <IconEl size={20} className={iconConfig.color} />}
-                                </div>
-
-                                {/* Text */}
-                                <div className="flex-1 min-w-0">
-                                    <h4 className={`text-[13px] font-black leading-tight ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{task.title}</h4>
-                                    <p className="text-[10px] font-bold text-slate-400 mt-0.5 leading-none truncate">{task.description}</p>
-                                </div>
-
-                                {/* Right side */}
-                                <div className="flex flex-col items-end gap-1.5 shrink-0">
-                                    {/* Reward */}
-                                    <span className={`text-[10px] font-black leading-tight ${isCompleted ? 'text-emerald-500' : isHighlighted ? 'text-orange-500' : 'text-slate-500'}`}>
-                                        {isCompleted ? 'Done' : `${task.reward} Coins`}
-                                    </span>
-                                    {/* Action Button */}
+                                {/* Compact Circular Icon */}
+                                <div className={`w-11 h-11 ${isCompleted ? 'bg-slate-100' : colorSet.bg} rounded-full flex items-center justify-center shrink-0 shadow-sm transition-transform active:scale-95`}>
                                     {isCompleted ? (
-                                        <button disabled className="text-[10px] font-black px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-500 border border-emerald-100/50 flex items-center gap-1">
-                                            Completed
-                                        </button>
+                                        <CheckCircle2 size={20} className="text-emerald-500" />
                                     ) : (
-                                        <button
-                                            className={`text-[10px] font-black px-3 py-1.5 rounded-lg transition-all active:scale-95 ${isHighlighted
-                                                    ? 'bg-amber-400 text-white shadow-md shadow-amber-100 hover:bg-amber-500'
-                                                    : 'bg-blue-600 text-white shadow-md shadow-blue-100 hover:bg-blue-700'
-                                                }`}
-                                            onClick={(e) => { e.stopPropagation(); handleTaskClick(task); }}
-                                        >
-                                            {task.type === 'Spin' ? 'Spin Now >' : task.type === 'Proof' ? 'Upload' : 'Complete'}
-                                        </button>
+                                        <IconEl size={20} className="text-white" />
+                                    )}
+                                </div>
+
+                                {/* Text Content */}
+                                <div className="flex-1 min-w-0">
+                                    <h4 className={`text-[13.5px] font-semibold tracking-tight leading-none ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
+                                        {task.title}
+                                    </h4>
+                                    <p className="text-[10px] font-medium text-slate-400 mt-1.5 leading-none uppercase tracking-wide">
+                                        {isCompleted ? 'Completed' : task.description}
+                                    </p>
+                                </div>
+
+                                {/* Right Side: Coins & Action */}
+                                <div className="flex flex-col items-end gap-1.5 min-w-[70px]">
+                                    <div className="flex items-center gap-1 leading-none">
+                                        <span className={`text-[15px] font-bold ${isCompleted ? 'text-emerald-500' : 'text-slate-700'}`}>
+                                            {isCompleted ? '+' : ''}{task.reward}
+                                        </span>
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Coins</span>
+                                    </div>
+                                    
+                                    {!isCompleted && (
+                                        <div className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full text-[8.5px] font-bold uppercase tracking-widest border border-blue-100/50">
+                                            {task.type === 'Spin' ? 'Spin' : task.type === 'Proof' ? 'Upload' : 'Open'}
+                                        </div>
                                     )}
                                 </div>
                             </div>
                         );
                     })}
                     {tasks.length === 0 && (
-                        <div className="p-8 text-center bg-white border border-slate-100 rounded-2xl mx-4 mt-2">
+                        <div className="p-8 text-center bg-white border-b border-slate-50">
                              <p className="text-slate-400 font-bold text-sm">No tasks available right now.</p>
-                             <p className="text-slate-300 font-medium text-xs mt-1">Please check back later.</p>
+                             <p className="text-slate-300 font-medium text-xs mt-1 uppercase tracking-widest">Check back soon</p>
                         </div>
                     )}
                 </div>
 
                 {/* ── Footer Banner ── */}
-                <div className="mx-4 mt-5 bg-amber-400 rounded-2xl py-3 px-5 flex items-center justify-center gap-2 shadow-lg shadow-amber-100">
-                    <span className="text-[13px] font-black text-white tracking-tight">
+                <div className="mx-0 mt-4 bg-emerald-500 py-4 px-5 flex items-center justify-center gap-2 shadow-md">
+                    <span className="text-[14px] font-bold text-white tracking-tight uppercase">
                         🪙 Complete tasks and earn coins!
                     </span>
                 </div>
 
                 {/* ── ₹49 Booster Card ── */}
-                <div className="mx-4 mt-4 bg-amber-50 border border-amber-100 rounded-2xl overflow-hidden shadow-sm">
+                <div className="mx-0 mt-3 bg-emerald-50 border-y border-emerald-100 overflow-hidden">
                     {/* Card Header Row */}
-                    <div className="p-4 flex items-center justify-between">
-                        <div className="flex flex-col gap-0.5">
-                            <h4 className="text-[15px] font-black text-slate-800 tracking-tight leading-none mb-1">₹49 Task Booster</h4>
-                            <p className="text-[10px] font-bold text-slate-500/80 leading-tight">Boost your earnings and get priority access!</p>
+                    <div className="px-5 py-3 flex items-center justify-between">
+                        <div className="flex flex-col">
+                            <h4 className="text-[14px] font-bold text-slate-800 tracking-tight leading-none mb-1">₹49 Task Booster</h4>
+                            <p className="text-[9px] font-semibold text-emerald-600/80 uppercase tracking-[0.15em]">Priority Enabled</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <button

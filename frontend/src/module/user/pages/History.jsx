@@ -1,6 +1,16 @@
 import React from 'react';
 import { useUser } from '../context/UserContext';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { 
+    ArrowLeft, 
+    Bell, 
+    Search, 
+    Wallet, 
+    ArrowUpRight, 
+    ArrowDownLeft, 
+    RefreshCcw, 
+    History as HistoryIcon,
+    MoreHorizontal
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const History = () => {
@@ -8,66 +18,133 @@ const History = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="flex flex-col gap-4 p-4 animate-in fade-in duration-700">
-            {/* --- Section Title with Back Button --- */}
-            <div className="flex items-center gap-3 mt-2">
-                <button 
-                    onClick={() => navigate(-1)} 
-                    className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-colors shadow-sm active:scale-95"
-                >
-                    <ArrowLeft size={20} />
-                </button>
-                <div>
-                    <h2 className="text-xl font-black text-sky-900 tracking-tight flex items-center gap-2">
-                        <Clock className="text-sky-500" size={20} /> History
-                    </h2>
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">All your earnings & spends</p>
-                </div>
-            </div>
+        <div className="min-h-screen bg-[#F8FAFC] flex flex-col relative overflow-hidden font-sans">
+            {/* --- Premium Background Decorative Elements --- */}
+            <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[30%] bg-emerald-100/30 blur-[100px] rounded-full"></div>
+            <div className="absolute top-[15%] right-[-5%] w-[40%] h-[30%] bg-sky-100/30 blur-[100px] rounded-full"></div>
 
-            {/* --- Total Coins Summary Box --- */}
-            <div className="bg-gradient-to-r from-sky-600 to-blue-700 rounded-2xl p-5 shadow-lg shadow-sky-200 relative overflow-hidden group mt-2">
-                <div className="relative z-10 flex items-center justify-between">
-                    <div>
-                        <p className="text-sky-100 text-[11px] font-bold uppercase tracking-widest opacity-90">Current Balance</p>
-                        <h3 className="text-white text-3xl font-black mt-1">{userData.coins.total} <span className="text-lg text-sky-300">Coins</span></h3>
-                    </div>
-                </div>
-                <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full -translate-x-4 -translate-y-4 blur-2xl group-hover:scale-125 transition-transform duration-1000"></div>
-            </div>
-
-            {/* --- Tasks List --- */}
-            <div className="flex flex-col gap-3 mt-2">
-                {(!userData.coins.history || userData.coins.history.length === 0) ? (
-                    <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center shadow-sm">
-                        <Clock className="mx-auto text-slate-300 mb-3" size={32} />
-                        <h3 className="text-slate-500 font-bold">No history available</h3>
-                        <p className="text-xs text-slate-400 mt-1">Complete tasks to view your earning history here.</p>
-                    </div>
-                ) : (
-                    userData.coins.history.map((item, index) => (
-                        <div key={item.id} style={{ animationDelay: `${index * 50}ms` }} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:border-sky-300 transition-colors flex items-center justify-between group relative overflow-hidden animate-in slide-in-from-bottom duration-500 fill-mode-both">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 ${item.type === 'credit' ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>
-                                    {item.type === 'credit' ? <span className="font-black text-xl">+</span> : <span className="font-black text-xl">-</span>}
+            <div className="relative z-10 p-4 flex flex-col gap-6 mt-4">
+                
+                {/* --- Debit Card Styled Wallet Section --- */}
+                <div className="relative group perspective-1000">
+                    <div className="bg-gradient-to-br from-[#1E293B] via-[#0F172A] to-[#020617] aspect-[1.6/1] rounded-2xl p-6 shadow-2xl relative overflow-hidden border border-white/10">
+                        {/* Holographic Overlays */}
+                        <div className="absolute top-[-20%] right-[-10%] w-[80%] h-[100%] bg-blue-500/10 blur-[80px] rounded-full rotate-45"></div>
+                        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[80%] bg-emerald-500/10 blur-[80px] rounded-full -rotate-12"></div>
+                        
+                        {/* Card Content */}
+                        <div className="relative z-10 h-full flex flex-col justify-between">
+                            {/* Top: Chip & Label */}
+                            <div className="flex justify-between items-start">
+                                <div className="flex flex-col gap-3">
+                                    <div className="w-10 h-8 bg-gradient-to-br from-amber-200 via-yellow-400 to-amber-500 rounded-md relative overflow-hidden shadow-inner border border-yellow-600/20">
+                                        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-20">
+                                            {[...Array(9)].map((_, i) => <div key={i} className="border border-black/20"></div>)}
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] font-normal text-white/40 uppercase tracking-[0.2em]">Platinum Member</span>
                                 </div>
-                                <div>
-                                    <h4 className="text-sm font-extrabold text-slate-800">{item.source}</h4>
-                                    <p className="text-[10px] font-bold text-slate-400 bg-slate-50 inline-block px-1.5 py-0.5 rounded uppercase tracking-tighter mt-1">{item.date}</p>
+                                <div className="text-right">
+                                    <h3 className="text-white font-medium text-[12px] italic tracking-widest opacity-80">DROMONEY</h3>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 relative z-10">
-                                <div className={`font-black text-sm px-2.5 py-1 rounded-lg ring-1 ${item.type === 'credit' ? 'bg-emerald-50 text-emerald-600 ring-emerald-100' : 'bg-rose-50 text-rose-600 ring-rose-100'}`}>
-                                    {item.type === 'credit' ? '+' : '-'}{item.amount} C
+                            {/* Middle: Balance */}
+                            <div className="mt-2">
+                                <p className="text-white/50 text-[10px] uppercase tracking-widest mb-1">Available Coins</p>
+                                <h3 className="text-white text-3xl font-medium tracking-tight">
+                                    {userData?.coins?.total?.toLocaleString() || '0'} <span className="text-sm font-normal opacity-50 ml-1">C</span>
+                                </h3>
+                            </div>
+
+                            {/* Bottom: Card Number & User */}
+                            <div className="flex justify-between items-end mt-4">
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-white/60 text-[13px] tracking-[0.25em] font-mono">**** **** **** 88{userData?.id?.slice(-2) || '42'}</p>
+                                    <p className="text-white/80 text-[11px] font-normal uppercase tracking-wider mt-1">{userData?.name || 'User Name'}</p>
+                                </div>
+                                <div className="flex gap-1.5 opacity-60">
+                                    <div className="w-6 h-6 rounded-full bg-rose-500/40 blur-[1px]"></div>
+                                    <div className="w-6 h-6 rounded-full bg-amber-500/40 blur-[1px] -ml-3"></div>
                                 </div>
                             </div>
                         </div>
-                    ))
-                )}
-            </div>
+                    </div>
 
-            <div className="h-6"></div>
+                    {/* Quick Action Overlay Row (Floating slightly below) */}
+                    <div className="absolute bottom-[-24px] left-4 right-4 bg-white shadow-xl p-3 flex justify-between items-center border border-slate-100 rounded-xl">
+                        {[
+                            { icon: ArrowUpRight, label: 'Send', color: 'text-blue-500 bg-blue-50' },
+                            { icon: ArrowDownLeft, label: 'Receive', color: 'text-emerald-500 bg-emerald-50' },
+                            { icon: RefreshCcw, label: 'Swap', color: 'text-purple-500 bg-purple-50' },
+                            { icon: HistoryIcon, label: 'More', color: 'text-slate-500 bg-slate-50' }
+                        ].map((action, i) => (
+                            <div key={i} className="flex flex-col items-center gap-1 cursor-pointer hover:scale-105 transition-transform px-3 border-r last:border-r-0 border-slate-100">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${action.color}`}>
+                                    <action.icon size={16} />
+                                </div>
+                                <span className="text-[9px] font-normal text-slate-500">{action.label}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mt-8"></div>
+
+                {/* --- Recent Activity Section --- */}
+                <div className="flex flex-col gap-3 mt-1">
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-[14px] font-medium text-slate-800 uppercase tracking-wider">Recent Activity</h3>
+                        <button className="text-[11px] font-normal text-blue-600 hover:underline">See all</button>
+                    </div>
+
+                    <div className="flex flex-col">
+                        {(!userData?.coins?.history || userData?.coins?.history.length === 0) ? (
+                            <div className="bg-white/60 backdrop-blur-sm border border-slate-100 p-8 text-center shadow-sm">
+                                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-slate-100">
+                                    <HistoryIcon className="text-slate-300" size={24} />
+                                </div>
+                                <h3 className="text-slate-500 font-medium text-sm">No activity yet</h3>
+                                <p className="text-[11px] text-slate-400 mt-1">Transactions will appear here.</p>
+                            </div>
+                        ) : (
+                            userData.coins.history.map((item, index) => (
+                                <div 
+                                    key={item.id || index} 
+                                    className="bg-white p-3.5 flex items-center justify-between shadow-sm border-b border-slate-100 last:border-b-0 group hover:bg-slate-50 transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 flex items-center justify-center shrink-0 ${item.type === 'credit' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+                                            {item.type === 'credit' ? (
+                                                <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white">
+                                                    <ArrowDownLeft size={12} />
+                                                </div>
+                                            ) : (
+                                                <div className="w-5 h-5 rounded-full bg-rose-500 flex items-center justify-center text-white">
+                                                    <ArrowUpRight size={12} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h4 className="text-[13px] font-medium text-slate-800">{item.source || 'Transaction'}</h4>
+                                            <p className="text-[10px] font-normal text-slate-400 mt-0.5">{item.date}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-right">
+                                        <p className={`text-[14px] font-medium ${item.type === 'credit' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                            {item.type === 'credit' ? '+' : '-'}{item.amount?.toLocaleString()} C
+                                        </p>
+                                        <MoreHorizontal size={12} className="text-slate-300 ml-auto mt-0.5" />
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                <div className="h-20"></div>
+            </div>
         </div>
     );
 };

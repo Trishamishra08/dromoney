@@ -1,62 +1,49 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { 
+    ChevronLeft, Camera, User, Award, CheckCircle2, 
+    ShieldCheck, Users, Headset, MessageSquare, 
+    ChevronRight, LogOut, Image as ImageIcon, Loader2 
+} from 'lucide-react';
 import { useUser } from '../context/UserContext';
-import api from '../../shared/services/api';
-import { User, ShieldCheck, Rocket, Zap, MessageCircle, LogOut, ChevronRight, Copy, Share2, Plus, Sparkles, Headset, MessageSquare } from 'lucide-react';
+import api from '../../shared/services/api'; 
 import UnlockModal from '../components/UnlockModal';
-import PaymentModal from '../components/PaymentModal';
 import KycModal from '../components/KycModal';
 import ReferralsModal from '../components/ReferralsModal';
-import ContactModal from '../components/ContactModal';
 import FeedbackModal from '../components/FeedbackModal';
 
 const Profile = () => {
     const navigate = useNavigate();
-    const { userData, addNotification, upgradeBooster, updateProfileImage, logout } = useUser();
-    const { name, id, referrals, isBoosterActive, isPaid, profileImage, kycStatus } = userData;
+    const fileInputRef = React.useRef(null);
+    const { userData, addNotification, updateProfileImage, logout } = useUser();
+    const { name, id, referrals, isPaid, profileImage, kycStatus } = userData;
     const [isUploading, setIsUploading] = useState(false);
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
-    const [paymentConfig, setPaymentConfig] = useState({ isOpen: false, plan: '', amount: 0 });
     const [isKycOpen, setIsKycOpen] = useState(false);
     const [isReferralsOpen, setIsReferralsOpen] = useState(false);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+
+    const defaultRealImage = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&q=80&fit=crop";
 
     const handleAction = (title) => {
         if (!isPaid) {
             setIsUnlockOpen(true);
             return;
         }
-
-        if (title === 'Help & Support') {
-            navigate('/user/help');
-            return;
-        }
-
-        if (title === 'App Feedback') {
-            setIsFeedbackOpen(true);
-            return;
-        }
-
-        if (title === 'KYC Status') {
-            setIsKycOpen(true);
-            return;
-        }
-
-        if (title === 'My Referrals') {
-            setIsReferralsOpen(true);
-            return;
-        }
+        if (title === 'Help & Support') { navigate('/user/help'); return; }
+        if (title === 'App Feedback') { setIsFeedbackOpen(true); return; }
+        if (title === 'KYC Status') { setIsKycOpen(true); return; }
+        if (title === 'My Referrals') { setIsReferralsOpen(true); return; }
     };
 
     const handleImageChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Optimistic UI update
+            // Instant Preview
             const reader = new FileReader();
             reader.onloadend = () => updateProfileImage(reader.result);
             reader.readAsDataURL(file);
-
-            // Real backend update
+            
             setIsUploading(true);
             try {
                 const uploadFormData = new FormData();
@@ -65,91 +52,209 @@ const Profile = () => {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
                 if (res.success) {
-                    updateProfileImage(res.data); // Update global state with Cloudinary URL
-                    addNotification("Success!", "Profile photo updated.", "success");
+                    updateProfileImage(res.data);
+                    addNotification("Success!", "Profile photo updated and saved.", "success");
                 }
             } catch (err) {
-                addNotification("Sync Error", "Photo failed to sync.", "warning");
+                console.error(err);
+                addNotification("Sync Error", "Photo failed to save on server.", "warning");
             } finally {
                 setIsUploading(false);
             }
         }
     };
 
-    const sections = [
-        { id: 1, title: 'KYC Status', status: kycStatus || 'Not Started', action: 'View' },
-        { id: 2, title: 'My Referrals', status: `${referrals.count} Total active`, action: 'View' },
-        { id: 4, title: 'Help & Support', status: '24/7 technical assistance' },
-        { id: 5, title: 'App Feedback', status: 'Tell us how to improve' },
-    ];
+    const triggerUpload = () => {
+        fileInputRef.current.click();
+    };
 
     return (
-        <div className="flex flex-col gap-6 p-5 bg-[#F8FAFC] animate-in fade-in duration-700">
+        <div className="flex flex-col min-h-screen bg-[#F1F9F3] pb-24 relative overflow-hidden">
             <UnlockModal isOpen={isUnlockOpen} onClose={() => setIsUnlockOpen(false)} />
             <KycModal isOpen={isKycOpen} onClose={() => setIsKycOpen(false)} />
             <ReferralsModal isOpen={isReferralsOpen} onClose={() => setIsReferralsOpen(false)} referralCount={referrals.count} />
             <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
-            <div className="flex flex-col items-center mt-0 mb-2 text-center">
-                <label className="relative cursor-pointer group mb-3">
-                    <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-                    <div className="relative w-20 h-20 bg-white rounded-full flex items-center justify-center ring-4 ring-white shadow-xl shadow-slate-200/50 overflow-hidden transition-transform group-active:scale-95">
-                        {isUploading ? (
-                            <div className="absolute inset-0 bg-white/80 z-10 flex items-center justify-center">
-                                <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                        ) : null}
-                        
-                        {profileImage ? (
-                            <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                                <User size={32} className="text-slate-400" />
-                            </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                            <Plus size={20} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
+            {/* Ultra-Compact Header Row - Navy Blue Theme */}
+            <div className="relative h-16 bg-gradient-to-br from-[#0B1221] to-[#1E293B] rounded-b-3xl shadow-lg overflow-hidden mb-4 flex items-center px-5">
+                {/* Decorative Elements */}
+                <div className="absolute right-[-10px] top-[-10px] opacity-[0.03] pointer-events-none">
+                    <User size={100} className="text-white" />
+                </div>
+                
+                {/* Compact Row: Back + Title */}
+                <div className="flex items-center gap-3 relative z-20 w-full">
+                    <button 
+                        onClick={() => navigate(-1)} 
+                        className="w-8 h-8 flex items-center justify-center bg-white/5 backdrop-blur-md rounded-lg text-white active:scale-90 transition-all border border-white/10"
+                    >
+                        <ChevronLeft size={18} />
+                    </button>
+                    
+                    <div className="flex flex-col">
+                        <p className="text-blue-400 text-[7px] font-black uppercase tracking-[0.2em] leading-none mb-1">
+                            Account Settings
+                        </p>
+                        <h1 className="text-base font-black text-white tracking-tight leading-none uppercase">
+                            Your Profile
+                        </h1>
                     </div>
-                </label>
-                <h2 className="text-xl font-black text-slate-800 tracking-tight">{name}</h2>
-                <div className="bg-slate-900/5 px-2.5 py-1 rounded-full mt-1.5 inline-block border border-slate-900/5">
-                    <p className="text-[9px] font-black text-slate-500 capitalize tracking-widest leading-none">{id}</p>
                 </div>
             </div>
 
-            <div className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden shadow-xl shadow-slate-200/50">
-                {sections.map((item, idx) => (
-                    <button 
-                        key={item.id} 
-                        onClick={() => handleAction(item.title)}
-                        className={`w-full p-5 flex items-center justify-between group transition-all active:bg-slate-50 ${idx !== sections.length - 1 ? 'border-b border-slate-50' : ''}`}>
-                         
-                         <div className="text-left">
-                            <h4 className="text-[13px] font-black text-slate-800 tracking-tight leading-tight mb-1">{item.title}</h4>
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tight opacity-70">{item.status}</p>
-                         </div>
-                         
-                         <div className="flex items-center gap-3">
-                             {item.action ? (
-                                 <div className="bg-[#EBF6FF] text-[#2D9AFF] hover:bg-[#2D9AFF] hover:text-white px-5 py-2.5 rounded-2xl text-[12px] font-black transition-all">
-                                     {item.action}
-                                 </div>
-                             ) : (
-                                 <ChevronRight size={20} className="text-slate-200 group-hover:text-slate-400 group-hover:translate-x-1 transition-all" />
-                             )}
-                         </div>
-                    </button>
-                ))}
-            </div>
+            <div className="flex-1 overflow-y-auto px-5 space-y-4">
+                {/* ── Profile Avatar Section ── */}
+                <div className="flex flex-col items-center py-2">
+                    <div className="relative mb-4">
+                        {/* Hidden File Input */}
+                        <input 
+                            type="file" 
+                            ref={fileInputRef}
+                            accept="image/*" 
+                            capture="user"
+                            className="hidden" 
+                            onChange={handleImageChange} 
+                        />
 
-            <div className="mt-4 flex flex-col items-center pb-2">
-                <button 
-                    onClick={logout}
-                    className="bg-white border border-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white px-10 py-4 rounded-full flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] shadow-lg shadow-rose-100/50 transition-all active:scale-95 group"
-                >
-                    <LogOut size={18} /> Logout Account
-                </button>
+                        <div className="w-24 h-24 bg-[#0B1221] rounded-[1.75rem] flex items-center justify-center text-white text-3xl font-bold shadow-xl shadow-slate-200 overflow-hidden border-[3px] border-white relative group">
+                            <img src={profileImage || defaultRealImage} alt="Profile" className="w-full h-full object-cover" />
+                            {isUploading && (
+                                <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center">
+                                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            )}
+                            <div 
+                                onClick={triggerUpload}
+                                className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                            >
+                                <Camera size={20} className="text-white" />
+                            </div>
+                        </div>
+                        
+                        <button 
+                            onClick={triggerUpload}
+                            className="absolute -bottom-0.5 -right-0.5 w-8 h-8 bg-white rounded-full shadow-lg border border-slate-100 flex items-center justify-center cursor-pointer active:scale-90 transition-all z-20"
+                        >
+                            <Camera size={14} className="text-slate-600" />
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-1.5">
+                        <button 
+                            onClick={triggerUpload}
+                            className="bg-white px-3.5 py-1.5 rounded-lg text-[9px] font-black text-slate-800 uppercase tracking-widest border border-slate-100 shadow-sm flex items-center gap-1.5 active:scale-95 transition-all"
+                        >
+                            <ImageIcon size={12} className="text-blue-500" /> Gallery
+                        </button>
+                        <button 
+                            onClick={triggerUpload}
+                            className="bg-[#0B1221] px-3.5 py-1.5 rounded-lg text-[9px] font-black text-white uppercase tracking-widest flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
+                        >
+                            <Camera size={12} className="text-blue-400" /> Camera
+                        </button>
+                    </div>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest opacity-60">Change Profile Photo</p>
+                </div>
+
+                {/* ── User Information Fields ── */}
+                <div className="space-y-3">
+                    <div className="space-y-1">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</p>
+                        <div className="bg-white border border-slate-100 rounded-xl px-4 py-3 flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <User size={16} className="text-slate-300" />
+                                <span className="text-[13px] font-bold text-slate-800">{name}</span>
+                            </div>
+                            <CheckCircle2 size={14} className="text-emerald-500" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">User Identification</p>
+                        <div className="bg-white border border-slate-100 rounded-xl px-4 py-3 flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <Award size={16} className="text-slate-300" />
+                                <span className="text-[13px] font-bold text-slate-800">{id}</span>
+                            </div>
+                            <div className="bg-slate-50 px-2 py-0.5 rounded text-[8px] font-bold text-slate-400 border border-slate-100 uppercase tracking-widest">Permanent</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Status & Verification Sections ── */}
+                <div className="pt-1">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Verification Status</p>
+                    <div className="grid grid-cols-2 gap-3">
+                        <button 
+                            onClick={() => handleAction('KYC Status')}
+                            className="bg-white border border-slate-100 rounded-2xl p-4 text-left shadow-sm active:bg-slate-50 transition-all group relative overflow-hidden"
+                        >
+                            <div className="absolute right-0 top-0 w-12 h-12 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                            <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform border border-emerald-100">
+                                <ShieldCheck size={20} className="text-emerald-500" />
+                            </div>
+                            <h4 className="text-[13px] font-bold text-slate-800 leading-tight">KYC Status</h4>
+                            <p className="text-[8px] font-black text-emerald-600 uppercase mt-1 tracking-wider">{kycStatus || 'SUBMITTED'}</p>
+                        </button>
+
+                        <button 
+                            onClick={() => handleAction('My Referrals')}
+                            className="bg-white border border-slate-100 rounded-2xl p-4 text-left shadow-sm active:bg-slate-50 transition-all group relative overflow-hidden"
+                        >
+                            <div className="absolute right-0 top-0 w-12 h-12 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                            <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform border border-blue-100">
+                                <Users size={20} className="text-blue-500" />
+                            </div>
+                            <h4 className="text-[13px] font-bold text-slate-800 leading-tight">My Referrals</h4>
+                            <p className="text-[8px] font-black text-blue-600 uppercase mt-1 tracking-wider">{referrals.count} ACTIVE</p>
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── Support Actions ── */}
+                <div className="space-y-2.5">
+                    <button 
+                        onClick={() => handleAction('Help & Support')}
+                        className="w-full bg-white border border-slate-100 rounded-xl p-3.5 flex items-center justify-between shadow-sm active:bg-slate-50 transition-all"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100">
+                                <Headset size={18} />
+                            </div>
+                            <div className="text-left">
+                                <h4 className="text-[13px] font-bold text-slate-800 leading-none">Help & Support</h4>
+                                <p className="text-[9px] font-medium text-slate-400 mt-1">24/7 technical assistance</p>
+                            </div>
+                        </div>
+                        <ChevronRight size={18} className="text-slate-300" />
+                    </button>
+
+                    <button 
+                        onClick={() => handleAction('App Feedback')}
+                        className="w-full bg-white border border-slate-100 rounded-xl p-3.5 flex items-center justify-between shadow-sm active:bg-slate-50 transition-all"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100">
+                                <MessageSquare size={18} />
+                            </div>
+                            <div className="text-left">
+                                <h4 className="text-[13px] font-bold text-slate-800 leading-none">App Feedback</h4>
+                                <p className="text-[9px] font-medium text-slate-400 mt-1">Tell us how to improve</p>
+                            </div>
+                        </div>
+                        <ChevronRight size={18} className="text-slate-300" />
+                    </button>
+                </div>
+
+                {/* ── Logout Button ── */}
+                <div className="pt-2">
+                    <button 
+                        onClick={logout}
+                        className="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                    >
+                        <LogOut size={18} className="text-rose-500" /> Logout Account
+                    </button>
+                </div>
             </div>
         </div>
     );

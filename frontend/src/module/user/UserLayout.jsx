@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Bell, Wallet as WalletIcon, Home as HomeIcon, LayoutGrid, User, History, PhoneCall, HelpCircle, Building2, Rocket, MonitorPlay, X, CheckCircle2, AlertCircle, Info, Globe, Sparkles, Headset, ChevronDown, TrendingUp } from 'lucide-react';
+import { 
+    Menu, Bell, Wallet as WalletIcon, Home as HomeIcon, LayoutGrid, User, History, 
+    PhoneCall, HelpCircle, Building2, Rocket, MonitorPlay, X, CheckCircle2, 
+    AlertCircle, Info, Globe, Sparkles, Headset, ChevronDown, TrendingUp, 
+    Wrench, MessageSquare, Zap, Users 
+} from 'lucide-react';
+import { motion } from "framer-motion";
 import { useUser } from './context/UserContext';
+import LogoImg from '../../assets/WhatsApp_Image_2026-04-28_at_10.52.49_PM-removebg-preview.png';
 
 const UserLayout = () => {
     const location = useLocation();
@@ -12,9 +19,11 @@ const UserLayout = () => {
     const { userData, notifications, clearNotifications, markAsRead } = useUser();
 
     const navItems = [
-        { path: '/user/home', label: 'Home', icon: HomeIcon },
-        { path: '/user/wallet', label: 'Scan', icon: LayoutGrid, isCenter: true },
-        { path: '/user/profile', label: 'Profile', icon: User },
+        { path: '/user/home', label: 'DASHBOARD', icon: LayoutGrid },
+        { path: '/user/earn', label: 'TASKS', icon: Zap },
+        { path: '/user/marketing', label: 'NETWORK', icon: Users },
+        { path: '/user/wallet', label: 'WALLET', icon: WalletIcon },
+        { path: '/user/profile', label: 'PROFILE', icon: User },
     ];
 
     const getNotifIcon = (type) => {
@@ -29,56 +38,55 @@ const UserLayout = () => {
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden">
             {/* --- New Dromoney Fixed Top Header --- */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md px-4 py-3 flex items-center justify-between max-w-md mx-auto border-b border-slate-100 shadow-sm">
-                {/* Left Side: Profile (Compact) */}
-                <div className="flex items-center active:scale-95 transition-transform cursor-pointer z-10" onClick={() => navigate('/user/profile')}>
-                    <div className="w-9 h-9 rounded-full border border-slate-200 shadow-sm overflow-hidden bg-slate-50">
+            <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md px-4 py-1.5 flex items-center justify-between max-w-md mx-auto border-b border-slate-800 shadow-xl min-h-[64px]">
+                {/* 1. Left Side: Profile */}
+                <div className="flex-shrink-0 active:scale-95 transition-transform cursor-pointer ml-1" onClick={() => navigate('/user/profile')}>
+                    <div className="w-9 h-9 rounded-full border border-slate-700 shadow-inner overflow-hidden bg-slate-800">
                         <img 
-                            src={userData?.profileImage || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80"} 
+                            src={userData?.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&q=80&fit=crop"} 
                             alt="Profile" 
                             className="w-full h-full object-cover" 
                         />
                     </div>
                 </div>
 
-                {/* Center: Logo (Absolute Centered) */}
-                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
-                    <div className="w-7 h-7 bg-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20">
-                        <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                {/* 2. Center: Brand & Logo */}
+                <div className="flex flex-1 items-center justify-center gap-0.5 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
+                    <div className="w-12 h-12 flex items-center justify-center">
+                        <img src={LogoImg} alt="Logo" className="w-full h-full object-contain brightness-110 drop-shadow-xl" />
                     </div>
-                    <span className="text-[15px] font-bold text-slate-800 tracking-tight uppercase">Dromoney</span>
+                    <span className="text-[14px] font-bold text-white tracking-[0.1em] uppercase font-outfit truncate">Dromoney</span>
                 </div>
 
-                {/* Right Side: Actions */}
-                <div className="flex items-center gap-1.5 z-10">
-                    {/* Wallet Icon */}
+                {/* 3. Right Side: Actions */}
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                    {/* Wallet */}
                     <button
                         onClick={() => navigate('/user/wallet')}
-                        className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-teal-600 active:scale-90 transition-all"
+                        className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-sky-400 active:scale-90 transition-all"
                     >
-                        <WalletIcon size={18} strokeWidth={2} />
+                        <WalletIcon size={17} strokeWidth={2} />
                     </button>
-
-                    {/* Bell Icon */}
+ 
+                    {/* Bell */}
                     <button
                         onClick={() => setIsNotifOpen(true)}
-                        className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-teal-600 relative active:scale-90 transition-all"
+                        className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-sky-400 relative active:scale-90 transition-all"
                     >
-                        <Bell size={18} strokeWidth={2} />
+                        <Bell size={17} strokeWidth={2} />
                         {notifications.length > 0 && (
-                            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white"></span>
+                            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-sky-500 rounded-full border border-slate-900"></span>
                         )}
                     </button>
-
-                    {/* Sidebar Menu Icon */}
+ 
+                    {/* Menu */}
                     <button
                         onClick={() => setIsMenuOpen(true)}
-                        className="w-8 h-8 flex items-center justify-center text-slate-700 hover:text-teal-600 active:scale-90 transition-all ml-0.5"
+                        className="w-8 h-8 flex items-center justify-center text-slate-100 hover:text-sky-400 active:scale-90 transition-all"
                     >
                         <Menu size={22} strokeWidth={2} />
                     </button>
                 </div>
-            </header>
             </header>
 
             {/* --- Notification Drawer (Right Side) --- */}
@@ -90,65 +98,85 @@ const UserLayout = () => {
                 ></div>
 
                 {/* Drawer Body */}
-                <div className={`absolute top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl transition-transform duration-500 ease-out flex flex-col ${isNotifOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                    <div className="p-4 border-b border-sky-50 flex items-center justify-between bg-sky-50/30">
-                        <div className="flex items-center gap-2">
-                            <Bell className="text-sky-600" size={20} />
-                            <h2 className="font-black text-slate-800 text-lg uppercase tracking-tight">Notifications</h2>
+                <div className={`absolute top-0 right-0 h-full w-full max-w-md bg-[#F1F9F3] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${isNotifOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                    {/* Ultra-Compact Header Row - Navy Blue Theme */}
+                    <div className="relative h-16 bg-gradient-to-br from-[#0B1221] to-[#1E293B] rounded-b-3xl shadow-lg overflow-hidden flex items-center px-5 shrink-0">
+                        {/* Decorative Elements */}
+                        <div className="absolute right-[-10px] top-[-10px] opacity-[0.03] pointer-events-none">
+                            <Bell size={100} className="text-white" />
                         </div>
-                        <button
-                            onClick={() => setIsNotifOpen(false)}
-                            className="p-2 hover:bg-sky-100 rounded-full transition-colors text-slate-400"
-                        >
-                            <X size={24} />
-                        </button>
+                        
+                        {/* Compact Row: Icon + Title */}
+                        <div className="flex items-center gap-3 relative z-20 w-full">
+                            <div className="w-8 h-8 flex items-center justify-center bg-white/5 backdrop-blur-md rounded-lg text-white border border-white/10">
+                                <Bell size={18} />
+                            </div>
+                            
+                            <div className="flex flex-col flex-1">
+                                <p className="text-blue-400 text-[7px] font-black uppercase tracking-[0.2em] leading-none mb-1">
+                                    In-App Updates
+                                </p>
+                                <h2 className="text-base font-black text-white tracking-tight leading-none uppercase">
+                                    Notifications
+                                </h2>
+                            </div>
+
+                            <button
+                                onClick={() => setIsNotifOpen(false)}
+                                className="w-8 h-8 flex items-center justify-center bg-white/5 backdrop-blur-md rounded-lg text-white active:scale-90 transition-all border border-white/10"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
                         {notifications.length > 0 ? (
                             notifications.map((notif) => (
                                 <div 
                                     key={notif.id} 
                                     onClick={() => markAsRead(notif.id)}
-                                    className={`flex gap-4 p-4 rounded-2xl transition-all cursor-pointer group relative ${
+                                    className={`flex gap-3 p-4 rounded-2xl transition-all cursor-pointer group relative border ${
                                         notif.isRead 
-                                        ? 'bg-slate-50/50 border border-slate-100 opacity-70' 
-                                        : 'bg-white border-2 border-sky-100 shadow-sm shadow-sky-100/50'
+                                        ? 'bg-white/40 border-slate-200/50 opacity-60' 
+                                        : 'bg-white border-blue-100 shadow-sm shadow-blue-100/30'
                                     }`}
                                 >
                                     {!notif.isRead && (
-                                        <div className="absolute top-4 right-4 w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(37,99,235,0.5)]"></div>
+                                        <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></div>
                                     )}
-                                    <div className={`mt-1 transition-transform group-hover:scale-110 ${notif.isRead ? 'grayscale opacity-50' : ''}`}>
+                                    <div className={`mt-0.5 shrink-0 transition-transform group-hover:scale-110 ${notif.isRead ? 'grayscale opacity-30' : ''}`}>
                                         {getNotifIcon(notif.type)}
                                     </div>
                                     <div className="flex-1">
-                                        <div className="flex justify-between items-start mb-1">
-                                            <h4 className={`text-sm font-black transition-colors ${notif.isRead ? 'text-slate-500' : 'text-slate-800'}`}>
+                                        <div className="flex justify-between items-start mb-0.5">
+                                            <h4 className={`text-[13px] font-bold tracking-tight transition-colors ${notif.isRead ? 'text-slate-500' : 'text-slate-800'} uppercase`}>
                                                 {notif.title}
                                             </h4>
-                                            <span className="text-[9px] font-black text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                                            <span className="text-[8px] font-bold text-slate-400 bg-slate-50/50 px-1.5 py-0.5 rounded-md border border-slate-100">
                                                 {notif.time}
                                             </span>
                                         </div>
-                                        <p className={`text-[11px] font-bold leading-relaxed ${notif.isRead ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        <p className={`text-[11px] font-medium leading-relaxed ${notif.isRead ? 'text-slate-400' : 'text-slate-500'}`}>
                                             {notif.message}
                                         </p>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center opacity-30 select-none py-20">
-                                <Bell size={60} className="text-slate-200 mb-4 stroke-1" />
+                            <div className="h-full flex flex-col items-center justify-center py-20">
+                                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 opacity-40">
+                                    <Bell size={32} className="text-slate-300 stroke-1" />
+                                </div>
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">All caught up</p>
                             </div>
                         )}
                     </div>
 
-                    <div className="p-4 border-t border-sky-50 text-center">
+                    <div className="p-4 bg-white/20 backdrop-blur-md border-t border-slate-200/50 text-center">
                         <button
                             onClick={clearNotifications}
-                            className="text-[10px] font-black text-sky-600 uppercase tracking-widest hover:underline px-4 py-2"
+                            className="w-full py-3 text-[10px] font-black text-blue-600 uppercase tracking-widest bg-white border border-blue-100 rounded-xl shadow-sm active:scale-95 transition-all"
                         >
                             Clear all notifications
                         </button>
@@ -156,114 +184,97 @@ const UserLayout = () => {
                 </div>
             </div>
 
-            {/* --- Premium Side Menu Drawer (Right Side) --- */}
-            <div className={`fixed inset-0 z-[100] transition-all duration-500 ${isMenuOpen ? 'visible' : 'invisible disabled'}`}>
+            {/* --- Standard Compact Side Menu (Right Side) --- */}
+            <div className={`fixed inset-0 z-[100] transition-all duration-500 ${isMenuOpen ? 'visible' : 'invisible'}`}>
                 {/* Backdrop */}
                 <div
                     onClick={() => setIsMenuOpen(false)}
                     className={`absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`}
                 ></div>
 
-                {/* Drawer Body (Half Width) */}
-                <div className={`absolute top-0 right-0 h-full w-[200px] bg-white shadow-2xl transition-transform duration-500 ease-out flex flex-col ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                    <div className="p-4 border-b border-sky-50 flex items-center justify-between bg-sky-50/20">
-                        <div className="flex items-center gap-2">
-                            <Menu className="text-sky-600" size={18} />
-                            <h2 className="font-black text-slate-800 text-sm uppercase tracking-tight">Menu</h2>
+                {/* Drawer Body (Full Height, Compact, No Scroll) */}
+                <div className={`absolute top-0 right-0 h-full w-[260px] bg-[#0B1221] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                    
+                    {/* --- Slim Header --- */}
+                    <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center border border-emerald-500/10">
+                                <Menu size={16} className="text-emerald-500" />
+                            </div>
+                            <h2 className="text-[13px] font-medium text-slate-300 tracking-[0.1em] uppercase">Menu</h2>
                         </div>
-                        <button
-                            onClick={() => setIsMenuOpen(false)}
-                            className="p-1.5 hover:bg-sky-100 rounded-full transition-colors text-slate-400"
-                        >
-                            <X size={20} />
+                        <button onClick={() => setIsMenuOpen(false)} className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-white transition-colors">
+                            <X size={18} />
                         </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto py-2">
-                        <div className="flex flex-col">
-                            {/* Option 1: Language (Expandable) */}
-                            <div className="border-b border-slate-50">
+                    {/* Navigation Area - Ultra Compact */}
+                    <div className="flex-1 overflow-hidden py-3 px-3">
+                        <div className="flex flex-col space-y-1">
+                            {/* Profile Entry - Simplified */}
+                            <button 
+                                onClick={() => { navigate('/user/profile'); setIsMenuOpen(false); }}
+                                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/[0.03] rounded-2xl transition-all group mb-2"
+                            >
+                                <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-slate-800">
+                                    <img src={userData?.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&q=80&fit=crop"} alt="Avatar" className="w-full h-full object-cover" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-[15px] font-normal text-white leading-none tracking-tight">{userData?.name || 'Guest User'}</p>
+                                    <p className="text-[10px] text-emerald-500 font-normal mt-1 uppercase tracking-wider">Profile</p>
+                                </div>
+                            </button>
+
+                            <div className="h-px bg-white/5 mx-4 mb-2"></div>
+
+                            {/* Options with reduced padding */}
+                            <div>
                                 <button 
                                     onClick={() => setIsLangOpen(!isLangOpen)}
-                                    className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
+                                    className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-white/[0.03] rounded-xl transition-all group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <Globe size={18} className="text-slate-400" />
-                                        <div>
-                                            <p className="text-[11px] font-black text-slate-800 uppercase tracking-tight">Language</p>
-                                            <p className="text-[9px] font-bold text-sky-600">हिंदी / English</p>
-                                        </div>
+                                        <Globe size={18} className="text-slate-500 group-hover:text-emerald-400 transition-colors" />
+                                        <span className="text-[13px] font-normal text-slate-300">Language</span>
                                     </div>
-                                    <ChevronDown size={14} className={`text-slate-300 transition-transform duration-300 ${isLangOpen ? 'rotate-180' : ''}`} />
+                                    <ChevronDown size={14} className={`text-slate-600 transition-transform duration-300 ${isLangOpen ? 'rotate-180' : ''}`} />
                                 </button>
-                                
-                                {/* Language Sub-menu */}
-                                <div className={`overflow-hidden transition-all duration-300 bg-slate-50/50 ${isLangOpen ? 'max-h-32' : 'max-h-0'}`}>
-                                    <button 
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="w-full pl-14 pr-5 py-3 flex items-center justify-between hover:bg-sky-50 transition-colors text-left border-b border-white/50"
-                                    >
-                                        <span className="text-[10px] font-bold text-slate-600">English</span>
-                                        <CheckCircle2 size={12} className="text-sky-500" />
+                                <div className={`overflow-hidden transition-all duration-300 bg-white/[0.02] rounded-xl mx-1 ${isLangOpen ? 'max-h-32 my-1 border border-white/5' : 'max-h-0'}`}>
+                                    <button onClick={() => setIsMenuOpen(false)} className="w-full px-6 py-2.5 text-left text-[12px] font-normal text-slate-400 hover:text-emerald-400 flex items-center justify-between">
+                                        English <CheckCircle2 size={12} className="text-emerald-400" />
                                     </button>
-                                    <button 
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="w-full pl-14 pr-5 py-3 flex items-center justify-between hover:bg-sky-50 transition-colors text-left"
-                                    >
-                                        <span className="text-[10px] font-bold text-slate-600">हिंदी (Hindi)</span>
-                                    </button>
+                                    <button onClick={() => setIsMenuOpen(false)} className="w-full px-6 py-2.5 text-left text-[12px] font-normal text-slate-400 hover:text-emerald-400">Hindi</button>
                                 </div>
                             </div>
 
-                            {/* Option 2: How It Works */}
-                            <button 
-                                onClick={() => { navigate('/user/info/how-it-works'); setIsMenuOpen(false); }}
-                                className="w-full px-5 py-4 flex items-center gap-3 hover:bg-slate-50 transition-colors border-b border-slate-50 text-left"
-                            >
-                                <HelpCircle size={18} className="text-slate-400" />
-                                <p className="text-[11px] font-black text-slate-800 uppercase tracking-tight">How It Works</p>
-                            </button>
-
-                            {/* Option 3: Benefits */}
-                            <button 
-                                onClick={() => { navigate('/user/info/benefits'); setIsMenuOpen(false); }}
-                                className="w-full px-5 py-4 flex items-center gap-3 hover:bg-slate-50 transition-colors border-b border-slate-50 text-left"
-                            >
-                                <Sparkles size={18} className="text-slate-400" />
-                                <p className="text-[11px] font-black text-slate-800 uppercase tracking-tight">Benefits</p>
-                            </button>
-
-                            {/* Option 4: Support */}
-                            <button 
-                                onClick={() => { navigate('/user/info/support'); setIsMenuOpen(false); }}
-                                className="w-full px-5 py-4 flex items-center gap-3 hover:bg-slate-50 transition-colors border-b border-slate-50 text-left"
-                            >
-                                <Headset size={18} className="text-slate-400" />
-                                <p className="text-[11px] font-black text-slate-800 uppercase tracking-tight">Support</p>
-                            </button>
-
-                            {/* Option 5: Promote Your Brand */}
-                            <button 
-                                onClick={() => { navigate('/user/promote-brand'); setIsMenuOpen(false); }}
-                                className="w-full px-5 py-4 flex items-center gap-3 hover:bg-slate-50 transition-colors border-b border-slate-50 text-left"
-                            >
-                                <Rocket size={18} className="text-sky-500" />
-                                <p className="text-[11px] font-black text-slate-800 uppercase tracking-tight">Promote Your Brand</p>
-                            </button>
-
-                            {/* Option 6: About */}
-                            <button 
-                                onClick={() => { navigate('/user/info/about'); setIsMenuOpen(false); }}
-                                className="w-full px-5 py-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
-                            >
-                                <Building2 size={18} className="text-slate-400" />
-                                <p className="text-[11px] font-black text-slate-800 uppercase tracking-tight">About Dromoney</p>
-                            </button>
+                            {[
+                                { icon: HelpCircle, label: 'How It Works', path: '/user/info/how-it-works' },
+                                { icon: Sparkles, label: 'Benefits', path: '/user/info/benefits' },
+                                { icon: Headset, label: 'Support', path: '/user/info/support' },
+                                { icon: Rocket, label: 'Promote Brand', path: '/user/promote-brand' },
+                                { icon: Building2, label: 'About Us', path: '/user/info/about' }
+                            ].map((item, idx) => (
+                                <button 
+                                    key={idx}
+                                    onClick={() => { navigate(item.path); setIsMenuOpen(false); }}
+                                    className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-white/[0.03] rounded-xl transition-all group"
+                                >
+                                    <item.icon size={18} className="text-slate-500 group-hover:text-emerald-400 group-hover:scale-105 transition-all" />
+                                    <span className="text-[13px] font-normal text-slate-300">{item.label}</span>
+                                </button>
+                            ))}
                         </div>
                     </div>
 
-                    <div className="p-6 border-t border-slate-50 text-center">
-                        <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest leading-none">V 1.0.2 (ALPHA)</p>
+                    {/* Footer - No Scroll Anchor */}
+                    <div className="p-4 border-t border-white/5">
+                        <button 
+                            onClick={() => { logout(); navigate('/user/auth/login'); setIsMenuOpen(false); }}
+                            className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all active:scale-95 shadow-lg shadow-black/20 font-normal uppercase text-[11px] tracking-widest"
+                        >
+                            Log out
+                        </button>
+                        <p className="text-[9px] font-normal text-slate-600 uppercase tracking-[0.1em] mt-4 text-center">Version 1.0.2</p>
                     </div>
                 </div>
             </div>
@@ -273,35 +284,72 @@ const UserLayout = () => {
                 <Outlet />
             </main>
 
-            {/* --- Premium Bottom Navigation Bar --- */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-6 py-3 flex items-center justify-between z-50 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.03)] max-w-md mx-auto">
-                {navItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = location.pathname === item.path;
+            {/* --- Premium White Elevated Bottom Navigation Bar (Same as Mechanic Image 2) --- */}
+            <div className="fixed bottom-0 left-0 right-0 z-50">
+                {/* The Ultra-Light Mustard Bar Container */}
+                <div className="relative bg-[#FFFEF7] border-t border-black/5 h-20 flex items-center px-4 shadow-[0_-10px_30px_rgba(0,0,0,0.06)] max-w-md mx-auto">
+                    
+                    {/* --- The Jumping Bubble Layer --- */}
+                    <div className="absolute inset-0 flex px-4 pointer-events-none">
+                        {(() => {
+                            const activeIdx = navItems.findIndex(item => location.pathname === item.path);
+                            const isBottomNavRoute = activeIdx !== -1;
+                            
+                            return isBottomNavRoute && (
+                                <motion.div
+                                    animate={{ x: `${activeIdx * 100}%` }}
+                                    transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                                    className="w-1/5 h-full flex items-center justify-center"
+                                >
+                                    <motion.div
+                                        key={location.pathname}
+                                        initial={{ y: 0 }}
+                                        animate={{ 
+                                            y: [0, -38, 0],
+                                            scaleX: [1, 0.8, 1.1, 1],
+                                            scaleY: [1, 1.2, 0.9, 1]
+                                        }}
+                                        transition={{ 
+                                            duration: 0.5, 
+                                            times: [0, 0.5, 1],
+                                            ease: ["easeOut", "easeIn"]
+                                        }}
+                                        className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-400 via-indigo-400 to-purple-500 flex items-center justify-center shadow-[0_8px_20px_rgba(59,130,246,0.3)] border-[6px] border-[#FFFEF7] -mt-16"
+                                    >
+                                        {(() => {
+                                            const activeItem = navItems[activeIdx];
+                                            const Icon = activeItem.icon;
+                                            return <Icon size={28} className="text-white" strokeWidth={2.5} />;
+                                        })()}
+                                    </motion.div>
+                                </motion.div>
+                            );
+                        })()}
+                    </div>
 
-                    if (item.isCenter) {
+                    {/* --- Static Navigation Buttons --- */}
+                    {navItems.map((item, idx) => {
+                        const Icon = item.icon;
+                        const isActive = location.pathname === item.path;
                         return (
-                            <NavLink
-                                key={item.path}
-                                to={item.path}
-                                className="relative -top-6 flex flex-col items-center justify-center w-14 h-14 bg-teal-800 rounded-full shadow-lg shadow-teal-800/40 text-white transition-transform active:scale-95"
+                            <button
+                                key={idx}
+                                onClick={() => navigate(item.path)}
+                                className="flex-1 h-full flex flex-col items-center justify-center relative z-10"
                             >
-                                <LayoutGrid size={24} strokeWidth={2} />
-                            </NavLink>
+                                <Icon 
+                                    size={26} 
+                                    className={`mb-1 transition-opacity duration-300 ${isActive ? "opacity-0" : "opacity-100 text-slate-400"}`} 
+                                    strokeWidth={2} 
+                                />
+                                <span className={`text-[10px] font-semibold uppercase tracking-wider ${isActive ? "text-blue-600" : "text-slate-600"}`}>
+                                    {item.label}
+                                </span>
+                            </button>
                         );
-                    }
-
-                    return (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            className={`flex flex-col items-center gap-1 p-2 transition-all duration-300 ${isActive ? 'text-teal-800' : 'text-slate-400 hover:text-teal-800'}`}
-                        >
-                            <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                        </NavLink>
-                    );
-                })}
-            </nav>
+                    })}
+                </div>
+            </div>
         </div>
     );
 };

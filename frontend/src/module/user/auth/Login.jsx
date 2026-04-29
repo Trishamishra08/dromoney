@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Loader2, Phone, ShieldCheck, Lock, ArrowRight, Smartphone } from 'lucide-react';
-
+import { Loader2, ArrowRight, Smartphone, Lock, ShieldCheck } from 'lucide-react';
 import { useUser } from '../context/UserContext';
+import logoImg from '../../../assets/WhatsApp_Image_2026-04-28_at_10.52.49_PM-removebg-preview.png';
 
 const Login = () => {
     const navigate = useNavigate();
     const { sendLoginOtp, verifyLoginOtp } = useUser();
     
-    // Form States
     const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState('');
-    
-    // Flow States
-    const [step, setStep] = useState(1); // 1 = Phone, 2 = OTP
+    const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [expectedOtp, setExpectedOtp] = useState('');
@@ -24,7 +21,6 @@ const Login = () => {
         setLoading(true);
         const result = await sendLoginOtp(phone);
         setLoading(false);
-        
         if (result.success) {
             setExpectedOtp(result.dev_otp);
             setStep(2);
@@ -39,7 +35,6 @@ const Login = () => {
         setLoading(true);
         const result = await verifyLoginOtp(phone, otp, expectedOtp);
         setLoading(false);
-        
         if (result.success) {
             navigate('/user/home');
         } else {
@@ -48,122 +43,126 @@ const Login = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-[500px] animate-in fade-in zoom-in-95 duration-700">
-            {/* Header: Platform Branding */}
-            <div className="text-center mb-10 flex flex-col items-center">
-                <div className="flex items-center gap-2 mb-6 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
-                    <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/20">
-                        <svg className="w-6 h-6 text-white -rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.5-1 1.3-2.1c.42-.6.44-1.37.04-2.13L3 3l5.3 2.34c.76.4 1.53.38 2.13-.04C11.5 4.5 12.5 4 12.5 4L12 9z" /></svg>
-                    </div>
-                    <span className="text-xl font-black text-white tracking-tighter uppercase">Dromoney</span>
-                </div>
+        <div className="flex flex-col h-screen bg-white animate-in fade-in duration-700 overflow-hidden">
+            <style>
+                {`
+                    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+                    body { font-family: 'Roboto', sans-serif; }
+                `}
+            </style>
 
-                <div className="inline-flex items-center gap-2.5 bg-sky-500/10 border border-sky-500/20 px-4 py-1.5 rounded-full mb-6">
-                    <div className="w-2 h-2 bg-sky-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(14,165,233,0.8)]"></div>
-                    <span className="text-[10px] font-black text-sky-400 tracking-[0.2em] uppercase">Secure Access</span>
+            {/* ── Extreme Compact Curved Header ── */}
+            <div className="bg-[#0f1d3a] pt-4 pb-8 px-8 rounded-br-[80px] relative overflow-hidden shrink-0">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4"></div>
+                
+                <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                        <img src={logoImg} alt="Dromoney" className="w-7 h-7 object-contain" />
+                        <span className="text-[15px] font-black text-white tracking-[0.2em] uppercase">DROMONEY</span>
+                    </div>
+
+                    <div className="mt-0">
+                        <p className="text-white/60 text-[11px] font-normal mb-0 tracking-wide uppercase">Welcome Back!</p>
+                        <h1 className="text-[30px] font-medium text-white tracking-tight leading-none">Sign In</h1>
+                    </div>
                 </div>
-                <h1 className="text-3xl font-black text-white tracking-tight mb-2">Welcome Back!</h1>
-                <p className="text-slate-400 text-[11px] font-bold tracking-wide uppercase opacity-70">
-                    {step === 1 ? 'Enter your phone number to continue' : 'Enter the OTP sent to your phone'}
-                </p>
             </div>
 
-            {/* Auth Card: Modern Glassmorphism */}
-            <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[32px] p-8 shadow-2xl relative overflow-hidden">
-                {/* Tabs */}
-                <div className="flex p-1.5 bg-slate-950/50 rounded-2xl border border-white/5 mb-8">
-                    <button className="flex-1 py-3 bg-sky-500 text-slate-950 font-black text-[11px] uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-sky-500/20 active:scale-95">Login</button>
-                    <Link to="/user/auth/register" className="flex-1 py-3 text-slate-400 font-black text-[11px] uppercase tracking-widest rounded-xl hover:text-white transition-all text-center flex items-center justify-center">Register</Link>
-                </div>
-
-                {error && (
-                    <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl">
-                        <p className="text-rose-400 text-[12px] font-bold text-center">{error}</p>
-                    </div>
-                )}
-
-                {step === 1 ? (
-                    <form onSubmit={handleSendOtp} className="space-y-6 relative z-10 transition-all">
-                        <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                                <Smartphone size={12} className="text-sky-500" />
-                                Phone Number
-                            </label>
-                            <input
-                                type="tel"
-                                placeholder="Enter mobile number"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                                className="w-full bg-slate-950/50 text-white font-bold px-5 py-4 rounded-2xl border border-white/10 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all placeholder:text-slate-700 text-[14px]"
-                                required
-                                maxLength={10}
-                            />
+            {/* ── Login Form Section ── */}
+            <div className="flex-1 px-8 pt-8 pb-4 flex flex-col justify-start">
+                <div className="w-full max-w-sm mx-auto">
+                    {error && (
+                        <div className="mb-4 p-3 bg-rose-50 border border-rose-100 rounded-2xl text-center">
+                            <p className="text-rose-500 text-[11px] font-medium">
+                                {typeof error === 'object' ? error.message : error}
+                            </p>
                         </div>
+                    )}
 
-                        <button
-                            type="submit"
-                            disabled={phone.length < 10 || loading}
-                            className="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 disabled:opacity-30 disabled:hover:bg-sky-500 font-black uppercase text-[12px] tracking-widest py-4.5 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-sky-500/20 active:scale-95 group"
-                        >
-                            {loading ? <Loader2 size={20} className="animate-spin" /> : (
-                                <>
-                                    Send Security Code
-                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                </>
-                            )}
-                        </button>
-                    </form>
-                ) : (
-                    <form onSubmit={handleVerifyOtp} className="space-y-6 relative z-10 animate-in fade-in slide-in-from-right-4 duration-500">
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between ml-1 mb-2">
-                                <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                    <Lock size={12} className="text-sky-500" />
-                                    Security Code
-                                </label>
-                                <button type="button" onClick={() => setStep(1)} className="text-[10px] font-bold text-sky-500 hover:text-sky-400 transition-colors uppercase">Change Number</button>
+                    {step === 1 ? (
+                        <form onSubmit={handleSendOtp} className="space-y-4">
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
+                                <div className="relative group">
+                                    <input
+                                        type="tel"
+                                        placeholder="Enter mobile number"
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                                        className="w-full bg-slate-50 text-[#0f1d3a] font-medium px-6 py-3.5 rounded-full border border-slate-100 focus:bg-white focus:border-[#0f1d3a]/20 transition-all placeholder:text-slate-300 text-[14px]"
+                                        required
+                                        maxLength={10}
+                                    />
+                                    <Smartphone className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                                </div>
                             </div>
-                            
-                            <input
-                                type="text"
-                                placeholder="Enter 4-digit OTP"
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                                className="w-full bg-slate-950/50 text-white font-bold px-5 py-4 rounded-2xl border border-white/10 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all placeholder:text-slate-700 text-[20px] tracking-[0.5em] text-center"
-                                required
-                                maxLength={4}
-                            />
-                            {/* Dev Helper - Shows OTP since we have no SMS Gateway */}
-                            {expectedOtp && (
-                                <p className="text-[11px] font-bold text-sky-400/80 text-center mt-2">
-                                    Dev Code: {expectedOtp}
-                                </p>
-                            )}
-                        </div>
 
-                        <button
-                            type="submit"
-                            disabled={otp.length !== 4 || loading}
-                            className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 disabled:opacity-30 disabled:hover:bg-emerald-500 font-black uppercase text-[12px] tracking-widest py-4.5 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-emerald-500/20 active:scale-95 group"
-                        >
-                            {loading ? <Loader2 size={20} className="animate-spin" /> : (
-                                <>
-                                    Verify & Access
-                                    <ShieldCheck size={18} />
-                                </>
-                            )}
+                            <button
+                                type="submit"
+                                disabled={phone.length < 10 || loading}
+                                className="w-full bg-[#0f1d3a] hover:bg-[#1a2c52] text-white py-4 rounded-full font-bold text-[14px] transition-all shadow-xl shadow-slate-200 active:scale-[0.98] flex items-center justify-center gap-2"
+                            >
+                                {loading ? <Loader2 size={18} className="animate-spin" /> : 'Sign In'}
+                            </button>
+                        </form>
+                    ) : (
+                        <form onSubmit={handleVerifyOtp} className="space-y-4 animate-in slide-in-from-right duration-500">
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-center px-1">
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Verification</label>
+                                    <button type="button" onClick={() => setStep(1)} className="text-[10px] font-bold text-sky-600 uppercase">Change</button>
+                                </div>
+                                <div className="relative group">
+                                    <input
+                                        type="text"
+                                        placeholder="0000"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                                        className="w-full bg-slate-50 text-[#0f1d3a] font-medium px-6 py-3.5 rounded-full border border-slate-100 focus:bg-white focus:border-[#0f1d3a]/20 transition-all text-center tracking-[1em] text-[18px] placeholder:text-slate-300 placeholder:tracking-normal"
+                                        required
+                                        maxLength={4}
+                                    />
+                                    <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                                </div>
+                                <p className="text-center text-[10px] font-bold text-sky-500 mt-2 tracking-widest uppercase">Dev Code: 1234</p>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={otp.length !== 4 || loading}
+                                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-full font-bold text-[14px] transition-all shadow-xl shadow-emerald-50 active:scale-[0.98] flex items-center justify-center gap-2"
+                            >
+                                {loading ? <Loader2 size={18} className="animate-spin" /> : 'Verify Account'}
+                            </button>
+                        </form>
+                    )}
+
+                    <div className="mt-3 text-center">
+                        <button className="text-[11px] font-medium text-slate-400 hover:text-[#0f1d3a] transition-colors uppercase tracking-widest">Forget Password?</button>
+                    </div>
+
+                    <div className="flex items-center gap-4 my-6 px-4">
+                        <div className="flex-1 h-px bg-slate-100"></div>
+                        <span className="text-[10px] font-medium text-slate-300 uppercase tracking-widest">Or login with</span>
+                        <div className="flex-1 h-px bg-slate-100"></div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 px-2">
+                        <button className="flex items-center justify-center gap-3 py-3 rounded-full border border-slate-100 shadow-sm bg-white hover:bg-slate-50 active:scale-95 transition-all">
+                            <img src="https://www.google.com/favicon.ico" className="w-4 h-4 grayscale opacity-40" alt="Google" />
+                            <span className="text-[11px] font-semibold text-[#0f1d3a]">Google</span>
                         </button>
-                    </form>
-                )}
-            </div>
+                        <button className="flex items-center justify-center gap-3 py-3 rounded-full border border-slate-100 shadow-sm bg-white hover:bg-slate-50 active:scale-95 transition-all">
+                            <img src="https://www.facebook.com/favicon.ico" className="w-4 h-4 grayscale opacity-40" alt="Facebook" />
+                            <span className="text-[11px] font-semibold text-[#0f1d3a]">Facebook</span>
+                        </button>
+                    </div>
+                </div>
 
-            {/* Support/Footer info */}
-            <div className="mt-12 text-center">
-                <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.15em] mb-4">Secured by industry standard encryption</p>
-                <div className="flex justify-center gap-8 items-center opacity-40 grayscale">
-                    <div className="h-4 w-12 bg-slate-800 rounded"></div>
-                    <div className="h-4 w-12 bg-slate-800 rounded"></div>
-                    <div className="h-4 w-12 bg-slate-800 rounded"></div>
+                <div className="mt-auto pb-4 text-center">
+                    <p className="text-[12px] font-normal text-slate-400 uppercase tracking-widest">
+                        Don't Have An Account? <Link to="/user/auth/register" className="text-[#0f1d3a] font-bold underline decoration-sky-500/20 underline-offset-4 ml-1">Sign Up</Link>
+                    </p>
                 </div>
             </div>
         </div>

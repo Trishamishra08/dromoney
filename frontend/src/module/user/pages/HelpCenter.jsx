@@ -54,18 +54,31 @@ const HelpCenter = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#F8FAFC] animate-in slide-in-from-right duration-500 pb-20">
-            {/* Minimal Header */}
-            <div className="p-4 bg-white border-b border-slate-100 flex items-center gap-4">
-                <button 
-                    onClick={() => navigate(-1)}
-                    className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-800 active:scale-95 transition-all"
-                >
-                    <ChevronLeft size={24} />
-                </button>
-                <div>
-                    <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none">Help Center</h1>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Direct support & guides</p>
+        <div className="flex flex-col min-h-screen bg-[#F1F9F3] pb-20 relative overflow-hidden">
+            {/* Ultra-Compact Header Row - Navy Blue Theme */}
+            <div className="relative h-20 bg-gradient-to-br from-[#0B1221] to-[#1E293B] rounded-b-3xl shadow-lg overflow-hidden mb-4 flex items-center px-5">
+                {/* Decorative Elements */}
+                <div className="absolute right-[-10px] top-[-10px] opacity-[0.03] pointer-events-none">
+                    <BookOpen size={120} className="text-white" />
+                </div>
+                
+                {/* Compact Row: Back + Title */}
+                <div className="flex items-center gap-4 relative z-20 w-full">
+                    <button 
+                        onClick={() => navigate(-1)} 
+                        className="w-9 h-9 flex items-center justify-center bg-white/5 backdrop-blur-md rounded-xl text-white active:scale-90 transition-all border border-white/10"
+                    >
+                        <ChevronLeft size={20} />
+                    </button>
+                    
+                    <div className="flex flex-col">
+                        <p className="text-blue-400 text-[8px] font-black uppercase tracking-[0.2em] leading-none mb-1">
+                            Support System
+                        </p>
+                        <h1 className="text-lg font-black text-white tracking-tight leading-none uppercase">
+                            Help Center
+                        </h1>
+                    </div>
                 </div>
             </div>
 

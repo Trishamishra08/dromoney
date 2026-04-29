@@ -73,23 +73,32 @@ const PromoteBrand = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-24 relative pt-20">
-            {/* Header */}
-            <header className="bg-gradient-to-r from-blue-600 to-sky-500 text-white px-4 py-4 fixed top-0 left-0 right-0 z-50 flex items-center justify-between shadow-lg max-w-md mx-auto">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => view === 'form' && myPromotions.length > 0 ? setView('list') : navigate('/user/home')} className="p-1 hover:bg-white/10 rounded-full transition-colors">
-                        <ChevronLeft size={24} />
+        <div className="min-h-screen bg-[#F1F9F3] pb-24 relative overflow-hidden">
+            {/* Ultra-Compact Header Row - Navy Blue Theme */}
+            <div className="relative h-16 bg-gradient-to-br from-[#0B1221] to-[#1E293B] rounded-b-3xl shadow-lg overflow-hidden flex items-center px-5 fixed top-0 left-0 right-0 z-50 max-w-md mx-auto">
+                {/* Decorative Elements */}
+                <div className="absolute right-[-10px] top-[-10px] opacity-[0.03] pointer-events-none">
+                    <Rocket size={100} className="text-white" />
+                </div>
+                
+                {/* Compact Row: Back + Title */}
+                <div className="flex items-center gap-3 relative z-20 w-full">
+                    <button onClick={() => view === 'form' && myPromotions.length > 0 ? setView('list') : navigate('/user/home')} className="w-8 h-8 flex items-center justify-center bg-white/5 backdrop-blur-md rounded-lg text-white active:scale-90 transition-all border border-white/10">
+                        <ChevronLeft size={18} />
                     </button>
-                    <div className="flex items-center gap-2">
-                        <Rocket size={20} className="fill-white/20" />
-                        <h1 className="text-lg font-black tracking-tight">
-                            {view === 'form' ? 'Promotion Details' : 'My Brand Promotion'}
+                    
+                    <div className="flex flex-col">
+                        <p className="text-blue-400 text-[7px] font-black uppercase tracking-[0.2em] leading-none mb-1">
+                            Brand Portal
+                        </p>
+                        <h1 className="text-base font-black text-white tracking-tight leading-none uppercase">
+                            {view === 'form' ? 'Promotion Details' : 'My Promotions'}
                         </h1>
                     </div>
                 </div>
-            </header>
+            </div>
 
-            <div className="p-4 max-w-md mx-auto">
+            <div className="pt-[64px] px-4 pb-24 max-w-md mx-auto">
                 
                 {/* LIST VIEW: Show existing requests */}
                 {view === 'list' && (
@@ -106,50 +115,43 @@ const PromoteBrand = () => {
                         </div>
 
                         {myPromotions.length === 0 ? (
-                            <div className="bg-white border-2 border-dashed border-slate-200 rounded-[2rem] p-12 text-center">
-                                <Rocket size={40} className="text-slate-200 mx-auto mb-4" />
-                                <p className="text-slate-400 font-bold text-sm leading-relaxed">No requests found. Click the button below to promote your brand!</p>
+                            <div className="bg-white border border-dashed border-slate-200 rounded-3xl p-10 text-center">
+                                <Rocket size={32} className="text-slate-200 mx-auto mb-3" />
+                                <p className="text-slate-400 font-bold text-[12px] leading-relaxed">No active promotions. Start your first campaign!</p>
                             </div>
                         ) : (
                             myPromotions.map((promo) => (
-                                <div key={promo.id} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden hover:border-sky-200 transition-all active:scale-[0.98]">
-                                    <div className="p-5">
-                                        <div className="flex justify-between items-start mb-4">
+                                <div key={promo.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:border-blue-100 transition-all active:scale-[0.99] mb-4">
+                                    <div className="p-4">
+                                        <div className="flex justify-between items-center mb-3">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 bg-sky-50 rounded-lg flex items-center justify-center text-sky-500">
-                                                    <Briefcase size={16} />
+                                                <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center text-blue-500 border border-blue-100">
+                                                    <Briefcase size={14} />
                                                 </div>
-                                                <h3 className="font-black text-slate-800 text-sm">{promo.category}</h3>
+                                                <h3 className="font-bold text-slate-800 text-[13px] uppercase tracking-wide">{promo.category}</h3>
                                             </div>
-                                            <span className={`text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-tighter ${
-                                                promo.status === 'Pending' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'
+                                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${
+                                                promo.status === 'Pending' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                             }`}>
                                                 {promo.status}
                                             </span>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4 mb-4">
-                                            <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Budget</p>
-                                                <p className="text-sm font-black text-slate-800">₹{promo.budget}</p>
+                                        <div className="grid grid-cols-2 gap-3 mb-3">
+                                            <div className="bg-[#F8FAFC] rounded-xl p-3 border border-slate-100">
+                                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Budget</p>
+                                                <p className="text-[13px] font-black text-slate-800">₹{promo.budget}</p>
                                             </div>
-                                            <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimated Users</p>
-                                                <p className="text-sm font-black text-slate-800">{promo.usersRequired}</p>
+                                            <div className="bg-[#F8FAFC] rounded-xl p-3 border border-slate-100">
+                                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Target Users</p>
+                                                <p className="text-[13px] font-black text-slate-800">{promo.usersRequired}</p>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 border-t border-slate-50 pt-4">
-                                            <span className="flex items-center gap-1"><Clock size={12}/> {promo.date}</span>
-                                            <a href={promo.link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-sky-500 hover:underline">Link <ExternalLink size={10}/></a>
+                                        <div className="flex items-center justify-between text-[9px] font-bold text-slate-400 border-t border-slate-50 pt-3">
+                                            <span className="flex items-center gap-1"><Clock size={10}/> {promo.date}</span>
+                                            <a href={promo.link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-500 hover:underline">View Campaign <ExternalLink size={10}/></a>
                                         </div>
-
-                                        {promo.adminResponse && (
-                                            <div className="mt-4 bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
-                                                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-wider mb-1 flex items-center gap-1"><CheckCircle2 size={12}/> Admin Response:</p>
-                                                <p className="text-xs font-bold text-emerald-800 leading-relaxed italic">"{promo.adminResponse}"</p>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             ))
@@ -159,114 +161,125 @@ const PromoteBrand = () => {
                 
                 {/* FORM VIEW: Original Promotion Form */}
                 {view === 'form' && (
-                    <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
+                    <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 pb-12">
                         {/* Name */}
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Name</label>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Business Name</label>
                             <div className="relative group">
-                                <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center border-r border-slate-100 text-slate-400 group-focus-within:text-sky-500 transition-colors">
-                                    <User size={18} />
+                                <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center border-r border-slate-100 text-slate-300 group-focus-within:text-blue-500 transition-colors">
+                                    <User size={16} />
                                 </div>
                                 <input 
                                     required
                                     type="text"
-                                    placeholder="Enter your name"
-                                    className="w-full bg-white border border-slate-200 rounded-xl pl-14 pr-4 py-3.5 text-sm font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-all outline-none"
+                                    placeholder="Enter business name"
+                                    className="w-full bg-white border border-slate-100 rounded-xl pl-14 pr-4 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm"
                                     value={formData.name}
                                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                                 />
                             </div>
                         </div>
 
-                        {/* Mobile & WhatsApp Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Mobile Number</label>
+                        {/* Mobile & Contact Info */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Mobile Number</label>
                                 <div className="relative group">
-                                    <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center border-r border-slate-100 text-slate-400 group-focus-within:text-sky-500 transition-colors">
-                                        <Phone size={18} />
+                                    <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center border-r border-slate-100 text-slate-300 group-focus-within:text-blue-500 transition-colors">
+                                        <Phone size={16} />
                                     </div>
-                                    <input required type="tel" placeholder="Mobile" className="w-full bg-white border border-slate-200 rounded-xl pl-14 pr-4 py-3.5 text-sm font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-all font-mono" value={formData.mobile} onChange={(e) => setFormData({...formData, mobile: e.target.value})} />
+                                    <input required type="tel" placeholder="Mobile" className="w-full bg-white border border-slate-100 rounded-xl pl-14 pr-4 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm" value={formData.mobile} onChange={(e) => setFormData({...formData, mobile: e.target.value})} />
                                 </div>
                             </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">WhatsApp/Email</label>
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Contact Details</label>
                                 <div className="relative group">
-                                    <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center border-r border-slate-100 text-slate-400 group-focus-within:text-sky-500 transition-colors">
-                                        <Mail size={18} />
+                                    <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center border-r border-slate-100 text-slate-300 group-focus-within:text-blue-500 transition-colors">
+                                        <Mail size={16} />
                                     </div>
-                                    <input required type="text" placeholder="Contact" className="w-full bg-white border border-slate-200 rounded-xl pl-14 pr-4 py-3.5 text-sm font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-all" value={formData.whatsapp} onChange={(e) => setFormData({...formData, whatsapp: e.target.value})} />
+                                    <input required type="text" placeholder="WhatsApp / Email" className="w-full bg-white border border-slate-100 rounded-xl pl-14 pr-4 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm" value={formData.whatsapp} onChange={(e) => setFormData({...formData, whatsapp: e.target.value})} />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Task Category */}
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Task Category</label>
-                            <div className="relative group">
-                                <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center border-r border-slate-100 text-slate-400 group-focus-within:text-sky-500 transition-colors">
-                                    <Briefcase size={18} />
-                                </div>
-                                <select 
-                                    required
-                                    className="w-full bg-white border border-slate-200 rounded-xl pl-14 pr-10 py-3.5 text-sm font-black text-slate-800 focus:outline-none focus:border-sky-500 appearance-none shadow-sm"
-                                    value={formData.category}
-                                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                                >
-                                    <option value="" disabled>Select Task Type</option>
-                                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><ChevronDown size={18} /></div>
-                            </div>
-                        </div>
-
-                        {/* Task Link */}
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Task Link</label>
-                            <div className="relative group">
-                                <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center border-r border-slate-100 text-slate-400 group-focus-within:text-sky-500 transition-colors">
-                                    <Link size={18} />
-                                </div>
-                                <input required type="url" placeholder="Paste link here" className="w-full bg-white border border-slate-200 rounded-xl pl-14 pr-4 py-3.5 text-sm font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-all" value={formData.link} onChange={(e) => setFormData({...formData, link: e.target.value})} />
-                            </div>
-                        </div>
-
-                        {/* Budget & Target */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Budget (₹)</label>
+                        {/* Task Category & Link Row */}
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Category & Target Link</label>
+                            <div className="flex flex-col gap-3">
                                 <div className="relative group">
-                                    <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center border-r border-slate-100 text-slate-400 transition-colors"><IndianRupee size={15} /></div>
-                                    <input required type="number" placeholder="Budget" className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-3 py-3 text-sm font-black text-slate-800 focus:outline-none focus:border-sky-500 transition-all" value={formData.budget} onChange={(e) => handleBudgetChange(e.target.value)} />
+                                    <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center border-r border-slate-100 text-slate-300 group-focus-within:text-blue-500 transition-colors">
+                                        <Briefcase size={16} />
+                                    </div>
+                                    <select 
+                                        required
+                                        className="w-full bg-white border border-slate-100 rounded-xl pl-14 pr-10 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 appearance-none shadow-sm"
+                                        value={formData.category}
+                                        onChange={(e) => setFormData({...formData, category: e.target.value})}
+                                    >
+                                        <option value="" disabled>Select Task Type</option>
+                                        {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300"><ChevronDown size={14} /></div>
                                 </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Target Users</label>
                                 <div className="relative group">
-                                    <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center border-r border-slate-100 text-slate-400 transition-colors"><Users size={15} /></div>
-                                    <input required type="number" placeholder="Users" className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-3 py-3 text-sm font-black text-slate-800 focus:outline-none focus:border-sky-500 transition-all" value={formData.usersRequired} onChange={(e) => handleUsersChange(e.target.value)} />
+                                    <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center border-r border-slate-100 text-slate-300 group-focus-within:text-blue-500 transition-colors">
+                                        <Link size={16} />
+                                    </div>
+                                    <input required type="url" placeholder="Paste campaign link here" className="w-full bg-white border border-slate-100 rounded-xl pl-14 pr-4 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm" value={formData.link} onChange={(e) => setFormData({...formData, link: e.target.value})} />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-center">
-                            <p className="text-[9px] font-bold text-amber-600 uppercase tracking-widest mb-2">Estimate: ₹{costPerUser}/User cost</p>
-                            <div className="text-xl font-black text-slate-800 leading-none">₹{formData.budget || 0} = {formData.usersRequired || 0} Users</div>
+                        {/* Budget & Target Users */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Budget (₹)</label>
+                                <div className="relative group">
+                                    <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center border-r border-slate-100 text-slate-300 transition-colors"><IndianRupee size={14} /></div>
+                                    <input required type="number" placeholder="Budget" className="w-full bg-white border border-slate-100 rounded-xl pl-12 pr-3 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm" value={formData.budget} onChange={(e) => handleBudgetChange(e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Users</label>
+                                <div className="relative group">
+                                    <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center border-r border-slate-100 text-slate-300 transition-colors"><Users size={14} /></div>
+                                    <input required type="number" placeholder="Users" className="w-full bg-white border border-slate-100 rounded-xl pl-12 pr-3 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm" value={formData.usersRequired} onChange={(e) => handleUsersChange(e.target.value)} />
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Description */}
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Description (Optional)</label>
-                            <textarea rows="3" placeholder="Explain your promotion goal..." className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-4 text-sm font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-all resize-none shadow-sm" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}></textarea>
+                        {/* Summary Card */}
+                        <div className="bg-[#0B1221] rounded-2xl p-6 text-center shadow-lg relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl rounded-full"></div>
+                            <p className="text-blue-400 text-[9px] font-black uppercase tracking-[0.2em] mb-3">Campaign Summary</p>
+                            <div className="text-2xl font-black text-white leading-none mb-1">₹{formData.budget || 0}</div>
+                            <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">for {formData.usersRequired || 0} Verified Users</p>
                         </div>
 
-                        {/* Submit Button */}
-                        <button type="submit" className="w-full bg-[#FFB800] hover:bg-[#E5A600] text-white font-black uppercase tracking-[0.2em] py-4 rounded-2xl shadow-lg shadow-amber-200 active:scale-[0.98] transition-all text-sm mt-2">
-                            Submit & Continue
+                        {/* Submit Button - Compact & Premium */}
+                        <button 
+                            type="submit" 
+                            disabled={loading}
+                            className="w-full bg-gradient-to-r from-[#0B1221] to-[#1E293B] hover:from-[#1E293B] hover:to-[#0B1221] text-white font-black uppercase tracking-[0.15em] py-3.5 rounded-xl shadow-lg shadow-slate-200 active:scale-[0.98] transition-all text-[13px] mt-4 border border-white/5 disabled:opacity-50 flex items-center justify-center gap-2"
+                            style={{ fontFamily: "'Roboto', sans-serif" }}
+                        >
+                            {loading ? (
+                                <Loader2 className="animate-spin" size={18} />
+                            ) : (
+                                <>
+                                    <Rocket size={18} className="text-blue-400" />
+                                    Launch Campaign
+                                </>
+                            )}
                         </button>
                     </form>
                 )}
             </div>
+
+            {/* Import Roboto Font */}
+            <style dangerouslySetInnerHTML={{ __html: `
+                @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+            `}} />
 
             {/* Floating Plus Button (Attractive Add Icon) */}
             {view === 'list' && (
