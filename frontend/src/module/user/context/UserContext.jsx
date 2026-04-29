@@ -3,7 +3,7 @@ import api from '../../shared/services/api';
 import io from 'socket.io-client';
 
 const UserContext = React.createContext();
-const SOCKET_URL = 'http://localhost:5000'; // Match backend port
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://dromoney.onrender.com';
 
 // Initial empty state to prevent destructuring crashes
 const INITIAL_USER_STATE = {
