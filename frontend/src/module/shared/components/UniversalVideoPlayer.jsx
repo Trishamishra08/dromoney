@@ -1,7 +1,9 @@
-import React from 'react';
-
+import { BASE_URL } from '../services/api';
 const UniversalVideoPlayer = ({ url, className, onEnded, autoPlay = true, controls = true }) => {
     if (!url) return null;
+
+    // Fix relative URLs from server
+    const fullUrl = url.startsWith('http') ? url : `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 
     // Helper to extract YouTube ID
     const getYouTubeId = (url) => {
@@ -52,7 +54,7 @@ const UniversalVideoPlayer = ({ url, className, onEnded, autoPlay = true, contro
     // Default to HTML5 Video for direct links (.mp4, etc.)
     return (
         <video
-            src={url}
+            src={fullUrl}
             className={className}
             controls={controls}
             autoPlay={autoPlay}
