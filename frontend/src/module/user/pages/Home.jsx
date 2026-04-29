@@ -603,6 +603,25 @@ const Home = () => {
                     addNotification("Unlocked!", "Platform access granted. Welcome!", "success");
                 }}
             />
+
+            {/* Video Modal Overlay */}
+            {isVideoPlaying && introConfig && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                    <button 
+                        onClick={() => setIsVideoPlaying(false)}
+                        className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white border border-white/10 transition-all z-[110] active:scale-90"
+                    >
+                        <X size={24} />
+                    </button>
+                    <div className="w-full max-w-4xl aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/5 bg-slate-900">
+                        <UniversalVideoPlayer 
+                            url={introConfig.videoUrl} 
+                            className="w-full h-full"
+                            autoPlay={true}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
