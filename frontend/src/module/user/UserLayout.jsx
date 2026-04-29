@@ -16,7 +16,7 @@ const UserLayout = () => {
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLangOpen, setIsLangOpen] = useState(false);
-    const { userData, notifications, clearNotifications, markAsRead } = useUser();
+    const { userData, notifications, clearNotifications, markAsRead, logout } = useUser();
 
     const navItems = [
         { path: '/user/home', label: 'DASHBOARD', icon: LayoutGrid },
@@ -51,11 +51,11 @@ const UserLayout = () => {
                 </div>
 
                 {/* 2. Center: Brand & Logo */}
-                <div className="flex flex-1 items-center justify-center gap-2 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
-                    <div className="w-10 h-10 flex items-center justify-center">
-                        <img src={LogoImg} alt="DROWMONEY" className="w-full h-full object-contain brightness-110 drop-shadow-[0_0_12px_rgba(255,255,255,0.25)]" />
+                <div className="flex flex-1 items-center justify-center gap-0.5 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
+                    <div className="w-12 h-12 flex items-center justify-center">
+                        <img src={LogoImg} alt="Logo" className="w-full h-full object-contain brightness-110 drop-shadow-xl" />
                     </div>
-                    <span className="text-[17px] font-black text-white tracking-[0.25em] uppercase font-outfit truncate">Drowmoney</span>
+                    <span className="text-[14px] font-bold text-white tracking-[0.1em] uppercase font-outfit truncate">Dromoney</span>
                 </div>
 
                 {/* 3. Right Side: Actions */}

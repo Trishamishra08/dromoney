@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, User, Phone, Mail, Briefcase, Link, IndianRupee, Users, AlertTriangle, FileText, Rocket, CheckCircle2, ChevronDown, Plus, Clock, ExternalLink } from 'lucide-react';
+import { ChevronLeft, User, Phone, Mail, Briefcase, Link, IndianRupee, Users, AlertTriangle, FileText, Rocket, CheckCircle2, ChevronDown, Plus, Clock, ExternalLink, Loader2 } from 'lucide-react';
 import { promotionStorage } from '../../shared/services/promotionStorage';
 
 const PromoteBrand = () => {
@@ -19,6 +19,7 @@ const PromoteBrand = () => {
     });
 
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
     const costPerUser = 1;
 
     useEffect(() => {
@@ -56,20 +57,25 @@ const PromoteBrand = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         
-        // Save to simulated backend
-        promotionStorage.savePromotion(formData);
-
-        setIsSubmitted(true);
-        setView('list');
-        // Reset form
-        setFormData({ name: '', mobile: '', whatsapp: '', category: '', link: '', budget: '', usersRequired: '', description: '' });
-        
+        // Simulate API Delay
         setTimeout(() => {
-            setIsSubmitted(false);
-        }, 3000);
+            // Save to simulated backend
+            promotionStorage.savePromotion(formData);
+
+            setIsSubmitted(true);
+            setView('list');
+            setLoading(false);
+            // Reset form
+            setFormData({ name: '', mobile: '', whatsapp: '', category: '', link: '', budget: '', usersRequired: '', description: '' });
+            
+            setTimeout(() => {
+                setIsSubmitted(false);
+            }, 3000);
+        }, 1500);
     };
 
     return (

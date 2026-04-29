@@ -31,7 +31,10 @@ if (process.env.NODE_ENV === 'development') {
 app.use(helmet({
     crossOriginResourcePolicy: false,
 })); // Set security headers
-app.use(cors()); // Enable CORS
+app.use(cors({
+    origin: [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
+    credentials: true
+})); // Enable CORS
 // app.use(mongoSanitize()); // Sanitize data
 
 // Rate limiting

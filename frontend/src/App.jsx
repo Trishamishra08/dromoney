@@ -64,7 +64,7 @@ import { Loader2 } from 'lucide-react';
 
 // Protected Route Component
 const ProtectedUserRoute = ({ children }) => {
-  const { isAuthenticated, userData, loading } = useUser();
+  const { isAuthenticated, userData, loading, logout } = useUser();
   
   if (!isAuthenticated) return <Navigate to="/user/auth/login" replace />;
   
@@ -124,6 +124,7 @@ function App() {
 
             {/* User Module Routes (Protected) */}
             <Route path="/user" element={<ProtectedUserRoute><UserLayout /></ProtectedUserRoute>}>
+              <Route index element={<Navigate to="home" replace />} />
               <Route path="home" element={<Home />} />
               <Route path="earn" element={<Earn />} />
               <Route path="income" element={<Income />} />
