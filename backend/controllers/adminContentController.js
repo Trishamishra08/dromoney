@@ -18,6 +18,17 @@ exports.getTasks = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
+exports.updateTask = async (req, res, next) => {
+    try {
+        const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
+        if (!task) return next(new ErrorResponse('Task not found', 404));
+        res.status(200).json({ success: true, data: task });
+    } catch (err) { next(err); }
+};
+
 // --- ADS ---
 exports.createAd = async (req, res, next) => {
     try {

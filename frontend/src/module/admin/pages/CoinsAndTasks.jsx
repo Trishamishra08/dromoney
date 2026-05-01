@@ -86,8 +86,7 @@ const CoinsAndTasks = () => {
         try {
             let response;
             if (editingTaskId) {
-                // response = await api.put(`/admin/tasks/${editingTaskId}`, payload); // Simplified for now
-                response = await api.post('/admin/tasks', payload); 
+                response = await api.put(`/admin/tasks/${editingTaskId}`, payload);
             } else {
                 response = await api.post('/admin/tasks', payload);
             }
@@ -125,7 +124,7 @@ const CoinsAndTasks = () => {
                     <div className="space-y-3">
                         {tasks.length === 0 && <p className="text-center text-slate-400 text-sm py-10 font-bold">No tasks available.</p>}
                         {tasks.map(task => (
-                            <div key={task.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center justify-between hover:border-slate-200 transition-all">
+                            <div key={task._id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center justify-between hover:border-slate-200 transition-all">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 bg-slate-50 rounded-xl flex flex-col items-center justify-center border border-slate-100">
                                         <span className="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">{task.type}</span>
@@ -147,13 +146,13 @@ const CoinsAndTasks = () => {
                                             ))}
                                         </div>
                                         <div className="mt-2 text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-1 rounded-lg inline-flex items-center gap-1 border border-amber-100/50">
-                                            <Coins size={12} /> {task.reward} Coins Reward
+                                            <Coins size={12} /> {task.coinsReward || task.reward} Coins Reward
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                     <button onClick={() => openEditModal(task)} className="w-9 h-9 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center transition-all active:scale-90"><Edit2 size={16} /></button>
-                                    <button onClick={() => deleteTask(task.id)} className="w-9 h-9 bg-rose-50 hover:bg-rose-500 hover:text-white text-rose-500 rounded-xl flex items-center justify-center transition-all active:scale-90"><Trash2 size={16} /></button>
+                                    <button onClick={() => deleteTask(task._id)} className="w-9 h-9 bg-rose-50 hover:bg-rose-500 hover:text-white text-rose-500 rounded-xl flex items-center justify-center transition-all active:scale-90"><Trash2 size={16} /></button>
                                 </div>
                             </div>
                         ))}

@@ -4,6 +4,8 @@ const { getBoosters } = require('../controllers/adminBoosterController'); // Reu
 const { getPublicNotifications } = require('../controllers/notificationController');
 const { getBusinessIdeas } = require('../controllers/businessIdeaController');
 const { getAds, getAdById } = require('../controllers/adController');
+const { getEvents, getEvent } = require('../controllers/eventController');
+const { getTasks } = require('../controllers/adminContentController');
 const { getOptionalUser } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -16,5 +18,8 @@ router.get('/notifications', getPublicNotifications);
 router.get('/business-ideas', getOptionalUser, getBusinessIdeas);
 router.get('/ads', getOptionalUser, getAds);
 router.get('/ads/:id', getOptionalUser, getAdById);
+router.get('/events', getEvents);
+router.get('/events/:id', getEvent);
+router.get('/tasks', getTasks);
 
 module.exports = router;

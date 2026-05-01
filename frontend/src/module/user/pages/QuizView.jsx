@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, CheckCircle2, XCircle, Timer, Trophy, Coins, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
 import { useUser } from '../context/UserContext';
-import { eventStorage } from '../../shared/services/eventStorage';
-
+import api from '../../shared/services/api';
 
 const QuizView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { userData, addCoins } = useUser();
-    const QUESTIONS = eventStorage.getQuestions();
-    const totalQ = QUESTIONS.length;
     
+    const [eventData, setEventData] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [currentStep, setCurrentStep] = useState(0); // 0: Start, 1: Questions, 2: Result
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [selectedOption, setSelectedOption] = useState(null);
@@ -20,7 +19,25 @@ const QuizView = () => {
     const [isAnswered, setIsAnswered] = useState(false);
     const [isEventClosed, setIsEventClosed] = useState(false);
 
+    const QUESTIONS = eventData?.config?.questions || [];
+    const totalQ = QUESTIONS.length;
+    
     useEffect(() => {
+        const fetchEvent = async () => {
+            try {
+                const res = await api.get(`/public/events/${id}`);
+                if (res.success) {
+                    setEventData(res.data);
+                }
+            } catch (err) {
+                console.error("Error fetching event:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchEvent();
+
         // Check if event is already completed
         const completed = JSON.parse(localStorage.getItem('dromoney_completed_events') || '[]');
         if (completed.includes(id)) {
@@ -65,23 +82,37 @@ const QuizView = () => {
         }
     };
 
-    const handleFinish = (finalScore) => {
+    const handleFinish = async (finalScore) => {
         const s = finalScore !== undefined ? finalScore : score;
         setCurrentStep(2);
         const completed = JSON.parse(localStorage.getItem('dromoney_completed_events') || '[]');
         if (!completed.includes(id)) {
             completed.push(id);
             localStorage.setItem('dromoney_completed_events', JSON.stringify(completed));
-            addCoins(s * 10, `Quiz Prize: ${id}`);
-            // Save participant record to eventStorage
-            eventStorage.addParticipant(id, {
-                name: userData?.name || 'User',
-                score: s,
-                result: `${s}/${totalQ}`,
-                prize: `${s * 10} Coins`
-            });
+            
+            // Add coins locally for immediate feedback
+            addCoins(s * 10, `Quiz Prize: ${eventData?.title || 'Event'}`);
+
+            try {
+                // Save result to Backend
+                await api.post(`/user/data/events/${id}/submit`, {
+                    score: s,
+                    result: `${s}/${totalQ}`,
+                    prize: `${s * 10} Coins`
+                });
+            } catch (err) {
+                console.error("Failed to save result to server:", err);
+            }
         }
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     if (currentStep === 0) {
         return (
@@ -90,7 +121,7 @@ const QuizView = () => {
                     <button onClick={() => navigate('/user/events')} className="p-2 bg-slate-50 rounded-full">
                         <ChevronLeft size={24} className="text-slate-600" />
                     </button>
-                    <h1 className="text-xl font-black text-slate-800 tracking-tight uppercase">Daily Quiz</h1>
+                    <h1 className="text-xl font-black text-slate-800 tracking-tight uppercase">{eventData?.title || 'Quiz'}</h1>
                 </header>
 
                 <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8">

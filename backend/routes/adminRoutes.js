@@ -5,7 +5,7 @@ const { login, getMe } = require('../controllers/adminAuthController');
 const { getStats, getAlerts } = require('../controllers/adminDashboardController');
 const { getUsers, manageKYC, toggleBlock, getPendingKyc } = require('../controllers/adminUserController');
 const { 
-    createTask, getTasks, 
+    createTask, getTasks, updateTask,
     deleteContent 
 } = require('../controllers/adminContentController');
 const { 
@@ -23,6 +23,8 @@ const {
     updateBusinessIdea, 
     deleteBusinessIdea 
 } = require('../controllers/businessIdeaController');
+const { createEvent, updateEvent, deleteEvent } = require('../controllers/eventController');
+const { getEvents } = require('../controllers/eventController');
 
 const { protectAdmin } = require('../middleware/authMiddleware');
 
@@ -47,6 +49,7 @@ router.post('/content', protectAdmin, updateContent);
 router.post('/upload', protectAdmin, uploadMiddleware, uploadToCloud);
 
 router.route('/tasks').post(protectAdmin, createTask).get(protectAdmin, getTasks);
+router.route('/tasks/:id').put(protectAdmin, updateTask);
 router.route('/ads')
     .post(protectAdmin, createAd)
     .get(protectAdmin, getAdminAds);
@@ -106,5 +109,14 @@ router.route('/business-ideas')
 router.route('/business-ideas/:id')
     .put(protectAdmin, updateBusinessIdea)
     .delete(protectAdmin, deleteBusinessIdea);
+
+// Event Routes
+router.route('/events')
+    .get(protectAdmin, getEvents)
+    .post(protectAdmin, createEvent);
+
+router.route('/events/:id')
+    .put(protectAdmin, updateEvent)
+    .delete(protectAdmin, deleteEvent);
 
 module.exports = router;

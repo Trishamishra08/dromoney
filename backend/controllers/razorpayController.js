@@ -117,6 +117,7 @@ exports.verifyPayment = asyncHandler(async (req, res, next) => {
             console.log(`[PAYMENT] Unlocking Platform for user ${user._id}`);
             // Set user isPaid = true (Platform Unlock)
             user.isPaid = true;
+            user.unlockedAt = new Date();
             await user.save();
         }
     }

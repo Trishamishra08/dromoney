@@ -15,7 +15,7 @@ const TaskSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['Social', 'Survey', 'Watch', 'Join', 'Bonus'],
+        enum: ['Social', 'Survey', 'Watch', 'Join', 'Bonus', 'Video', 'Web', 'Quiz', 'Spin', 'Memory', 'Scratch', 'Tapper'],
         default: 'Social'
     },
     category: {
@@ -26,6 +26,14 @@ const TaskSchema = new mongoose.Schema({
     link: {
         type: String,
         required: [true, 'Please add task link']
+    },
+    icon: {
+        type: String,
+        default: 'Monitor'
+    },
+    config: {
+        type: Map,
+        of: String
     },
     thumbnail: String,
     status: {

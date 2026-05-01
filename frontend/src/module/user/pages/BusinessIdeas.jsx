@@ -49,7 +49,6 @@ const BusinessIdeas = () => {
 
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
-        alert("Link copied to clipboard!");
     };
 
     const renderIcon = (iconName, size = 28) => {
@@ -67,130 +66,178 @@ const BusinessIdeas = () => {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#F8FAFC] animate-in fade-in duration-500 pb-6 text-slate-900">
-            {/* Header Section */}
-            <div className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-30 border-b border-slate-100">
-                <button 
-                    onClick={() => navigate(-1)}
-                    className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-600 active:scale-90 transition-all border border-slate-100"
-                >
-                    <ChevronLeft size={20} />
-                </button>
-                <div className="text-center">
-                    <h2 className="text-lg font-bold text-slate-900 tracking-tight">Business Hub</h2>
-                    <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5">Start Your Journey Today</p>
+        <div className="flex flex-col min-h-screen bg-[#F8FAFC] pb-24 text-slate-900">
+            {/* Header - Ultra Compact Dark Blue */}
+            <div className="bg-gradient-to-br from-slate-950 via-blue-900 to-slate-900 p-4 rounded-b-[1.5rem] shadow-lg sticky top-[57px] z-40 relative overflow-hidden">
+                <div className="absolute -right-10 -top-10 w-24 h-24 bg-white/5 rounded-full blur-3xl"></div>
+                
+                <div className="flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={() => navigate('/user/home')}
+                            className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 active:scale-95 transition-all"
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+                        <div className="flex flex-col">
+                            <h1 className="text-lg font-black text-white tracking-tight leading-none">Business Hub</h1>
+                            <p className="text-[9px] font-bold text-blue-300 opacity-80 uppercase tracking-widest mt-1">Start Your Journey</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
+                        <Sparkles size={12} className="text-amber-400 fill-amber-400" />
+                        <span className="text-[10px] font-black text-white uppercase tracking-wider">Growth</span>
+                    </div>
                 </div>
-                <div className="w-10 h-10"></div>
+
+                {/* Info Bar - Slim Version */}
+                <div className="mt-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center shadow-lg shrink-0">
+                        <Briefcase size={20} className="text-white" />
+                    </div>
+                    <div className="flex-1">
+                        <h2 className="text-[13px] font-black text-white leading-none">Verified Strategies</h2>
+                        <p className="text-[8px] font-bold text-blue-100 opacity-60 mt-1">Tested by our expert team.</p>
+                    </div>
+                </div>
             </div>
 
-            <div className="px-2 mt-3">
-                {/* Visual Tab Switcher */}
-                <div className="bg-white p-1.5 rounded-2xl border border-slate-100 flex items-center shadow-sm">
+            <div className="p-3 space-y-3">
+                {/* Visual Tab Switcher - Compact Premium */}
+                <div className="bg-slate-200/50 p-1 rounded-2xl flex items-center">
                     <button 
                         onClick={() => setActiveTab('free')}
-                        className={`flex-1 py-3.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2
-                            ${activeTab === 'free' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2
+                            ${activeTab === 'free' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         <Gift size={14} />
-                        Free Ideas
+                        Free
                     </button>
                     <button 
                         onClick={() => setActiveTab('premium')}
-                        className={`flex-1 py-3.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2
-                            ${activeTab === 'premium' ? 'bg-[#1A1C30] text-white shadow-lg shadow-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2
+                            ${activeTab === 'premium' ? 'bg-[#1A1C30] text-white shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         <Lock size={14} />
-                        Premium Ideas
+                        Premium
                     </button>
                 </div>
 
-                <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {activeTab === 'free' ? (
-                        freeIdeas.map((idea) => (
-                            <div key={idea._id} className="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-sm relative overflow-hidden group">
-                                <div className="flex items-start gap-3">
-                                    <div className={`w-14 h-14 ${idea.bg || 'bg-emerald-50'} rounded-2xl flex items-center justify-center ${idea.color || 'text-emerald-500'} shadow-sm border border-black/5`}>
-                                        {renderIcon(idea.icon)}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-base font-bold text-slate-900">{idea.title}</h3>
-                                            <div className="bg-emerald-100/50 px-2.5 py-1 rounded-lg border border-emerald-100">
-                                                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">Active</span>
+                        <div className="space-y-3">
+                            <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Available Strategies</h2>
+                            {freeIdeas.map((idea, idx) => {
+                                const THEMES = [
+                                    { bg: 'bg-emerald-50', border: 'border-emerald-100', accent: 'bg-emerald-600', text: 'text-emerald-600', iconBg: 'bg-emerald-100', shadow: 'shadow-emerald-100' },
+                                    { bg: 'bg-indigo-50', border: 'border-indigo-100', accent: 'bg-indigo-600', text: 'text-indigo-600', iconBg: 'bg-indigo-100', shadow: 'shadow-indigo-100' },
+                                    { bg: 'bg-amber-50', border: 'border-amber-100', accent: 'bg-amber-600', text: 'text-amber-600', iconBg: 'bg-amber-100', shadow: 'shadow-amber-100' },
+                                    { bg: 'bg-rose-50', border: 'border-rose-100', accent: 'bg-rose-600', text: 'text-rose-600', iconBg: 'bg-rose-100', shadow: 'shadow-rose-100' },
+                                ];
+                                const theme = THEMES[idx % THEMES.length];
+
+                                return (
+                                    <div key={idea._id} className={`${theme.bg} border ${theme.border} rounded-2xl p-4 shadow-sm relative overflow-hidden group`}>
+                                        <div className={`absolute -right-6 -top-6 w-20 h-20 ${theme.accent} opacity-[0.03] rounded-full`}></div>
+                                        
+                                        <div className="flex justify-between items-start mb-3 relative z-10">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-12 h-12 ${theme.iconBg} rounded-xl flex items-center justify-center ${theme.text} shadow-inner`}>
+                                                    {renderIcon(idea.icon, 24)}
+                                                </div>
+                                                <div className="space-y-0.5">
+                                                    <h3 className="text-[15px] font-black text-slate-800 leading-none tracking-tight">{idea.title}</h3>
+                                                    <span className={`inline-block text-[8px] font-black ${theme.text} uppercase tracking-widest`}>Free Access</span>
+                                                </div>
+                                            </div>
+                                            <div className="bg-emerald-500 px-2 py-0.5 rounded-lg">
+                                                <span className="text-[8px] font-black text-white uppercase tracking-widest">Active</span>
                                             </div>
                                         </div>
-                                        <p className="text-[12px] font-medium text-slate-400 mt-1 line-clamp-2">{idea.desc}</p>
+
+                                        <p className="text-[11px] font-bold text-slate-400 mt-1 line-clamp-2 leading-relaxed">{idea.desc}</p>
                                         
-                                        <div className="mt-4 flex items-center justify-between bg-slate-50/80 px-4 py-3 rounded-2xl border border-slate-100/50">
+                                        <div className="mt-4 flex items-center justify-between bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-white/80 relative z-10">
                                             <div>
-                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Earning Potential</p>
-                                                <p className="text-[13px] font-bold text-emerald-600">{idea.potential}</p>
+                                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">Earning Potential</p>
+                                                <p className={`text-[13px] font-black ${theme.text} tracking-tight`}>{idea.potential}</p>
                                             </div>
                                             <button 
                                                 onClick={() => setViewIdea(idea)}
-                                                className="bg-white text-slate-900 p-2 rounded-xl border border-slate-200 shadow-sm hover:bg-slate-50 active:scale-90 transition-all cursor-pointer"
+                                                className={`${theme.accent} text-white p-2.5 rounded-xl shadow-lg ${theme.shadow} active:scale-95 transition-all`}
                                             >
                                                 <ArrowRight size={16} />
                                             </button>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        ))
+                                );
+                            })}
+                        </div>
                     ) : (
-                        <div className="space-y-6">
-                            {/* Premium Banner */}
-                            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[2rem] p-7 text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                        <div className="space-y-4">
+                            {/* Premium Banner - Ultra Premium */}
+                            <div className="bg-gradient-to-br from-indigo-600 via-blue-700 to-purple-800 rounded-[1.5rem] p-6 text-white shadow-xl relative overflow-hidden">
+                                <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center border border-white/30">
-                                        <Sparkles size={20} className="text-white" />
+                                    <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
+                                        <Sparkles size={20} className="text-amber-300" />
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-100">Premium Exclusive</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-100">Premium Vault</span>
                                 </div>
-                                <h3 className="text-xl font-bold leading-snug">Upgrade to Access High-Ticket Frameworks</h3>
-                                <p className="text-[12px] font-medium text-indigo-100 mt-2 opacity-80 leading-relaxed">
-                                    Our premium members get access to pre-built business models and 1-on-1 mentorship sessions.
+                                <h3 className="text-lg font-black leading-tight tracking-tight">High-Ticket Frameworks</h3>
+                                <p className="text-[11px] font-bold text-indigo-100/70 mt-2 leading-relaxed">
+                                    Access pre-built business models and 1-on-1 expert mentorship.
                                 </p>
                             </div>
 
-                            {premiumIdeas.map((idea) => {
-                                return (
-                                    <div key={idea._id} className={`bg-white rounded-2xl p-3.5 border border-slate-100 shadow-sm relative overflow-hidden group ${idea.isLocked ? 'opacity-90' : ''}`}>
-                                        <div className="flex items-start gap-3">
-                                            <div className={`w-14 h-14 ${idea.bg || 'bg-indigo-50'} rounded-2xl flex items-center justify-center ${idea.color || 'text-indigo-500'} border border-black/5 shadow-sm`}>
-                                                {renderIcon(idea.icon)}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between">
-                                                    <h3 className="text-base font-bold text-slate-900">{idea.title}</h3>
-                                                    {idea.isLocked && (
-                                                        <div className="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 flex items-center gap-1.5">
-                                                            <Lock size={10} className="text-slate-400" />
-                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Locked</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <p className="text-[12px] font-medium text-slate-400 mt-1">{idea.desc}</p>
-                                                
-                                                <div className={`mt-4 flex items-center justify-between px-4 py-3 rounded-2xl border transition-all ${!idea.isLocked ? 'bg-indigo-50/50 border-indigo-100/50' : 'bg-slate-50 border-slate-100'}`}>
-                                                    <div>
-                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Earning Potential</p>
-                                                        <p className={`text-[13px] font-bold ${!idea.isLocked ? 'text-indigo-600' : 'text-slate-400'}`}>{idea.potential}</p>
+                            <div className="space-y-3">
+                                <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Exclusive Vault</h2>
+                                {premiumIdeas.map((idea, idx) => {
+                                    const THEMES = [
+                                        { bg: 'bg-slate-900', border: 'border-slate-800', accent: 'bg-indigo-500', text: 'text-white', subText: 'text-slate-400', glass: 'bg-white/5 border-white/10' },
+                                        { bg: 'bg-white', border: 'border-slate-100', accent: 'bg-[#1A1C30]', text: 'text-slate-800', subText: 'text-slate-400', glass: 'bg-slate-50 border-slate-100' }
+                                    ];
+                                    const theme = THEMES[idx % THEMES.length];
+
+                                    return (
+                                        <div key={idea._id} className={`${theme.bg} border ${theme.border} rounded-2xl p-4 shadow-sm relative overflow-hidden group`}>
+                                            <div className="flex justify-between items-start mb-3 relative z-10">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-12 h-12 ${theme.accent} rounded-xl flex items-center justify-center text-white shadow-lg`}>
+                                                        {renderIcon(idea.icon, 24)}
                                                     </div>
-                                                    <button 
-                                                        onClick={() => !idea.isLocked ? setViewIdea(idea) : setShowPayment(idea)}
-                                                        className={`p-2 rounded-xl border shadow-sm active:scale-90 transition-all flex items-center justify-center
-                                                            ${!idea.isLocked ? 'bg-white text-indigo-600 border-indigo-100' : 'bg-[#1A1C30] text-white border-transparent'}`}
-                                                    >
-                                                        {idea.isLocked ? <Lock size={16} /> : <ArrowRight size={16} />}
-                                                    </button>
+                                                    <div className="space-y-0.5">
+                                                        <h3 className={`text-[15px] font-black ${theme.text} leading-none tracking-tight`}>{idea.title}</h3>
+                                                        <span className={`inline-block text-[8px] font-black ${theme.subText} uppercase tracking-widest`}>Premium</span>
+                                                    </div>
                                                 </div>
+                                                {idea.isLocked && (
+                                                    <div className="bg-amber-400/10 px-2 py-0.5 rounded-lg border border-amber-400/20 flex items-center gap-1">
+                                                        <Lock size={10} className="text-amber-500" />
+                                                        <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Locked</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <p className={`text-[11px] font-bold ${theme.subText} mt-1 line-clamp-2 leading-relaxed`}>{idea.desc}</p>
+                                            
+                                            <div className={`mt-4 flex items-center justify-between rounded-xl p-3 border ${theme.glass} relative z-10`}>
+                                                <div>
+                                                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter mb-0.5">Earning Potential</p>
+                                                    <p className={`text-[13px] font-black ${idea.isLocked ? 'text-slate-400' : 'text-indigo-500'} tracking-tight`}>{idea.potential}</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => !idea.isLocked ? setViewIdea(idea) : setShowPayment(idea)}
+                                                    className={`${theme.accent} text-white p-2.5 rounded-xl shadow-lg active:scale-95 transition-all`}
+                                                >
+                                                    {idea.isLocked ? <Lock size={16} /> : <ArrowRight size={16} />}
+                                                </button>
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -210,102 +257,96 @@ const BusinessIdeas = () => {
                 }}
             />
 
-            {/* Idea Detail Overlay */}
+            {/* Idea Detail Overlay - Refined Premium */}
             {viewIdea && (
-                <div className="fixed inset-0 z-[60] flex flex-col bg-white animate-in slide-in-from-bottom duration-500 pb-10">
-                    <div className="p-6 relative overflow-hidden bg-slate-900 text-white">
-                        <div className="absolute top-0 right-0 p-8 opacity-10">
-                            {renderIcon(viewIdea.icon, 150)}
-                        </div>
+                <div className="fixed inset-0 z-[100] flex flex-col bg-white animate-in slide-in-from-bottom duration-500">
+                    <div className="bg-gradient-to-br from-slate-950 via-blue-900 to-slate-900 p-6 pt-12 relative overflow-hidden text-white shrink-0">
+                        <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full blur-[100px]"></div>
+                        
                         <button 
                             onClick={() => setViewIdea(null)}
-                            className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20 mb-6 active:scale-95 transition-all relative z-10"
+                            className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10 mb-6 active:scale-95 transition-all relative z-10"
                         >
-                            <ChevronLeft size={24} />
+                            <ChevronLeft size={20} />
                         </button>
+                        
                         <div className="relative z-10">
-                            <h1 className="text-2xl font-black tracking-tight uppercase">{viewIdea.title}</h1>
-                            <div className="flex items-center gap-2 mt-2">
-                                <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest">Success Roadmap</p>
-                                <div className="w-1 h-1 rounded-full bg-white/30"></div>
-                                <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{viewIdea.potential}</p>
+                            <span className="text-[10px] font-black text-blue-300 uppercase tracking-[0.3em] mb-2 block">Strategy Unlocked</span>
+                            <h1 className="text-2xl font-black tracking-tight leading-none uppercase">{viewIdea.title}</h1>
+                            <div className="flex items-center gap-3 mt-4">
+                                <div className="bg-emerald-500 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg shadow-emerald-950/20">
+                                    <TrendingUp size={12} className="text-white" />
+                                    <span className="text-[10px] font-black text-white uppercase tracking-wider">{viewIdea.potential}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8 bg-white rounded-t-[2.5rem] -mt-6 relative z-10 shadow-2xl">
-                        <div className="space-y-6">
-                            {viewIdea.steps?.map((step, idx) => (
-                                <div key={idx} className="flex gap-5 group">
-                                    <div className="flex flex-col items-center">
-                                        <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-[12px] shadow-lg shadow-slate-200 shrink-0">
+
+                    <div className="flex-1 overflow-y-auto px-5 py-8 space-y-8 bg-[#F8FAFC] rounded-t-[2rem] -mt-6 relative z-10 shadow-2xl">
+                        <div className="space-y-1">
+                            <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] ml-1 mb-4">Success Roadmap</h2>
+                            <div className="space-y-4">
+                                {viewIdea.steps?.map((step, idx) => (
+                                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex gap-4 group">
+                                        <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-[12px] shadow-lg shrink-0">
                                             {idx + 1}
                                         </div>
-                                        {idx !== viewIdea.steps.length - 1 && <div className="w-0.5 h-full bg-slate-100 my-2"></div>}
+                                        <div className="space-y-1">
+                                            <h3 className="text-[14px] font-black text-slate-800 leading-tight">{step.title}</h3>
+                                            <p className="text-[11px] font-bold text-slate-400 leading-relaxed italic">{step.text}</p>
+                                        </div>
                                     </div>
-                                    <div className="pb-4">
-                                        <h3 className="text-[15px] font-black text-slate-800 mb-1 leading-none">{step.title}</h3>
-                                        <p className="text-[12px] font-bold text-slate-400 leading-relaxed italic">{step.text}</p>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
+
                         {/* YouTube Tutorial Section */}
                         {viewIdea.youtubeLink && (
-                            <div className="mt-8 space-y-4">
-                                <h3 className="text-[11px] font-black text-rose-500 uppercase tracking-[0.2em] ml-1">Video Tutorial</h3>
-                                <div className="bg-slate-50 rounded-[2rem] p-6 border border-slate-100 flex items-center justify-between gap-4">
+                            <div className="space-y-3">
+                                <h2 className="text-[11px] font-black text-rose-500 uppercase tracking-[0.25em] ml-1">Video Tutorial</h2>
+                                <div className="bg-white border border-rose-100 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600 shadow-sm shrink-0">
+                                        <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600 shadow-inner">
                                             <ExternalLink size={24} />
                                         </div>
                                         <div>
-                                            <p className="text-[13px] font-black text-slate-800 tracking-tight">Watch Guide</p>
-                                            <p className="text-[11px] font-bold text-slate-500/80 leading-tight line-clamp-1 max-w-[150px]">
-                                                {viewIdea.youtubeLink}
-                                            </p>
+                                            <p className="text-[13px] font-black text-slate-800 tracking-tight leading-none mb-1">Watch Guide</p>
+                                            <p className="text-[10px] font-bold text-slate-400 truncate max-w-[140px] uppercase tracking-wider">YouTube Tutorial</p>
                                         </div>
                                     </div>
                                     <button 
-                                        onClick={() => copyToClipboard(viewIdea.youtubeLink)}
-                                        className="bg-white text-slate-900 border border-slate-200 p-3 rounded-xl shadow-sm hover:bg-slate-50 active:scale-95 transition-all text-[11px] font-black uppercase tracking-widest flex items-center gap-2"
+                                        onClick={() => {
+                                            copyToClipboard(viewIdea.youtubeLink);
+                                            window.open(viewIdea.youtubeLink, '_blank');
+                                        }}
+                                        className="bg-rose-600 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-rose-200 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest"
                                     >
-                                        <Copy size={14} /> Copy
+                                        Watch
                                     </button>
                                 </div>
                             </div>
                         )}
 
-                        <div className="mt-8 p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100 flex items-center gap-4">
-                            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm shrink-0">
+                        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border border-emerald-100 flex items-center gap-4 shadow-sm">
+                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-emerald-500 shadow-sm shrink-0 border border-emerald-100">
                                 <CheckCircle2 size={24} />
                             </div>
-                            <div>
-                                <p className="text-[13px] font-black text-slate-800 tracking-tight">Strategy Unlocked</p>
-                                <p className="text-[11px] font-bold text-slate-500/80 leading-tight">Start working on these steps to see real growth.</p>
+                            <div className="space-y-1">
+                                <p className="text-[13px] font-black text-slate-800 tracking-tight leading-none">Ready to Start?</p>
+                                <p className="text-[10px] font-bold text-emerald-600/80 leading-tight uppercase tracking-wider">Execute steps for growth.</p>
                             </div>
                         </div>
+
                         <button 
                             onClick={() => setViewIdea(null)}
-                            className="w-full bg-[#1A1C30] text-white py-5 rounded-[2rem] text-[12px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 mt-10 active:scale-95 transition-all"
+                            className="w-full bg-slate-900 text-white py-5 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 mt-4 active:scale-95 transition-all"
                         >
                             Got it
                         </button>
+                        <div className="h-10"></div>
                     </div>
                 </div>
             )}
-
-            {/* Bottom Info Banner */}
-            <div className="px-2 mt-4">
-                <div className="bg-white rounded-2xl p-4 border border-slate-100 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-500">
-                        <CheckCircle2 size={24} />
-                    </div>
-                    <div>
-                        <p className="text-[13px] font-bold text-slate-800 tracking-tight">Verified Strategies</p>
-                        <p className="text-[11px] font-medium text-slate-400 leading-tight">All ideas are tested by our expert team for success.</p>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 };

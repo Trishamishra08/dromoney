@@ -4,11 +4,14 @@ const {
     unlockPlatform, 
     submitPromotion, 
     getMyPromotions, 
-    updateProfilePhoto 
+    updateProfilePhoto,
+    updateFutureFundProgress,
+    unlockFutureFund
 } = require('../controllers/userController');
 const { unlockIdea } = require('../controllers/businessIdeaController');
 const { createOrder, verifyPayment } = require('../controllers/razorpayController');
 const { rewardUserForAd } = require('../controllers/adController');
+const { joinEvent, submitResult } = require('../controllers/eventController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/upload');
 
@@ -24,10 +27,14 @@ router.post('/unlock', unlockPlatform);
 router.post('/promotions', submitPromotion);
 router.get('/promotions', getMyPromotions);
 router.patch('/photo', upload.single('photo'), updateProfilePhoto);
+router.post('/future-fund/progress', updateFutureFundProgress);
+router.post('/future-fund/unlock', unlockFutureFund);
 router.post('/feedback', submitFeedback);
 router.post('/reports', submitReport);
 router.post('/business-ideas/unlock', unlockIdea);
 router.post('/ads/reward', rewardUserForAd);
+router.post('/events/:id/join', joinEvent);
+router.post('/events/:id/submit', submitResult);
 
 // Razorpay Routes
 router.post('/razorpay/create-order', createOrder);

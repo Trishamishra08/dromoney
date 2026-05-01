@@ -27,8 +27,10 @@ const ICON_MAP = {
     TrendingUp: { el: TrendingUp, bg: 'bg-emerald-100', color: 'text-emerald-500' },
 };
 
+import api from '../../shared/services/api';
+
 const Earn = () => {
-    const { userData } = useUser();
+    const { userData, refreshUserProfile } = useUser();
     const { isPaid } = userData;
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [isBoosterExpanded, setIsBoosterExpanded] = useState(false);
@@ -38,10 +40,27 @@ const Earn = () => {
     // DYNAMIC TASKS STATE
     const [tasks, setTasks] = useState([]);
     const [completedTasks, setCompletedTasks] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        setTasks(taskStorage.getTasks());
-        setCompletedTasks(taskStorage.getCompletedTasks());
+        const loadTasks = async () => {
+            try {
+                const res = await api.get('/public/tasks');
+                if (res.success && res.data && res.data.length > 0) {
+                    setTasks(res.data);
+                } else {
+                    setTasks(taskStorage.getTasks());
+                }
+            } catch (err) {
+                setTasks(taskStorage.getTasks());
+            } finally {
+                setLoading(false);
+            }
+            
+            setCompletedTasks(taskStorage.getCompletedTasks());
+        };
+
+        loadTasks();
     }, []);
 
     const totalCount = tasks.length;
@@ -49,11 +68,12 @@ const Earn = () => {
     const remainingCount = totalCount - completedCount;
 
     const handleTaskClick = (task) => {
+        const taskId = task._id || task.id;
         if (!isPaid) {
             setIsUnlockOpen(true);
             return;
         }
-        if (completedTasks.includes(task.id)) {
+        if (completedTasks.includes(taskId)) {
             // Do not open if already completed
             return;
         }
@@ -61,25 +81,25 @@ const Earn = () => {
         // SWITCH ROUTE BASED ON TYPE
         switch (task.type) {
             case 'Quiz':
-                navigate(`/user/task-quiz/${task.id}`);
+                navigate(`/user/task-quiz/${taskId}`);
                 break;
             case 'Spin':
-                navigate(`/user/lucky-draw/${task.id}`);
+                navigate(`/user/lucky-draw/${taskId}`);
                 break;
             case 'Memory':
-                navigate(`/user/memory-master/${task.id}`);
+                navigate(`/user/memory-master/${taskId}`);
                 break;
             case 'Treasure':
-                navigate(`/user/treasure-chest/${task.id}`);
+                navigate(`/user/treasure-chest/${taskId}`);
                 break;
             case 'Scratch':
-                navigate(`/user/scratch-card/${task.id}`);
+                navigate(`/user/scratch-card/${taskId}`);
                 break;
             case 'Tapper':
-                navigate(`/user/speed-tapper/${task.id}`);
+                navigate(`/user/speed-tapper/${taskId}`);
                 break;
             default:
-                navigate(`/user/task/${task.id}`);
+                navigate(`/user/task/${taskId}`);
         }
     };
 
@@ -99,7 +119,7 @@ const Earn = () => {
                     <div className="w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center">
                         <Coins size={11} className="text-white" />
                     </div>
-                    <span className="text-[13px] font-black text-amber-700">{userData.coins.total}</span>
+                    <span className="text-[13px] font-black text-amber-700">{userData.coins?.total || 0}</span>
                 </div>
             </div>
 
@@ -116,10 +136,10 @@ const Earn = () => {
                         <div className="flex items-center gap-3 mt-0.5">
                             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                                 Done: <span className="text-emerald-500 font-bold">{completedCount}</span>
-                            </span>
-                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                             </span>
+                             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                                 Left: <span className="text-orange-500 font-bold">{remainingCount}</span>
-                            </span>
+                             </span>
                         </div>
                     </div>
                     {/* Coin Bag Illustration */}
@@ -130,7 +150,8 @@ const Earn = () => {
 
                 {/* ── Task List ── */}
                 <div className="flex flex-col gap-0 mt-2">
-                    {tasks.map((task) => {
+                    {tasks.map((task, idx) => {
+                        const taskId = task._id || task.id;
                         const COLORS = [
                             { bg: 'bg-blue-500', icon: 'text-white' },
                             { bg: 'bg-rose-500', icon: 'text-white' },
@@ -138,14 +159,14 @@ const Earn = () => {
                             { bg: 'bg-purple-500', icon: 'text-white' },
                             { bg: 'bg-emerald-500', icon: 'text-white' },
                         ];
-                        const colorSet = COLORS[task.id % COLORS.length];
-                        const iconConfig = ICON_MAP[task.icon] || ICON_MAP['Monitor'];
+                        const colorSet = COLORS[idx % COLORS.length];
+                        const iconConfig = ICON_MAP[task.icon] || ICON_MAP[task.category] || ICON_MAP['Monitor'];
                         const IconEl = iconConfig.el;
-                        const isCompleted = completedTasks.includes(task.id);
+                        const isCompleted = completedTasks.includes(taskId);
 
                         return (
                             <div
-                                key={task.id}
+                                key={taskId}
                                 onClick={() => handleTaskClick(task)}
                                 className={`bg-white border-b border-slate-50 px-5 py-2.5 flex items-center gap-3.5 transition-all ${isCompleted ? 'opacity-60 cursor-default' : 'active:bg-slate-50 cursor-pointer'}`}
                             >
@@ -172,7 +193,7 @@ const Earn = () => {
                                 <div className="flex flex-col items-end gap-1.5 min-w-[70px]">
                                     <div className="flex items-center gap-1 leading-none">
                                         <span className={`text-[15px] font-bold ${isCompleted ? 'text-emerald-500' : 'text-slate-700'}`}>
-                                            {isCompleted ? '+' : ''}{task.reward}
+                                            {isCompleted ? '+' : ''}{task.coinsReward || task.reward}
                                         </span>
                                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Coins</span>
                                     </div>

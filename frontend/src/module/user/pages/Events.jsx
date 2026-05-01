@@ -8,6 +8,7 @@ import {
 import UnlockModal from '../components/UnlockModal';
 import PaymentModal from '../components/PaymentModal';
 import { eventStorage } from '../../shared/services/eventStorage';
+import api from '../../shared/services/api';
 
 const Events = () => {
     const { userData, addCoins, addNotification } = useUser();
@@ -22,9 +23,29 @@ const Events = () => {
     useEffect(() => {
         const saved = JSON.parse(localStorage.getItem('dromoney_joined_events') || '[]');
         setJoinedEvents(saved);
-        // Load events from admin-managed storage
-        const allEvents = eventStorage.getEvents();
-        setEventList(allEvents.filter(e => e.status === 'Active'));
+        
+        // Load events from Backend API
+        const fetchEvents = async () => {
+            try {
+                const res = await api.get('/public/events');
+                if (res.success && res.data && res.data.length > 0) {
+                    setEventList(res.data);
+                    if (res.joinedEvents) {
+                        setJoinedEvents(res.joinedEvents);
+                    }
+                } else {
+                    // Fallback to local storage if DB is empty
+                    const allEvents = eventStorage.getEvents();
+                    setEventList(allEvents.filter(e => e.status === 'Active'));
+                }
+            } catch (err) {
+                console.error("Failed to fetch events from DB:", err);
+                const allEvents = eventStorage.getEvents();
+                setEventList(allEvents.filter(e => e.status === 'Active'));
+            }
+        };
+
+        fetchEvents();
     }, []);
 
     const showToast = (message, type = 'info') => {
@@ -52,33 +73,37 @@ const Events = () => {
         }
     };
 
-    const handleJoinEvent = (event) => {
+    const handleJoinEvent = async (event) => {
         if (!userData.isPaid) {
             setIsUnlockOpen(true);
             return;
         }
 
         // If already joined, just navigate
-        if (joinedEvents.includes(event.id)) {
+        if (joinedEvents.includes(event._id)) {
             navigateToEvent(event);
             return;
         }
 
-        if (userData.coins.total < event.fee) {
-            showToast("Not enough coins to join!", "error");
-            return;
+        try {
+            const res = await api.post(`/user/data/events/${event._id}/join`);
+            if (res.success) {
+                // Refresh profile to see updated coins
+                await refreshUserProfile();
+                
+                // Save joined status locally and update state
+                const newJoined = [...joinedEvents, event._id];
+                setJoinedEvents(newJoined);
+                localStorage.setItem('dromoney_joined_events', JSON.stringify(newJoined));
+
+                showToast(`Successfully joined ${event.title}!`, "success");
+                setTimeout(() => navigateToEvent(event), 900);
+            } else {
+                showToast(res.message || "Failed to join event", "error");
+            }
+        } catch (err) {
+            showToast(err.message || "Something went wrong", "error");
         }
-
-        // Deduct coins
-        addCoins(-event.fee, `Event Entry: ${event.title}`);
-        
-        // Save joined status
-        const newJoined = [...joinedEvents, event.id];
-        setJoinedEvents(newJoined);
-        localStorage.setItem('dromoney_joined_events', JSON.stringify(newJoined));
-
-        showToast(`Successfully joined ${event.title}!`, "success");
-        setTimeout(() => navigateToEvent(event), 900);
     };
 
     return (
@@ -126,7 +151,7 @@ const Events = () => {
                 <div className="space-y-3">
                     <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Active Events</h2>
                     {eventList.map((event, idx) => {
-                        const isJoined = joinedEvents.includes(event.id);
+                        const isJoined = joinedEvents.includes(event._id);
                         const isComingSoon = event.status !== 'Active';
 
                         // Theme Mapping
@@ -139,7 +164,7 @@ const Events = () => {
                         const theme = THEMES[idx % THEMES.length];
 
                         return (
-                            <div key={event.id} className={`${theme.bg} border ${theme.border} rounded-2xl p-4 shadow-sm relative overflow-hidden group`}>
+                            <div key={event._id} className={`${theme.bg} border ${theme.border} rounded-2xl p-4 shadow-sm relative overflow-hidden group`}>
                                 {/* Decorative circle */}
                                 <div className={`absolute -right-6 -top-6 w-20 h-20 ${theme.accent} opacity-[0.03] rounded-full`}></div>
 

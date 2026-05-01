@@ -18,9 +18,7 @@ exports.getUsers = async (req, res, next) => {
         }
 
         if (status && status !== 'All') {
-            // Need a 'status' field in User model or map here
-            // Currently User has isPaid, but not 'Blocked'
-            // I'll add 'isBlocked' to User Schema later if needed, but for now I'll use logic
+            query['kyc.status'] = status;
         }
 
         const users = await User.find(query).sort('-createdAt');
@@ -47,9 +45,21 @@ exports.manageKYC = async (req, res, next) => {
             return next(new ErrorResponse('User not found', 404));
         }
 
-        user.kyc.status = status;
-        if (rejectionReason) user.kyc.rejectionReason = rejectionReason;
+        // Ensure kyc object exists
+        if (!user.kyc) {
+            user.kyc = { status: 'Not Started' };
+        }
 
+        user.kyc.status = status;
+        
+        if (status === 'Approved' || status === 'Verified') {
+            user.kyc.rejectionReason = ''; // Clear reason on approval
+        } else if (rejectionReason) {
+            user.kyc.rejectionReason = rejectionReason;
+        }
+
+        // Use markModified for nested objects to ensure Mongoose detects change
+        user.markModified('kyc');
         await user.save();
 
         res.status(200).json({

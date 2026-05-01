@@ -3,6 +3,8 @@ const Promotion = require('../models/Promotion');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
+const path = require('path');
 
 // Configure Cloudinary
 cloudinary.config({
@@ -17,39 +19,55 @@ cloudinary.config({
 exports.updateKyc = asyncHandler(async (req, res, next) => {
     console.log('--- KYC Submission Started ---');
     const { documentNumber } = req.body;
-    
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+        return next(new ErrorResponse('User not found', 404));
+    }
+
+    // Prevent resubmission if already Approved/Verified
+    if (user.kyc?.status === 'Approved' || user.kyc?.status === 'Verified') {
+        return res.status(200).json({
+            success: true,
+            message: 'KYC already approved'
+        });
+    }
+
     if (!req.file) {
-        console.log('KYC Error: No file uploaded');
         return next(new ErrorResponse('Please upload your Aadhaar Card image', 400));
     }
 
     if (!documentNumber) {
-        console.log('KYC Error: No document number provided');
         return next(new ErrorResponse('Please provide Aadhaar Number', 400));
     }
 
-    const user = await User.findById(req.user.id);
-    console.log('KYC for User:', user.name, user.email);
-
     // Upload to Cloudinary
     try {
-        console.log('Uploading to Cloudinary...');
+        console.log('Uploading KYC document for user:', user._id);
         const result = await cloudinary.uploader.upload(req.file.path, {
             folder: 'dromoney/kyc',
             public_id: `aadhaar_${user._id}_${Date.now()}`
         });
-        console.log('Cloudinary Upload Success:', result.secure_url);
+        
+        // Update user KYC data
+        user.kyc = {
+            status: 'Pending',
+            documentType: 'Aadhaar',
+            documentNumber: documentNumber,
+            documentImage: result.secure_url,
+            rejectionReason: ''
+        };
 
-        user.kyc.documentNumber = documentNumber;
-        user.kyc.documentType = 'Aadhaar';
-        user.kyc.documentImage = result.secure_url;
-        user.kyc.status = 'Pending';
-        user.kyc.rejectionReason = ''; // Clear any old rejection
-
+        // Explicitly mark as modified for Mongoose
+        user.markModified('kyc');
         await user.save();
-        console.log('User KYC Status updated to Pending');
+        
+        // Cleanup local file
+        if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: 'KYC documents submitted for verification',
             data: {
@@ -58,7 +76,11 @@ exports.updateKyc = asyncHandler(async (req, res, next) => {
             }
         });
     } catch (err) {
-        console.error('Cloudinary Upload Error:', err);
+        console.error('KYC FINAL UPLOAD ERROR:', err.message);
+        // Cleanup local file on error
+        if (req.file.path && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
         return next(new ErrorResponse('Failed to upload document. Please try again.', 500));
     }
 });
@@ -71,6 +93,7 @@ exports.unlockPlatform = asyncHandler(async (req, res, next) => {
 
     // In production, verify payment gateway response here
     user.isPaid = true;
+    user.unlockedAt = new Date();
     await user.save();
 
     res.status(200).json({
@@ -121,6 +144,7 @@ exports.updateProfilePhoto = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Please upload an image', 400));
     }
 
+    // Upload to Cloudinary
     try {
         const result = await cloudinary.uploader.upload(req.file.path, {
             folder: 'dromoney/profile_pics',
@@ -134,12 +158,102 @@ exports.updateProfilePhoto = asyncHandler(async (req, res, next) => {
             { new: true, runValidators: true }
         );
 
+        // Cleanup local file
+        if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+
         res.status(200).json({
             success: true,
             data: user.profileImage
         });
     } catch (err) {
         console.error('Profile Photo Upload Error:', err);
+        // Cleanup local file on error
+        if (req.file.path && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
         return next(new ErrorResponse('Failed to upload profile photo', 500));
     }
+});
+
+// @desc    Update Future Fund Progress
+// @route   POST /api/user/data/future-fund/progress
+// @access  Private
+exports.updateFutureFundProgress = asyncHandler(async (req, res, next) => {
+    const { type, value } = req.body; // type: 'sales', 'activity', 'days'
+    const user = await User.findById(req.user.id);
+
+    if (!user.futureFund) {
+        user.futureFund = { progress: 0, criteria: [] };
+    }
+
+    // Initialize default criteria if empty
+    if (!user.futureFund.criteria || user.futureFund.criteria.length === 0) {
+        user.futureFund.criteria = [
+            { id: 1, title: 'Successful Sales', target: 10, current: 0, completed: false },
+            { id: 2, title: 'Daily Activity', target: 15, current: 0, completed: false },
+            { id: 3, title: 'Active Days', target: 7, current: 0, completed: false }
+        ];
+    }
+
+    const criterion = user.futureFund.criteria.find(c => {
+        if (type === 'sales' && c.id === 1) return true;
+        if (type === 'activity' && c.id === 2) return true;
+        if (type === 'days' && c.id === 3) return true;
+        return false;
+    });
+
+    if (criterion) {
+        if (type === 'activity') {
+            criterion.current += value; // value is minutes to add
+        } else if (type === 'sales') {
+            criterion.current += value; // add successful sales
+        } else if (type === 'days') {
+            criterion.current = value; // set total active days
+        }
+
+        if (criterion.current >= criterion.target) {
+            criterion.completed = true;
+        }
+    }
+
+    // Recalculate total progress
+    const totalCriteria = user.futureFund.criteria.length;
+    let completedWeight = 0;
+
+    user.futureFund.criteria.forEach(c => {
+        // Simple weight: each criterion contributes equally to the 100%
+        const ratio = Math.min(c.current / c.target, 1);
+        completedWeight += ratio;
+    });
+
+    user.futureFund.progress = Math.round((completedWeight / totalCriteria) * 100);
+
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        data: user.futureFund
+    });
+});
+// @desc    Unlock Future Fund
+// @route   POST /api/user/data/future-fund/unlock
+// @access  Private
+exports.unlockFutureFund = asyncHandler(async (req, res, next) => {
+    const user = await User.findById(req.user.id);
+
+    if (user.futureFund.progress < 100) {
+        return next(new ErrorResponse('Please complete all criteria first', 400));
+    }
+
+    // Mark as unlocked/active
+    // You could add a status field to the model if needed, but for now we just return success
+    // user.futureFund.status = 'active'; 
+    // await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: 'Future Fund unlocked'
+    });
 });

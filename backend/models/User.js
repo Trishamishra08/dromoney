@@ -29,6 +29,9 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false, // Platform unlock status
     },
+    unlockedAt: {
+        type: Date,
+    },
     isBoosterActive: {
         type: Boolean,
         default: false,

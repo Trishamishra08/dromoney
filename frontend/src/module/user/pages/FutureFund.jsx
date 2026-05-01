@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, TrendingUp, CheckCircle2, Timer, Calendar, ShieldCheck, Sparkles, IndianRupee, X, Zap } from 'lucide-react';
 import { useUser } from '../context/UserContext';
+import api from '../../shared/services/api';
 
 const FutureFund = () => {
     const navigate = useNavigate();
@@ -100,35 +101,23 @@ const FutureFund = () => {
         );
     }
 
-    const CRITERIA = [
-        { 
-            id: 1, 
-            title: "Successful Sales", 
-            target: "10-15 Sales", 
-            current: futureFund.criteria.find(c => c.id === 1)?.current || 0,
-            icon: ShieldCheck, 
-            color: 'text-emerald-500',
-            bg: 'bg-emerald-50'
-        },
-        { 
-            id: 2, 
-            title: "Daily Activity", 
-            target: "15 Mins Daily", 
-            current: "active",
-            icon: Timer, 
-            color: 'text-sky-500',
-            bg: 'bg-sky-50'
-        },
-        { 
-            id: 3, 
-            title: "Active Days", 
-            target: "7-10 Days", 
-            current: futureFund.criteria.find(c => c.id === 2)?.current || 0,
-            icon: Calendar, 
-            color: 'text-indigo-500',
-            bg: 'bg-indigo-50'
-        }
-    ];
+    const salesCriterion = futureFund.criteria?.find(c => c.id === 1) || { current: 0, target: 10 };
+    const activityCriterion = futureFund.criteria?.find(c => c.id === 2) || { current: 0, target: 15 };
+    const daysCriterion = futureFund.criteria?.find(c => c.id === 3) || { current: 0, target: 7 };
+
+    React.useEffect(() => {
+        // Activity tracking (Simulation: update every 1 minute of being on this page)
+        const interval = setInterval(async () => {
+            try {
+                await api.post('/user/data/future-fund/progress', { type: 'activity', value: 1 });
+                // We should refresh profile to get new data, but for now we rely on the next refresh
+            } catch (err) {
+                console.error("Activity Update Error:", err);
+            }
+        }, 60000); 
+
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="flex flex-col min-h-screen bg-slate-50 relative overflow-hidden animate-in slide-in-from-right duration-500 pb-6">
@@ -169,12 +158,12 @@ const FutureFund = () => {
                         <div className="w-full max-w-[280px] bg-white/10 backdrop-blur-md rounded-sm px-3 py-2 border border-white/10 mx-auto">
                             <div className="flex justify-between items-center mb-1.5">
                                 <span className="text-[7px] font-black uppercase tracking-widest text-white/80">Progress</span>
-                                <span className="text-[11px] font-black">{futureFund.progress}%</span>
+                                <span className="text-[11px] font-black">{futureFund.progress || 0}%</span>
                             </div>
                             <div className="w-full h-1 bg-white/20 overflow-hidden">
                                 <div 
                                     className="h-full bg-white transition-all duration-1000 shadow-[0_0_8px_rgba(255,255,255,0.6)]"
-                                    style={{ width: `${futureFund.progress}%` }}
+                                    style={{ width: `${futureFund.progress || 0}%` }}
                                 ></div>
                             </div>
                         </div>
@@ -195,7 +184,6 @@ const FutureFund = () => {
                     </div>
 
                     {/* Eligibility Criteria Cards */}
-                    {/* Eligibility Criteria Cards (Compact & Rounded) */}
                     <div className="grid grid-cols-1 gap-3">
                         {/* 1. Successful Sales */}
                         <div 
@@ -213,7 +201,7 @@ const FutureFund = () => {
                                     </div>
                                 </div>
                                 <div className="bg-emerald-600/10 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                                    <span className="text-[11px] font-black text-emerald-700">7/10</span>
+                                    <span className="text-[11px] font-black text-emerald-700">{salesCriterion.current}/{salesCriterion.target}</span>
                                 </div>
                             </div>
                             <div className="relative z-10 flex-1">
@@ -221,7 +209,7 @@ const FutureFund = () => {
                                 <p className="text-[10px] font-bold text-slate-500 leading-tight tracking-tight uppercase">Target Milestone</p>
                             </div>
                             <div className="w-full h-1 bg-white/50 rounded-full mt-3 overflow-hidden relative">
-                                <div className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-1000" style={{ width: '70%' }}></div>
+                                <div className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-1000" style={{ width: `${Math.min((salesCriterion.current / salesCriterion.target) * 100, 100)}%` }}></div>
                             </div>
                         </div>
 
@@ -241,7 +229,7 @@ const FutureFund = () => {
                                     </div>
                                 </div>
                                 <div className="bg-amber-600/10 px-2.5 py-0.5 rounded-full border border-amber-200">
-                                    <span className="text-[11px] font-black text-amber-700">12:30m</span>
+                                    <span className="text-[11px] font-black text-amber-700">{activityCriterion.current}m/{activityCriterion.target}m</span>
                                 </div>
                             </div>
                             <div className="relative z-10 flex-1">
@@ -249,7 +237,7 @@ const FutureFund = () => {
                                 <p className="text-[10px] font-bold text-slate-500 leading-tight tracking-tight uppercase">Time Tracker</p>
                             </div>
                             <div className="w-full h-1 bg-white/50 rounded-full mt-3 overflow-hidden">
-                                <div className="h-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)] transition-all duration-1000" style={{ width: '83%' }}></div>
+                                <div className="h-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)] transition-all duration-1000" style={{ width: `${Math.min((activityCriterion.current / activityCriterion.target) * 100, 100)}%` }}></div>
                             </div>
                         </div>
 
@@ -269,7 +257,7 @@ const FutureFund = () => {
                                     </div>
                                 </div>
                                 <div className="bg-blue-600/10 px-2.5 py-0.5 rounded-full border border-blue-200">
-                                    <span className="text-[11px] font-black text-blue-700">6/10</span>
+                                    <span className="text-[11px] font-black text-blue-700">{daysCriterion.current}/{daysCriterion.target}</span>
                                 </div>
                             </div>
                             <div className="relative z-10 flex-1">
@@ -277,7 +265,7 @@ const FutureFund = () => {
                                 <p className="text-[10px] font-bold text-slate-500 leading-tight tracking-tight uppercase">Continuity Goal</p>
                             </div>
                             <div className="w-full h-1 bg-white/50 rounded-full mt-3 overflow-hidden">
-                                <div className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)] transition-all duration-1000" style={{ width: '60%' }}></div>
+                                <div className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)] transition-all duration-1000" style={{ width: `${Math.min((daysCriterion.current / daysCriterion.target) * 100, 100)}%` }}></div>
                             </div>
                         </div>
 
@@ -298,7 +286,25 @@ const FutureFund = () => {
 
                         {/* Action Buttons */}
                         <div className="pt-2 space-y-3">
-                            <button className="w-full bg-slate-900 text-white font-black py-4 shadow-2xl active:scale-[0.98] transition-all text-[15px] tracking-[0.1em] uppercase border-b-4 border-purple-600 flex items-center justify-center gap-3 group">
+                            <button 
+                                onClick={async () => {
+                                    if (futureFund.progress < 100) {
+                                        addNotification("Incomplete!", "Please complete all criteria to unlock.", "error");
+                                        return;
+                                    }
+                                    try {
+                                        const res = await api.post('/user/data/future-fund/unlock');
+                                        if (res.success) {
+                                            setViewState('active');
+                                            addNotification("Success!", "Future Fund activated!", "success");
+                                        }
+                                    } catch (err) {
+                                        addNotification("Error", "Failed to unlock Future Fund", "error");
+                                    }
+                                }}
+                                disabled={futureFund.progress < 100 && false} // Keep it clickable for feedback or allow if logic permits
+                                className={`w-full font-black py-4 shadow-2xl active:scale-[0.98] transition-all text-[15px] tracking-[0.1em] uppercase border-b-4 flex items-center justify-center gap-3 group ${futureFund.progress >= 100 ? 'bg-slate-900 text-white border-purple-600' : 'bg-slate-200 text-slate-400 border-slate-300'}`}
+                            >
                                 UNLOCK FUTURE FUND
                                 <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                             </button>
