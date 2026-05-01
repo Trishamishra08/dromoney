@@ -26,7 +26,7 @@ const UniversalVideoPlayer = ({ url, className, onEnded, autoPlay = true, contro
             <div className={`relative pb-[56.25%] h-0 ${className}`}>
                 <iframe
                     src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${autoPlay ? 1 : 0}&controls=${controls ? 1 : 0}`}
-                    className="absolute top-0 left-0 w-full h-full rounded-2xl"
+                    className="absolute top-0 left-0 w-full h-full rounded-none"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -41,7 +41,7 @@ const UniversalVideoPlayer = ({ url, className, onEnded, autoPlay = true, contro
             <div className={`relative pb-[56.25%] h-0 ${className}`}>
                 <iframe
                     src={`https://player.vimeo.com/video/${vimeoId}?autoplay=${autoPlay ? 1 : 0}`}
-                    className="absolute top-0 left-0 w-full h-full rounded-2xl"
+                    className="absolute top-0 left-0 w-full h-full rounded-none"
                     frameBorder="0"
                     allow="autoplay; fullscreen; picture-in-picture"
                     allowFullScreen
@@ -60,7 +60,7 @@ const UniversalVideoPlayer = ({ url, className, onEnded, autoPlay = true, contro
             autoPlay={autoPlay}
             playsInline
             onEnded={onEnded}
-            style={{ width: '100%', borderRadius: '1rem' }}
+            style={{ width: '100%', borderRadius: '0' }}
         />
     );
 };

@@ -133,40 +133,48 @@ const AdPlayer = () => {
                 )}
             </div>
 
-            {/* Bottom Controls / Reward Card */}
-            <div className="bg-white rounded-t-[2.5rem] p-6 pb-10">
+            {/* Bottom Controls / Reward Card - Premium Design */}
+            <div className="bg-white rounded-t-[2rem] p-5 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
                 {!isCompleted ? (
                     <div className="space-y-4">
+                        {/* Title & Live Indicator */}
                         <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white shadow-lg">
+                                    <MonitorPlay size={18} />
+                                </div>
+                                <div className="flex flex-col">
+                                    <h2 className="text-[15px] font-black text-slate-800 tracking-tight leading-none mb-1">{ad.title}</h2>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Sponsored Advertisement</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Watching</span>
+                            </div>
+                        </div>
+
+                        {/* Earnings Card - High Impact */}
+                        <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-indigo-200">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                                    <MonitorPlay size={20} />
+                                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
+                                    <Coins size={20} className="text-yellow-300 fill-yellow-300" />
                                 </div>
                                 <div>
-                                    <h2 className="text-sm font-black text-slate-800 tracking-tight">{ad.title}</h2>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sponsored Advertisement</p>
+                                    <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest leading-none mb-1">Estimated Earnings</p>
+                                    <p className="text-lg font-black text-white leading-none">+{ad.coinsReward} <span className="text-xs font-bold opacity-80">Coins</span></p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1.5 text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
-                                <RefreshCw size={12} className={isPlaying ? 'animate-spin' : ''} />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Watching</span>
+                            <div className="bg-white/10 px-2 py-1 rounded-lg border border-white/10">
+                                <span className="text-[10px] font-black text-white uppercase tracking-tighter">After {ad.duration}s</span>
                             </div>
                         </div>
 
-                        <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center gap-4">
-                            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center shadow-inner">
-                                <Coins size={24} className="text-amber-600 fill-amber-600" />
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">Total Earnings</p>
-                                <p className="text-sm font-black text-slate-800">Earn <span className="text-indigo-600">+{ad.coinsReward} coins</span> after {ad.duration}s</p>
-                            </div>
-                        </div>
-
-                        <div className="p-4 bg-sky-50 border border-sky-100 rounded-2xl flex items-start gap-3">
-                            <ShieldCheck size={18} className="text-sky-500 shrink-0 mt-0.5" />
-                            <p className="text-[9px] font-bold text-sky-700 leading-relaxed uppercase tracking-tight">
-                                Do not close the app while watching. Reward will be added only after full timer completion for verification.
+                        {/* Instruction Note - Sleek */}
+                        <div className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2.5">
+                            <ShieldCheck size={14} className="text-indigo-500 shrink-0" />
+                            <p className="text-[8.5px] font-bold text-slate-500 leading-tight uppercase tracking-tight">
+                                Do not close app while watching to verify reward.
                             </p>
                         </div>
                     </div>

@@ -44,7 +44,7 @@ const KycSetup = () => {
             }
         } catch (err) {
             console.error(err);
-            addNotification("Error", err.response?.data?.message || "Failed to submit KYC", "error");
+            addNotification("Error", err.message || "Failed to submit KYC", "error");
         } finally {
             setLoading(false);
         }

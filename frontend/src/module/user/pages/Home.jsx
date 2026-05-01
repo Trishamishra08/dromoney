@@ -253,11 +253,11 @@ const Home = () => {
 
     return (
         <div className="flex flex-col animate-in fade-in duration-700 min-h-full">
-            {/* --- 1. Platform Intro Video Card (Top, Full Width, Sharp Corners) --- */}
+            {/* --- 1. Platform Intro Video Card (Moved to Top) --- */}
             {introConfig && introConfig.isActive && (
                 <div 
                     onClick={() => setIsVideoPlaying(true)}
-                    className="w-full bg-slate-900 overflow-hidden shadow-xl relative group cursor-pointer active:brightness-90 transition-all border-b border-slate-800"
+                    className="w-full bg-slate-900 rounded-none overflow-hidden shadow-2xl relative group cursor-pointer active:brightness-90 transition-all border border-white/5"
                 >
                     <div className="absolute inset-0">
                         <img src={introConfig.thumbnailUrl || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80'} className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-1000" alt="Intro"/>
@@ -278,36 +278,41 @@ const Home = () => {
                 </div>
             )}
 
-            {/* Main Content Area (With Padding) */}
-            <div className="flex flex-col gap-5 p-4 pb-4">
-                
-                {/* --- 2. Marketplace & Services (Moved Up) --- */}
-                <div>
-                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Marketplace & Services</h3>
-                    <div className="grid grid-cols-4 gap-y-4 gap-x-2 bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                        {[
-                            { icon: Share2, label: 'Refer', color: 'bg-emerald-50 text-emerald-500', path: '/user/income-info#refer' },
-                            { icon: ClipboardList, label: 'Task', color: 'bg-amber-50 text-amber-500', path: '/user/income-info#task' },
-                            { icon: TrendingUp, label: 'Fund', color: 'bg-pink-50 text-pink-500', path: '/user/income-info#fund' },
-                            { icon: Sparkles, label: 'Events', color: 'bg-purple-50 text-purple-500', path: '/user/income-info#events' },
-                            { icon: Wallet, label: 'Wallet', color: 'bg-rose-50 text-rose-500', path: '/user/wallet' },
-                            { icon: Clock, label: 'History', color: 'bg-indigo-50 text-indigo-500', path: '/user/history' },
-                            { icon: PlusSquare, label: 'Add Money', color: 'bg-teal-50 text-teal-500', path: '/user/wallet' },
-                            { icon: MoreHorizontal, label: 'Others', color: 'bg-yellow-50 text-yellow-500', path: '/user/info/about' }
-                        ].map((service, i) => (
-                            <button
-                                key={i}
-                                onClick={() => navigate(service.path)}
-                                className="flex flex-col items-center gap-2 group transition-all"
-                            >
-                                <div className={`w-12 h-12 ${service.color} rounded-xl flex items-center justify-center shadow-sm group-hover:-translate-y-1 transition-transform`}>
-                                    <service.icon size={20} strokeWidth={2.2} />
-                                </div>
-                                <span className="text-[10px] font-bold text-slate-600">{service.label}</span>
-                            </button>
-                        ))}
-                    </div>
+            {/* --- 4. Marketplace & Services (Moved Up) --- */}
+            <div className="px-4 pt-2 pb-1">
+                <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Marketplace & Services</h3>
+                <div className="grid grid-cols-4 gap-y-4 gap-x-2 bg-white rounded-2xl p-5 shadow-xl shadow-slate-200/40 border border-slate-50">
+                    {[
+                        { icon: Share2, label: 'Refer', color: 'bg-emerald-50 text-emerald-500', path: '/user/marketing' },
+                        { icon: ClipboardList, label: 'Task', color: 'bg-amber-50 text-amber-500', path: '/user/earn' },
+                        { icon: TrendingUp, label: 'Fund', color: 'bg-blue-50 text-blue-500', path: '/user/future-fund' },
+                        { icon: Sparkles, label: 'Events', color: 'bg-purple-50 text-purple-500', path: '/user/events' }
+                    ].map((service, i) => (
+                        <button
+                            key={i}
+                            onClick={() => navigate(service.path)}
+                            className="flex flex-col items-center gap-2 group transition-all"
+                        >
+                            <div className={`w-12 h-12 ${service.color} rounded-2xl flex items-center justify-center shadow-sm group-hover:-translate-y-1 transition-transform`}>
+                                <service.icon size={22} strokeWidth={2.2} />
+                            </div>
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">{service.label}</span>
+                        </button>
+                    ))}
                 </div>
+            </div>
+
+            {/* --- 2. Promotional Ad Banners --- */}
+            <div className="py-2">
+                <AdBanners navigate={navigate} />
+            </div>
+
+            {/* Main Content Area (With Padding) */}
+            <div className="flex flex-col gap-5 p-4 pt-0 pb-4">
+                
+
+                
+
 
                 {/* --- 3. Wallet Section --- */}
                 <div className="mx-[-12px]">
@@ -345,39 +350,7 @@ const Home = () => {
                     </div>
                 </div>
 
-                {/* --- 4. Recent Transactions --- */}
-                <div className="mx-[-12px]">
-                    <div className="flex justify-between items-center mb-3 px-4">
-                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Recent Activity</h3>
-                        <button onClick={() => navigate('/user/history')} className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:underline">View All</button>
-                    </div>
-                    <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4 border border-slate-100">
-                        {[
-                            { name: 'Alex Macculam', type: 'Send Money', amount: '-$66.02', date: '25-12-2022', time: '6:00pm', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80', isNegative: true },
-                            { name: 'Mac Dinner', type: 'Cashout', amount: '-$120.02', date: '01-01-2023', time: '8:00pm', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&q=80', isNegative: true },
-                            { name: 'Brandon King', type: 'Add Money', amount: '+$250.00', date: '02-01-2023', time: '10:00am', image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150&q=80', isNegative: false },
-                        ].map((tx, i) => (
-                            <div key={i} className={`flex items-center justify-between ${i !== 2 ? 'border-b border-slate-50 pb-4' : ''}`}>
-                                <div className="flex items-center gap-3">
-                                    <img src={tx.image} alt={tx.name} className="w-10 h-10 rounded-full object-cover shadow-sm" />
-                                    <div>
-                                        <h4 className="text-[13px] font-bold text-slate-800 leading-tight mb-0.5">{tx.name}</h4>
-                                        <p className="text-[10px] text-blue-500 font-bold uppercase tracking-tight leading-none">{tx.type}</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <h4 className={`text-[13px] font-black leading-tight mb-0.5 ${tx.isNegative ? 'text-slate-800' : 'text-emerald-500'}`}>{tx.amount}</h4>
-                                    <p className="text-[9px] text-slate-400 font-bold leading-none">{tx.date} • {tx.time}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
 
-                {/* --- 5. Promotional Ad Banners --- */}
-                <div className="mx-[-12px]">
-                    <AdBanners navigate={navigate} />
-                </div>
 
                 {/* --- 6. Booster Sections --- */}
                 <div className="space-y-4 mx-[-12px]">
@@ -571,8 +544,7 @@ const Home = () => {
                         <div className="space-y-4">
                             <h4 className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-[0.2em] not-italic font-sans">Organization</h4>
                             <div className="flex flex-col gap-3">
-                                <a href="#" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">User Guidelines</a>
-                                <a href="#" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">Career Info</a>
+                                <a href="#" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">Community Guidelines</a>
                             </div>
                         </div>
                     </div>
@@ -613,7 +585,7 @@ const Home = () => {
                     >
                         <X size={24} />
                     </button>
-                    <div className="w-full max-w-4xl aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/5 bg-slate-900">
+                    <div className="w-full max-w-4xl aspect-video rounded-none overflow-hidden shadow-2xl border border-white/5 bg-slate-900">
                         <UniversalVideoPlayer 
                             url={introConfig.videoUrl} 
                             className="w-full h-full"

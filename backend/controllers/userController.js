@@ -15,24 +15,30 @@ cloudinary.config({
 // @route   PATCH /api/user/data/kyc
 // @access  Private
 exports.updateKyc = asyncHandler(async (req, res, next) => {
+    console.log('--- KYC Submission Started ---');
     const { documentNumber } = req.body;
     
     if (!req.file) {
+        console.log('KYC Error: No file uploaded');
         return next(new ErrorResponse('Please upload your Aadhaar Card image', 400));
     }
 
     if (!documentNumber) {
+        console.log('KYC Error: No document number provided');
         return next(new ErrorResponse('Please provide Aadhaar Number', 400));
     }
 
     const user = await User.findById(req.user.id);
+    console.log('KYC for User:', user.name, user.email);
 
     // Upload to Cloudinary
     try {
+        console.log('Uploading to Cloudinary...');
         const result = await cloudinary.uploader.upload(req.file.path, {
             folder: 'dromoney/kyc',
             public_id: `aadhaar_${user._id}_${Date.now()}`
         });
+        console.log('Cloudinary Upload Success:', result.secure_url);
 
         user.kyc.documentNumber = documentNumber;
         user.kyc.documentType = 'Aadhaar';
@@ -41,6 +47,7 @@ exports.updateKyc = asyncHandler(async (req, res, next) => {
         user.kyc.rejectionReason = ''; // Clear any old rejection
 
         await user.save();
+        console.log('User KYC Status updated to Pending');
 
         res.status(200).json({
             success: true,

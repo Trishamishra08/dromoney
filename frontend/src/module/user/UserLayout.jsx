@@ -19,11 +19,11 @@ const UserLayout = () => {
     const { userData, notifications, clearNotifications, markAsRead, logout } = useUser();
 
     const navItems = [
-        { path: '/user/home', label: 'DASHBOARD', icon: LayoutGrid },
-        { path: '/user/earn', label: 'TASKS', icon: Zap },
-        { path: '/user/marketing', label: 'NETWORK', icon: Users },
-        { path: '/user/wallet', label: 'WALLET', icon: WalletIcon },
-        { path: '/user/profile', label: 'PROFILE', icon: User },
+        { path: '/user/home', label: 'Home', icon: HomeIcon },
+        { path: '/user/income', label: 'Income', icon: TrendingUp },
+        { path: '/user/wallet', label: 'Wallet', icon: WalletIcon },
+        { path: '/user/watch', label: 'Watch', icon: MonitorPlay },
+        { path: '/user/profile', label: 'Profile', icon: User },
     ];
 
     const getNotifIcon = (type) => {

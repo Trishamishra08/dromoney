@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, TrendingUp, CheckCircle2, Timer, Calendar, ShieldCheck, Sparkles, IndianRupee } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingUp, CheckCircle2, Timer, Calendar, ShieldCheck, Sparkles, IndianRupee, X, Zap } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 
 const FutureFund = () => {
@@ -131,40 +131,49 @@ const FutureFund = () => {
     ];
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#F8FAFC] animate-in slide-in-from-right duration-500 pb-6">
-            {/* Header */}
-            <div className="p-4 bg-white border-b border-slate-100 flex items-center gap-4">
-                <button 
-                    onClick={() => navigate(-1)}
-                    className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-800 active:scale-95 transition-all"
-                >
-                    <ChevronLeft size={24} />
-                </button>
-                <div>
-                    <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none text-uppercase">Future Fund</h1>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Long-term Growth Opportunity</p>
-                </div>
+        <div className="flex flex-col min-h-screen bg-slate-50 relative overflow-hidden animate-in slide-in-from-right duration-500 pb-6">
+            {/* Background Decorative Elements */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-[-10%] left-[-20%] w-[70%] h-[50%] bg-purple-200/40 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-[10%] right-[-20%] w-[70%] h-[50%] bg-indigo-200/30 rounded-full blur-[120px]"></div>
             </div>
 
-            <div className="flex-1 space-y-4">
+            <div className="flex-1 space-y-2.5 relative z-10">
                 {/* Full Width Hero Card */}
-                <div className="w-full bg-gradient-to-br from-indigo-600 via-indigo-500 to-sky-400 rounded-b-[2rem] p-5 text-white relative overflow-hidden shadow-xl shadow-indigo-100/50">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                    <div className="relative z-10 flex flex-col items-center text-center">
-                        <div className="w-11 h-11 bg-white shadow-xl rounded-xl flex items-center justify-center mb-2 border border-white/20">
-                            <TrendingUp size={22} className="text-indigo-600" />
-                        </div>
-                        <h2 className="text-lg font-black tracking-tight leading-none mb-1">Future Fund</h2>
-                        <p className="text-[9px] font-bold text-indigo-100/80 uppercase tracking-widest leading-none">Monetization Program</p>
-                        
-                        <div className="mt-4 w-full max-w-[280px] bg-black/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 mx-auto">
-                            <div className="flex justify-between items-center mb-1.5 px-1">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-100">Progress</span>
-                                <span className="text-xs font-black">{futureFund.progress}%</span>
+                <div className="w-full bg-gradient-to-br from-purple-700 via-purple-600 to-indigo-500 rounded-b-[2.5rem] p-4 pb-7 text-white relative overflow-hidden shadow-2xl">
+                    {/* Back Button Integrated */}
+                    <button 
+                        onClick={() => {
+                            if (window.history.length > 1) {
+                                navigate(-1);
+                            } else {
+                                navigate('/user/home');
+                            }
+                        }}
+                        className="absolute top-4 left-2 w-10 h-10 flex items-center justify-center text-white active:scale-75 transition-all z-[100] cursor-pointer"
+                    >
+                        <ChevronLeft size={28} strokeWidth={2.5} />
+                    </button>
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="relative z-10 flex flex-col items-center">
+                        <div className="flex items-center gap-2.5 mb-3">
+                            <div className="w-8 h-8 bg-white/20 backdrop-blur-md rounded-sm flex items-center justify-center border border-white/20 shadow-lg">
+                                <TrendingUp size={16} className="text-white" />
                             </div>
-                            <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden p-0.5 border border-white/10">
+                            <div className="text-left">
+                                <h2 className="text-[15px] font-black tracking-tight leading-none">Future Fund</h2>
+                                <p className="text-[7px] font-bold text-white/60 uppercase tracking-widest mt-0.5">Eligibility Program</p>
+                            </div>
+                        </div>
+                        
+                        <div className="w-full max-w-[280px] bg-white/10 backdrop-blur-md rounded-sm px-3 py-2 border border-white/10 mx-auto">
+                            <div className="flex justify-between items-center mb-1.5">
+                                <span className="text-[7px] font-black uppercase tracking-widest text-white/80">Progress</span>
+                                <span className="text-[11px] font-black">{futureFund.progress}%</span>
+                            </div>
+                            <div className="w-full h-1 bg-white/20 overflow-hidden">
                                 <div 
-                                    className="h-full bg-white rounded-full transition-all duration-1000"
+                                    className="h-full bg-white transition-all duration-1000 shadow-[0_0_8px_rgba(255,255,255,0.6)]"
                                     style={{ width: `${futureFund.progress}%` }}
                                 ></div>
                             </div>
@@ -174,99 +183,133 @@ const FutureFund = () => {
 
                 <div className="px-5 pb-10 space-y-4">
                     {/* Description Section */}
-                    <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-                        <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Sparkles size={14} className="text-amber-500" />
-                            What is Future Fund?
+                    <div className="bg-slate-900 p-5 shadow-2xl relative overflow-hidden border-b-4 border-purple-500">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl"></div>
+                        <h3 className="text-[9px] font-black text-purple-400 uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
+                            <Sparkles size={12} />
+                            PROGRAM INSIGHT
                         </h3>
-                        <p className="text-[12px] font-black text-slate-400 leading-relaxed italic border-l-3 border-indigo-500/20 pl-4">
+                        <p className="text-[13px] font-medium text-slate-300 leading-relaxed italic border-l-2 border-purple-500/50 pl-4">
                             "Future Fund is a long-term earning opportunity. Once activated, users become eligible for cash rewards derived from platform profits."
                         </p>
                     </div>
 
                     {/* Eligibility Criteria Cards */}
-                    <div className="space-y-3">
+                    {/* Eligibility Criteria Cards (Compact & Rounded) */}
+                    <div className="grid grid-cols-1 gap-3">
                         {/* 1. Successful Sales */}
-                        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                            <div className="flex items-center gap-2 mb-2">
-                                <CheckCircle2 size={18} className="text-emerald-500" />
-                                <h4 className="text-[14px] font-black text-slate-800">Successful Sales</h4>
+                        <div 
+                            className="relative bg-gradient-to-br from-emerald-50 to-teal-100 p-4 shadow-lg shadow-emerald-100/50 border border-white active:scale-[0.98] transition-all overflow-hidden flex flex-col"
+                            style={{ borderRadius: '2rem' }}
+                        >
+                            <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/30 rounded-full blur-2xl"></div>
+                            <div className="flex justify-between items-start mb-3 relative z-10">
+                                <div className="flex gap-1.5">
+                                    <div className="w-8 h-8 bg-white/60 backdrop-blur-md rounded-lg flex items-center justify-center border border-white shadow-sm">
+                                        <CheckCircle2 size={16} className="text-emerald-600" />
+                                    </div>
+                                    <div className="w-8 h-8 bg-white/40 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/50">
+                                        <Zap size={14} className="text-slate-400" />
+                                    </div>
+                                </div>
+                                <div className="bg-emerald-600/10 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                    <span className="text-[11px] font-black text-emerald-700">7/10</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between items-end mb-1.5">
-                                <span className="text-[12px] font-bold text-slate-500">7 / 10 <span className="text-[10px] uppercase ml-1">Completed</span></span>
+                            <div className="relative z-10 flex-1">
+                                <h4 className="text-[15px] font-black text-slate-800 tracking-tight leading-none mb-1">Successful Sales</h4>
+                                <p className="text-[10px] font-bold text-slate-500 leading-tight tracking-tight uppercase">Target Milestone</p>
                             </div>
-                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500 w-[70%] rounded-full"></div>
+                            <div className="w-full h-1 bg-white/50 rounded-full mt-3 overflow-hidden relative">
+                                <div className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-1000" style={{ width: '70%' }}></div>
                             </div>
                         </div>
 
-                        {/* 2. Today's Activity */}
-                        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Timer size={18} className="text-amber-500" />
-                                <h4 className="text-[14px] font-black text-slate-800">Today's Activity</h4>
+                        {/* 2. Daily Activity */}
+                        <div 
+                            className="relative bg-gradient-to-br from-amber-50 to-orange-100 p-4 shadow-lg shadow-amber-100/50 border border-white active:scale-[0.98] transition-all overflow-hidden flex flex-col"
+                            style={{ borderRadius: '2rem' }}
+                        >
+                            <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/30 rounded-full blur-2xl"></div>
+                            <div className="flex justify-between items-start mb-3 relative z-10">
+                                <div className="flex gap-1.5">
+                                    <div className="w-8 h-8 bg-white/60 backdrop-blur-md rounded-lg flex items-center justify-center border border-white shadow-sm">
+                                        <Timer size={16} className="text-amber-600" />
+                                    </div>
+                                    <div className="w-8 h-8 bg-white/40 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/50">
+                                        <Sparkles size={14} className="text-amber-400" />
+                                    </div>
+                                </div>
+                                <div className="bg-amber-600/10 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                    <span className="text-[11px] font-black text-amber-700">12:30m</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between items-end mb-1.5">
-                                <span className="text-[12px] font-bold text-slate-500">12:30 / 15:00 <span className="text-[10px] uppercase ml-1">Minutes</span></span>
+                            <div className="relative z-10 flex-1">
+                                <h4 className="text-[15px] font-black text-slate-800 tracking-tight leading-none mb-1">Daily Activity</h4>
+                                <p className="text-[10px] font-bold text-slate-500 leading-tight tracking-tight uppercase">Time Tracker</p>
                             </div>
-                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-2">
-                                <div className="h-full bg-amber-500 w-[83%] rounded-full"></div>
+                            <div className="w-full h-1 bg-white/50 rounded-full mt-3 overflow-hidden">
+                                <div className="h-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)] transition-all duration-1000" style={{ width: '83%' }}></div>
                             </div>
-                            <p className="text-[11px] font-bold text-slate-400 italic">✨ 3 मिनट और active रहें</p>
                         </div>
 
                         {/* 3. Active Days */}
-                        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Calendar size={18} className="text-blue-500" />
-                                <h4 className="text-[14px] font-black text-slate-800">Active Days</h4>
-                            </div>
-                            <div className="flex justify-between items-end mb-1.5">
-                                <span className="text-[12px] font-bold text-slate-500">6 / 10 <span className="text-[10px] uppercase ml-1">Days</span></span>
-                            </div>
-                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-500 w-[60%] rounded-full"></div>
-                            </div>
-                        </div>
-
-                        {/* Info Box */}
-                        <div className="bg-sky-50 border border-sky-100 rounded-xl p-4 flex gap-3">
-                            <div className="w-6 h-6 bg-sky-500 rounded-full flex items-center justify-center text-white shrink-0 mt-0.5">
-                                <span className="text-[12px] font-black">i</span>
-                            </div>
-                            <p className="text-[11px] font-bold text-slate-600 leading-tight">
-                                App use करने पर time automatically count होगा.<br />
-                                15 मिनट पूरा होने पर 1 दिन complete माना जाएगा
-                            </p>
-                        </div>
-
-                        {/* Conditional Eligibility/Action Box */}
-                        {viewState === 'initial' ? (
-                            <div className="bg-rose-50/30 border-2 border-rose-100 rounded-xl p-4 text-center">
-                                <div className="flex items-center justify-center gap-2 text-rose-500 mb-1">
-                                    <div className="w-4 h-4 bg-rose-500 rounded-full flex items-center justify-center text-white">
-                                        <span className="text-[10px]">✕</span>
-                                    </div>
-                                    <span className="text-[13px] font-black uppercase tracking-tight">Not Eligible Yet</span>
-                                </div>
-                                <p className="text-[10px] font-bold text-slate-400 mt-1">Complete all 3 criteria to unlock Future Fund</p>
-                            </div>
-                        ) : (
-                            <button 
-                                onClick={() => setViewState('active')}
-                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl shadow-lg shadow-emerald-100 active:scale-95 transition-all text-sm tracking-tight flex items-center justify-center gap-2"
-                            >
-                                Move Forward <ChevronRight size={18} />
-                            </button>
-                        )}
-
-                        {/* Secondary Action Button */}
-                        <button 
-                            onClick={() => navigate('/user/home')}
-                            className="w-full bg-white border border-slate-200 text-slate-600 font-black py-3 text-[12px] rounded-xl active:scale-95 transition-all tracking-tight uppercase"
+                        <div 
+                            className="relative bg-gradient-to-br from-blue-50 to-indigo-100 p-4 shadow-lg shadow-blue-100/50 border border-white active:scale-[0.98] transition-all overflow-hidden flex flex-col"
+                            style={{ borderRadius: '2rem' }}
                         >
-                            Continue Earning
-                        </button>
+                            <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/30 rounded-full blur-2xl"></div>
+                            <div className="flex justify-between items-start mb-3 relative z-10">
+                                <div className="flex gap-1.5">
+                                    <div className="w-8 h-8 bg-white/60 backdrop-blur-md rounded-lg flex items-center justify-center border border-white shadow-sm">
+                                        <Calendar size={16} className="text-blue-600" />
+                                    </div>
+                                    <div className="w-8 h-8 bg-white/40 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/50">
+                                        <Zap size={14} className="text-slate-400" />
+                                    </div>
+                                </div>
+                                <div className="bg-blue-600/10 px-2.5 py-0.5 rounded-full border border-blue-200">
+                                    <span className="text-[11px] font-black text-blue-700">6/10</span>
+                                </div>
+                            </div>
+                            <div className="relative z-10 flex-1">
+                                <h4 className="text-[15px] font-black text-slate-800 tracking-tight leading-none mb-1">Active Days</h4>
+                                <p className="text-[10px] font-bold text-slate-500 leading-tight tracking-tight uppercase">Continuity Goal</p>
+                            </div>
+                            <div className="w-full h-1 bg-white/50 rounded-full mt-3 overflow-hidden">
+                                <div className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)] transition-all duration-1000" style={{ width: '60%' }}></div>
+                            </div>
+                        </div>
+
+                        {/* Info Box (Compact & Rounded) */}
+                        <div 
+                            className="bg-slate-900 text-white p-5 shadow-2xl relative overflow-hidden"
+                            style={{ borderRadius: '2rem' }}
+                        >
+                            <div className="flex gap-3 items-center relative z-10">
+                                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-white shrink-0 border border-white/10">
+                                    <Sparkles size={16} className="text-purple-400" />
+                                </div>
+                                <p className="text-[10px] font-medium text-slate-300 leading-relaxed flex-1">
+                                    आपका समय <span className="text-white font-bold">स्वचालित रूप से</span> गिना जाएगा। 15 मिनट = 1 दिन।
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="pt-2 space-y-3">
+                            <button className="w-full bg-slate-900 text-white font-black py-4 shadow-2xl active:scale-[0.98] transition-all text-[15px] tracking-[0.1em] uppercase border-b-4 border-purple-600 flex items-center justify-center gap-3 group">
+                                UNLOCK FUTURE FUND
+                                <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                            </button>
+                            
+                            <button 
+                                onClick={() => navigate('/user/home')}
+                                className="w-full bg-white text-slate-500 font-black py-3.5 text-[11px] active:scale-[0.98] transition-all tracking-[0.2em] uppercase border border-slate-200 shadow-sm"
+                            >
+                                Continue Earning
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

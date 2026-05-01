@@ -28,7 +28,7 @@ function checkFileType(file, cb) {
     if (mimetype && extname) {
         return cb(null, true);
     } else {
-        cb(new Error('Error: Images Only!'));
+        cb(new ErrorResponse('Error: Images Only! (jpeg, jpg, png, gif, webp)', 400));
     }
 }
 
