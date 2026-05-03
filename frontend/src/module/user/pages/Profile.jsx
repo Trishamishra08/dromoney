@@ -26,13 +26,14 @@ const Profile = () => {
     const defaultRealImage = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&q=80&fit=crop";
 
     const handleAction = (title) => {
+        if (title === 'Help & Support') { navigate('/user/help'); return; }
+        if (title === 'KYC Status') { setIsKycOpen(true); return; }
+        
         if (!isPaid) {
             setIsUnlockOpen(true);
             return;
         }
-        if (title === 'Help & Support') { navigate('/user/help'); return; }
         if (title === 'App Feedback') { setIsFeedbackOpen(true); return; }
-        if (title === 'KYC Status') { setIsKycOpen(true); return; }
         if (title === 'My Referrals') { setIsReferralsOpen(true); return; }
     };
 

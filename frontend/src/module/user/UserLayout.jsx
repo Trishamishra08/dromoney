@@ -4,7 +4,7 @@ import {
     Menu, Bell, Wallet as WalletIcon, Home as HomeIcon, LayoutGrid, User, History, 
     PhoneCall, HelpCircle, Building2, Rocket, MonitorPlay, X, CheckCircle2, 
     AlertCircle, Info, Globe, Sparkles, Headset, ChevronDown, TrendingUp, 
-    Wrench, MessageSquare, Zap, Users 
+    Wrench, MessageSquare, Zap, Users, Share2 
 } from 'lucide-react';
 import { motion } from "framer-motion";
 import { useUser } from './context/UserContext';
@@ -250,6 +250,7 @@ const UserLayout = () => {
                             {[
                                 { icon: HelpCircle, label: 'How It Works', path: '/user/info/how-it-works' },
                                 { icon: Sparkles, label: 'Benefits', path: '/user/info/benefits' },
+                                { icon: Share2, label: 'Refer & Earn', path: '/user/marketing' },
                                 { icon: Headset, label: 'Support', path: '/user/info/support' },
                                 { icon: Rocket, label: 'Promote Brand', path: '/user/promote-brand' },
                                 { icon: Building2, label: 'About Us', path: '/user/info/about' }

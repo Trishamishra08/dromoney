@@ -14,23 +14,29 @@ const Settings = () => {
     const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
-        const data = SettingsDataService.getSettings();
-        setConfig(data);
+        const fetchSettings = async () => {
+            const data = await SettingsDataService.getSettings();
+            if (data) setConfig(data);
+        };
+        fetchSettings();
     }, []);
 
     const handleChange = (field, value) => {
         setConfig(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsSaving(true);
-        // Simulate API call delay
-        setTimeout(() => {
-            SettingsDataService.saveSettings(config);
+        try {
+            await SettingsDataService.saveSettings(config);
             setIsSaving(false);
             setShowToast(true);
             setTimeout(() => setShowToast(false), 3000);
-        }, 800);
+        } catch (err) {
+            console.error(err);
+            setIsSaving(false);
+            alert("Failed to save settings");
+        }
     };
 
     if (!config) return <div className="p-10 text-center font-black animate-pulse">Loading Platform Config...</div>;
@@ -218,14 +224,22 @@ const Settings = () => {
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100 flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm">
-                                            <TrendingUpIcon size={24} />
+                                    <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100 flex items-center justify-between gap-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm">
+                                                <TrendingUpIcon size={24} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[13px] font-black text-emerald-900 tracking-tight">Referral Reward System</p>
+                                                <p className="text-[11px] font-bold text-emerald-600/70 mt-1">Enable/Disable referral bonuses for all users.</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-[13px] font-black text-emerald-900 tracking-tight">Active Economic Model</p>
-                                            <p className="text-[11px] font-bold text-emerald-600/70 mt-1">Changes here will affect current balance calculations immediately across all user dashboards.</p>
-                                        </div>
+                                        <button 
+                                            onClick={() => handleChange('referralSystemEnabled', !config.referralSystemEnabled)}
+                                            className={`relative w-16 h-8 rounded-full transition-all duration-300 ${config.referralSystemEnabled ? 'bg-emerald-500 shadow-lg shadow-emerald-200' : 'bg-slate-200'}`}
+                                        >
+                                            <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-all duration-300 shadow-sm ${config.referralSystemEnabled ? 'translate-x-8' : ''}`}></div>
+                                        </button>
                                     </div>
                                 </div>
                             )}

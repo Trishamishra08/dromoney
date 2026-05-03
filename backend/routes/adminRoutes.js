@@ -25,8 +25,14 @@ const {
 } = require('../controllers/businessIdeaController');
 const { createEvent, updateEvent, deleteEvent } = require('../controllers/eventController');
 const { getEvents } = require('../controllers/eventController');
+const { getSettings, updateSettings } = require('../controllers/adminSettingsController');
 
 const { protectAdmin } = require('../middleware/authMiddleware');
+
+// Settings Routes
+router.route('/settings')
+    .get(protectAdmin, getSettings)
+    .put(protectAdmin, updateSettings);
 
 // Auth Routes
 router.post('/auth/login', login);
@@ -47,6 +53,9 @@ const { updateContent } = require('../controllers/contentController');
 const { uploadToCloud, uploadMiddleware } = require('../controllers/adminUploadController');
 router.post('/content', protectAdmin, updateContent);
 router.post('/upload', protectAdmin, uploadMiddleware, uploadToCloud);
+
+const { getAffiliateStats } = require('../controllers/adminAffiliateController');
+router.get('/affiliates', protectAdmin, getAffiliateStats);
 
 router.route('/tasks').post(protectAdmin, createTask).get(protectAdmin, getTasks);
 router.route('/tasks/:id').put(protectAdmin, updateTask);

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
-import { CreditCard, Wallet as WalletIcon, IndianRupee, ArrowUpRight, ArrowDownLeft, History, Filter, AlertCircle, Sparkles, Coins, TrendingUp, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { CreditCard, Wallet as WalletIcon, IndianRupee, ArrowUpRight, ArrowDownLeft, History, Filter, AlertCircle, Sparkles, Coins, TrendingUp, ChevronRight, CheckCircle2, Share2 } from 'lucide-react';
 import UnlockModal from '../components/UnlockModal';
 
 const Wallet = () => {
+    const navigate = useNavigate();
     const { userData, requestWithdrawal, addNotification } = useUser();
     const { wallet, coins, name, isPaid } = userData;
     const [activeTab, setActiveTab] = useState('cash'); // 'cash' or 'coins'
@@ -114,6 +116,25 @@ const Wallet = () => {
                 </div>
             </div>
 
+            {/* --- Refer & Earn Promo --- */}
+            <div 
+                onClick={() => navigate('/user/marketing')}
+                className="bg-emerald-50 border border-emerald-100 rounded-lg p-3.5 flex items-center justify-between cursor-pointer active:scale-95 transition-all shadow-sm"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-white shadow-sm">
+                        <Share2 size={20} />
+                    </div>
+                    <div>
+                        <h4 className="text-[12px] font-black text-emerald-900 uppercase tracking-tight leading-none mb-1">Refer & Earn</h4>
+                        <p className="text-[9px] font-bold text-emerald-600/70">Get ₹200 for every friend!</p>
+                    </div>
+                </div>
+                <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                    Invite
+                </div>
+            </div>
+
             {/* --- Wallet Actions --- */}
             <div className="px-1 mt-1">
                 <h3 className="text-[13px] font-bold text-slate-400 uppercase tracking-widest">Settings</h3>
@@ -122,10 +143,15 @@ const Wallet = () => {
             <div className="flex flex-col gap-2">
                 {[
                     { id: 'withdraw', title: 'Instant Withdrawals', subtitle: 'Transfer to bank', icon: <ArrowUpRight size={16} className="text-blue-500" /> },
+                    { id: 'refer', title: 'Referral Rewards', subtitle: 'Earn commission', icon: <Share2 size={16} className="text-emerald-500" /> },
                     { id: 'limits', title: 'Transfer Limits', subtitle: 'Daily cap', icon: <Filter size={16} className="text-indigo-500" />, check: true },
                     { id: 'security', title: 'Security', subtitle: 'Encrypted', icon: <AlertCircle size={16} className="text-sky-500" />, check: true },
                 ].map((item) => (
-                    <div key={item.id} className="bg-white border border-slate-100 rounded-lg p-2.5 flex items-center justify-between shadow-sm active:bg-slate-50 transition-all">
+                    <div 
+                        key={item.id} 
+                        onClick={() => item.id === 'refer' ? navigate('/user/marketing') : null}
+                        className="bg-white border border-slate-100 rounded-lg p-2.5 flex items-center justify-between shadow-sm active:bg-slate-50 transition-all"
+                    >
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-slate-50 rounded-md flex items-center justify-center">
                                 {item.icon}

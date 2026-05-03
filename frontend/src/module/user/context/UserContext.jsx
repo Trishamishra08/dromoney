@@ -109,7 +109,7 @@ export const UserProvider = ({ children }) => {
             earnings: {
                 today: dbUser.wallet?.todayEarnings || 0,
                 total: dbUser.wallet?.lifetimeEarnings || 0,
-                referral: (dbUser.wallet?.lifetimeEarnings || 0) * 0.6
+                referral: dbUser.wallet?.referralEarnings || 0
             },
             coins: {
                 total: dbUser.coins?.balance || 0,

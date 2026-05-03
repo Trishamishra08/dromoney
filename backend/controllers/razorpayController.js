@@ -6,6 +6,8 @@ const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errorResponse');
 
 const BusinessIdea = require('../models/BusinessIdea');
+const Settings = require('../models/Settings');
+const ReferralTransaction = require('../models/ReferralTransaction');
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -115,6 +117,40 @@ exports.verifyPayment = asyncHandler(async (req, res, next) => {
             }
         } else {
             console.log(`[PAYMENT] Unlocking Platform for user ${user._id}`);
+            
+            // Check if this user was referred by someone
+            if (user.referredBy && !user.isPaid) {
+                try {
+                    const settings = await Settings.findOne();
+                    const commission = settings ? settings.referralCommission : 200;
+                    const referralSystemEnabled = settings ? settings.referralSystemEnabled : true;
+
+                    if (referralSystemEnabled) {
+                        const referrer = await User.findById(user.referredBy);
+                        if (referrer) {
+                            // Update Referrer Wallet
+                            referrer.wallet.balance += commission;
+                            referrer.wallet.referralEarnings += commission;
+                            referrer.wallet.lifetimeEarnings += commission;
+                            referrer.referralCount += 1;
+                            await referrer.save();
+
+                            // Create Transaction Log
+                            await ReferralTransaction.create({
+                                referrer: referrer._id,
+                                referredUser: user._id,
+                                amount: commission,
+                                status: 'Completed'
+                            });
+                            console.log(`[REFERRAL] Credited ₹${commission} to referrer ${referrer._id} for user ${user._id}`);
+                        }
+                    }
+                } catch (refErr) {
+                    console.error('[REFERRAL ERROR] Failed to process reward:', refErr.message);
+                    // We don't block the main payment success if referral fails
+                }
+            }
+
             // Set user isPaid = true (Platform Unlock)
             user.isPaid = true;
             user.unlockedAt = new Date();

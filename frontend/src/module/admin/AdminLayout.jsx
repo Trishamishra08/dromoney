@@ -78,7 +78,7 @@ const AdminLayout = () => {
     };
 
     return (
-        <div className="fixed inset-0 flex bg-slate-50 font-sans overflow-hidden">
+        <div className="fixed inset-0 flex bg-slate-50 font-playfair overflow-hidden">
 
             {/* ── Notification Drawer ── */}
             <div className={`fixed inset-0 z-[100] transition-all duration-500 ${isNotifOpen ? 'visible' : 'invisible'}`}>

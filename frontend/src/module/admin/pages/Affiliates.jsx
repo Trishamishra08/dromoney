@@ -3,26 +3,62 @@ import { Users, IndianRupee, Share2, TrendingUp, Edit2, Search, ArrowRight, Awar
 import PageHeader from '../components/PageHeader';
 import AdminStatCard from '../components/AdminStatCard';
 import StatusBadge from '../components/StatusBadge';
+import api from '../../shared/services/api';
 
 const Affiliates = () => {
     // ── Data & States ──
-    const [referralsData, setReferralsData] = useState([
-        { id: 1, referrer: 'Ravi Patel', referredTo: 'Rahul Sharma', date: '10 Apr 2026', reward: '₹200', status: 'Credited', txnId: 'PAY-90882', joinTime: '10:30 AM', ip: '192.168.1.45' },
-        { id: 2, referrer: 'Ravi Patel', referredTo: 'Priya Singh', date: '09 Apr 2026', reward: '₹200', status: 'Credited', txnId: 'PAY-66551', joinTime: '02:15 PM', ip: '172.16.0.22' },
-        { id: 3, referrer: 'Rahul Sharma', referredTo: 'Amit Kumar', date: '08 Apr 2026', reward: '₹200', status: 'Credited', txnId: 'PAY-11223', joinTime: '11:00 AM', ip: '10.0.0.12' },
-        { id: 4, referrer: 'Priya Singh', referredTo: 'Neha Verma', date: '08 Apr 2026', reward: '₹200', status: 'Pending', txnId: 'WAITING...', joinTime: '09:45 AM', ip: '142.250.190.46' },
-        { id: 5, referrer: 'Sunita Mehta', referredTo: 'Karan Joshi', date: '07 Apr 2026', reward: '₹200', status: 'Credited', txnId: 'PAY-88770', joinTime: '04:20 PM', ip: '1.1.1.1' },
-    ]);
-
+    const [referralsData, setReferralsData] = useState([]);
+    const [stats, setStats] = useState({
+        totalReferrals: 0,
+        totalPayouts: 0,
+        topReferrer: '...',
+        activeReferrersCount: 0,
+        currentCommission: 200
+    });
+    const [loading, setLoading] = useState(true);
     const [rate, setRate] = useState(200);
     const [editing, setEditing] = useState(false);
     const [tempRate, setTempRate] = useState(200);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5);
+    const [itemsPerPage] = useState(10);
     const [selectedAudit, setSelectedAudit] = useState(null);
     const [isAuditOpen, setIsAuditOpen] = useState(false);
+
+    // ── Fetch Data ──
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get('/admin/affiliates');
+            if (res.success) {
+                setReferralsData(res.data.logs);
+                setStats(res.data.stats);
+                setRate(res.data.stats.currentCommission);
+            }
+        } catch (err) {
+            console.error("Affiliate fetch error", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchData();
+    }, []);
+
+    const handleUpdateRate = async () => {
+        try {
+            const res = await api.put('/admin/settings', { referralCommission: parseFloat(tempRate) });
+            if (res.success) {
+                setRate(tempRate);
+                setEditing(false);
+                alert('Commission rate updated successfully!');
+            }
+        } catch (err) {
+            alert('Failed to update rate');
+        }
+    };
 
     // ── Logic ──
     const handleSearch = (e) => {
@@ -52,9 +88,9 @@ const Affiliates = () => {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-                <AdminStatCard label="Total Referrals" value="124" change="+12 this week" icon={Users} color="bg-indigo-600" />
-                <AdminStatCard label="Reward Payouts" value="₹24,800" change="Verified successful joinings" icon={IndianRupee} color="bg-emerald-500" />
-                <AdminStatCard label="Active Referrers" value="32" change="Top: Ravi Patel" icon={Award} color="bg-amber-500" />
+                <AdminStatCard label="Total Referrals" value={stats.totalReferrals} change="All time joinings" icon={Users} color="bg-indigo-600" />
+                <AdminStatCard label="Reward Payouts" value={`₹${stats.totalPayouts.toLocaleString()}`} change="Verified successful joinings" icon={IndianRupee} color="bg-emerald-500" />
+                <AdminStatCard label="Active Referrers" value={stats.activeReferrersCount} change={`Top: ${stats.topReferrer}`} icon={Award} color="bg-amber-500" />
                 <AdminStatCard label="Live Commission" value={`₹${rate}`} change="Configurable" icon={Zap} color="bg-sky-500" />
             </div>
 
@@ -73,7 +109,7 @@ const Affiliates = () => {
                                     onChange={(e) => setTempRate(e.target.value)}
                                     className="w-20 bg-slate-50 border border-sky-200 rounded-lg px-2 py-1 text-lg font-black text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
                                 />
-                                <button onClick={() => { setRate(tempRate); setEditing(false); }} className="bg-sky-500 text-white px-3 py-1.5 rounded-lg font-black text-[10px] uppercase">Save</button>
+                                <button onClick={handleUpdateRate} className="bg-sky-500 text-white px-3 py-1.5 rounded-lg font-black text-[10px] uppercase">Save</button>
                                 <button onClick={() => setEditing(false)} className="text-slate-400 text-[10px] font-black uppercase px-1">X</button>
                             </div>
                         ) : (

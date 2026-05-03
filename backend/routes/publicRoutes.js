@@ -10,6 +10,8 @@ const { getOptionalUser } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
+const { getPublicSettings } = require('../controllers/publicController');
+
 router.get('/content/bulk', getBulkContent);
 router.get('/content/:key', getContent);
 router.get('/banners', getActiveBanners);
@@ -21,5 +23,6 @@ router.get('/ads/:id', getOptionalUser, getAdById);
 router.get('/events', getEvents);
 router.get('/events/:id', getEvent);
 router.get('/tasks', getTasks);
+router.get('/settings', getPublicSettings);
 
 module.exports = router;

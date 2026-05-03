@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const Promotion = require('../models/Promotion');
+const Settings = require('../models/Settings');
+const ReferralTransaction = require('../models/ReferralTransaction');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const cloudinary = require('cloudinary').v2;
@@ -92,6 +94,34 @@ exports.unlockPlatform = asyncHandler(async (req, res, next) => {
     const user = await User.findById(req.user.id);
 
     // In production, verify payment gateway response here
+    
+    // Check for referral reward
+    if (user.referredBy && !user.isPaid) {
+        try {
+            const settings = await Settings.findOne();
+            const commission = settings ? settings.referralCommission : 200;
+            if (settings && settings.referralSystemEnabled) {
+                const referrer = await User.findById(user.referredBy);
+                if (referrer) {
+                    referrer.wallet.balance += commission;
+                    referrer.wallet.referralEarnings += commission;
+                    referrer.wallet.lifetimeEarnings += commission;
+                    referrer.referralCount += 1;
+                    await referrer.save();
+
+                    await ReferralTransaction.create({
+                        referrer: referrer._id,
+                        referredUser: user._id,
+                        amount: commission,
+                        status: 'Completed'
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Simulation Referral Error:', err.message);
+        }
+    }
+
     user.isPaid = true;
     user.unlockedAt = new Date();
     await user.save();

@@ -58,7 +58,7 @@ const AdminLogin = () => {
     ];
 
     return (
-        <div className="flex min-h-screen bg-white font-sans overflow-hidden">
+        <div className="flex min-h-screen bg-white font-playfair overflow-hidden">
             {/* ── Left Column: Login Form ── */}
             <div className="flex-1 flex flex-col justify-center px-8 sm:px-16 lg:px-24 xl:px-32 relative">
                 <div className="max-w-md w-full mx-auto">

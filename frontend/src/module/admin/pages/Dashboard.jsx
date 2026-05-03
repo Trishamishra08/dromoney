@@ -20,6 +20,8 @@ const Dashboard = () => {
     const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [regOpen, setRegOpen] = useState(true);
     const [broadcastMsg, setBroadcastMsg] = useState('');
+    const [broadcastTitle, setBroadcastTitle] = useState('Dromoney Global Alert');
+    const [isSending, setIsSending] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [alerts, setAlerts] = useState([]);
     const [queue, setQueue] = useState([]);
@@ -80,6 +82,30 @@ const Dashboard = () => {
         setIsRefreshing(true);
         await Promise.all([fetchDashboardStats(), fetchAlerts()]);
         setTimeout(() => setIsRefreshing(false), 800);
+    };
+
+    const handleBroadcast = async () => {
+        if (!broadcastMsg || !broadcastTitle) return;
+        
+        setIsSending(true);
+        try {
+            const response = await api.post('/admin/notifications', {
+                title: broadcastTitle,
+                message: broadcastMsg,
+                type: 'broadcast'
+            });
+
+            if (response.success) {
+                alert('Broadcast Sent Successfully!');
+                setBroadcastMsg('');
+                setBroadcastTitle('Dromoney Global Alert');
+            }
+        } catch (err) {
+            console.error('Broadcast Error:', err);
+            alert('Failed to send broadcast');
+        } finally {
+            setIsSending(false);
+        }
     };
 
     const quickActions = [
@@ -267,18 +293,34 @@ const Dashboard = () => {
                             <p className="text-[9px] font-bold text-white/30 uppercase mt-1">Send global announcement</p>
                         </div>
                     </div>
-                    <textarea 
-                        value={broadcastMsg}
-                        onChange={(e) => setBroadcastMsg(e.target.value)}
-                        placeholder="Type message for all users..."
-                        className="bg-white/5 border border-white/10 rounded-3xl p-6 text-[12px] font-bold text-white placeholder-white/20 h-40 focus:ring-2 focus:ring-sky-500 outline-none resize-none transition-all mb-4"
-                    />
+                    <div className="space-y-4 mb-4">
+                        <input 
+                            type="text"
+                            value={broadcastTitle}
+                            onChange={(e) => setBroadcastTitle(e.target.value)}
+                            placeholder="Message Title..."
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-[12px] font-black text-sky-400 placeholder-white/20 focus:ring-2 focus:ring-sky-500 outline-none transition-all"
+                        />
+                        <textarea 
+                            value={broadcastMsg}
+                            onChange={(e) => setBroadcastMsg(e.target.value)}
+                            placeholder="Type message for all users..."
+                            className="w-full bg-white/5 border border-white/10 rounded-3xl p-5 text-[12px] font-bold text-white placeholder-white/20 h-32 focus:ring-2 focus:ring-sky-500 outline-none resize-none transition-all"
+                        />
+                    </div>
                     <button 
-                        disabled={!broadcastMsg}
-                        onClick={() => { alert('Success: Message Transmitted'); setBroadcastMsg(''); }}
-                        className="w-full mt-auto py-5 bg-sky-500 hover:bg-sky-400 disabled:bg-white/5 disabled:text-white/20 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-sky-900/40 transition-all flex items-center justify-center gap-3 group/btn"
+                        disabled={!broadcastMsg || isSending}
+                        onClick={handleBroadcast}
+                        className={`w-full mt-auto py-5 bg-sky-500 hover:bg-sky-400 disabled:bg-white/5 disabled:text-white/20 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-sky-900/40 transition-all flex items-center justify-center gap-3 group/btn
+                            ${isSending ? 'opacity-80' : ''}`}
                     >
-                        TRANSmit NOW <ArrowUpRight size={18} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+                        {isSending ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : (
+                            <>
+                                TRANSmit NOW <ArrowUpRight size={18} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+                            </>
+                        )}
                     </button>
                 </div>
             </div>

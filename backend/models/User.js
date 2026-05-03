@@ -52,6 +52,7 @@ const UserSchema = new mongoose.Schema({
         balance: { type: Number, default: 0 },
         lifetimeEarnings: { type: Number, default: 0 },
         todayEarnings: { type: Number, default: 0 },
+        referralEarnings: { type: Number, default: 0 },
     },
     coins: {
         balance: { type: Number, default: 0 },

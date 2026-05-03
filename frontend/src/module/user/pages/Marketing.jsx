@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useUser } from '../context/UserContext';
+import api from '../../shared/services/api';
 import {
     Users, Copy, Send, ChevronLeft,
     History, CheckCircle2, Share2, ArrowUpRight, Wallet
@@ -10,8 +11,23 @@ const Marketing = () => {
     const navigate = useNavigate();
     const { userData } = useUser();
     const [copied, setCopied] = useState(false);
+    const [rewardAmount, setRewardAmount] = useState(200);
 
-    const referralLink = `https://earningapp.com/join/${userData?.name?.split(' ')[0] || 'USER'}${userData?.id || '777'}`;
+    const referralLink = userData?.referrals?.link || `${window.location.origin}/user/auth/register?ref=${userData?.referrals?.code}`;
+
+    React.useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await api.get('/public/settings');
+                if (res.success && res.data) {
+                    setRewardAmount(res.data.referralCommission);
+                }
+            } catch (err) {
+                console.error("Failed to fetch referral settings", err);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(referralLink);
@@ -23,8 +39,8 @@ const Marketing = () => {
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: 'Join Drowmoney & Earn',
-                    text: `Hey! Join Drowmoney using my link and start earning ₹200 per referral easily! 🚀`,
+                    title: 'Join Dromoney & Earn',
+                    text: `Hey! Join Dromoney using my link and start earning ₹${rewardAmount} per referral easily! 🚀`,
                     url: referralLink,
                 });
             } catch (err) {
@@ -32,7 +48,6 @@ const Marketing = () => {
             }
         } else {
             handleCopy();
-            alert("Referral Link Copied!");
         }
     };
 
@@ -64,7 +79,7 @@ const Marketing = () => {
                         <div>
                             <h3 className="text-[15px] font-bold text-slate-800 leading-tight">Affiliate Program</h3>
                             <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider mt-1 flex items-center gap-1">
-                                ₹200 Reward per referral <CheckCircle2 size={10} className="text-emerald-500" />
+                                ₹{rewardAmount} Reward per referral <CheckCircle2 size={10} className="text-emerald-500" />
                             </p>
                         </div>
                     </div>
@@ -100,7 +115,7 @@ const Marketing = () => {
                         </div>
                         <span className="text-[11px] font-bold text-slate-800 uppercase tracking-widest">Total Members</span>
                     </div>
-                    <span className="text-[13px] font-bold text-slate-900">4 Participants</span>
+                    <span className="text-[13px] font-bold text-slate-900">{userData?.referrals?.count || 0} Participants</span>
                 </div>
 
                 {/* ── Earnings Section (Payment Style) ── */}
@@ -108,7 +123,7 @@ const Marketing = () => {
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1">Total Affiliate Earnings</span>
-                            <h4 className="text-2xl font-bold text-slate-800 tracking-tighter">₹800.00</h4>
+                            <h4 className="text-2xl font-bold text-slate-800 tracking-tighter">₹{Number(userData?.earnings?.referral || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h4>
                         </div>
                         <div className="w-10 h-10 bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
                             <Wallet size={20} />
