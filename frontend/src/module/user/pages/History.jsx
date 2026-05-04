@@ -45,7 +45,10 @@ const History = () => {
                                     <span className="text-[10px] font-normal text-white/40 uppercase tracking-[0.2em]">Platinum Member</span>
                                 </div>
                                 <div className="text-right">
-                                    <h3 className="text-white font-medium text-[12px] italic tracking-widest opacity-80">DROMONEY</h3>
+                                    <h3 className="font-bold text-[14px] italic tracking-widest">
+                                        <span className="text-[#8B4513]">DRO</span>
+                                        <span className="text-white">MONEY</span>
+                                    </h3>
                                 </div>
                             </div>
 

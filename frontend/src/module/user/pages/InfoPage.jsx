@@ -24,11 +24,19 @@ const InfoPage = () => {
                         sections: Array.isArray(d) ? d : (d.sections || [])
                     });
                 } else {
-                    setPageData({
-                        title: 'Information',
-                        subtitle: 'Page Details',
-                        sections: [{ title: 'Info', text: 'This section is currently being updated.' }]
-                    });
+                    if (type === 'refund-policy') {
+                        setPageData({
+                            title: 'Refund Policy',
+                            subtitle: 'Cancellation & Refund Rules',
+                            sections: [{ title: 'Strict No Refund Policy', text: 'Please note that all purchases and payments made on Dromoney are final. We do not offer any refunds or cancellations once a transaction is completed or a service is activated.' }]
+                        });
+                    } else {
+                        setPageData({
+                            title: 'Information',
+                            subtitle: 'Page Details',
+                            sections: [{ title: 'Info', text: 'This section is currently being updated.' }]
+                        });
+                    }
                 }
             } catch (err) {
                 console.error(err);
@@ -96,7 +104,7 @@ const InfoPage = () => {
                 </div>
             </div>
 
-            <div className="px-4 flex flex-col gap-4 relative z-10">
+            <div className="px-4 pt-8 flex flex-col gap-4 relative z-10">
                 {/* Subtitle / Intro - Compact */}
                 <div className="px-2">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">

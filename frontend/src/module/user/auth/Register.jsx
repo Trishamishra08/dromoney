@@ -58,9 +58,12 @@ const Register = () => {
                 <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4"></div>
                 
                 <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-2">
-                        <img src={logoImg} alt="Dromoney" className="w-7 h-7 object-contain" />
-                        <span className="text-[15px] font-black text-white tracking-[0.2em] uppercase">DROMONEY</span>
+                    <div className="flex items-center gap-3 mb-2">
+                        <img src={logoImg} alt="Dromoney" className="w-10 h-10 object-contain" />
+                        <span className="text-[20px] font-black tracking-[0.1em] uppercase">
+                            <span className="text-[#8B4513]">DRO</span>
+                            <span className="text-white">MONEY</span>
+                        </span>
                     </div>
 
                     <div className="mt-0">
@@ -151,6 +154,11 @@ const Register = () => {
                             >
                                 {loading ? <Loader2 size={18} className="animate-spin" /> : 'Sign Up Now'}
                             </button>
+                            <div className="text-center mt-3">
+                                <p className="text-[11px] font-normal text-slate-400 uppercase tracking-widest">
+                                    Already Have An Account? <Link to="/user/auth/login" className="text-[#0f1d3a] font-bold underline decoration-sky-500/20 underline-offset-4 ml-1">Sign In</Link>
+                                </p>
+                            </div>
                         </form>
                     ) : (
                         <form onSubmit={handleVerifyOTP} className="space-y-4 animate-in slide-in-from-right duration-500 pt-2">
@@ -185,11 +193,7 @@ const Register = () => {
                     )}
                 </div>
 
-                <div className="mt-auto pb-4 text-center">
-                    <p className="text-[12px] font-normal text-slate-400 uppercase tracking-widest">
-                        Already Have An Account? <Link to="/user/auth/login" className="text-[#0f1d3a] font-bold underline decoration-sky-500/20 underline-offset-4 ml-1">Sign In</Link>
-                    </p>
-                </div>
+
             </div>
         </div>
     );

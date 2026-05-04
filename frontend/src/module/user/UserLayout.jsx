@@ -39,34 +39,20 @@ const UserLayout = () => {
         <div className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden">
             {/* --- New Dromoney Fixed Top Header --- */}
             <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md px-4 py-1.5 flex items-center justify-between max-w-md mx-auto border-b border-slate-800 shadow-xl min-h-[64px]">
-                {/* 1. Left Side: Profile */}
-                <div className="flex-shrink-0 active:scale-95 transition-transform cursor-pointer ml-1" onClick={() => navigate('/user/profile')}>
-                    <div className="w-9 h-9 rounded-full border border-slate-700 shadow-inner overflow-hidden bg-slate-800">
-                        <img 
-                            src={userData?.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&q=80&fit=crop"} 
-                            alt="Profile" 
-                            className="w-full h-full object-cover" 
-                        />
-                    </div>
-                </div>
-
-                {/* 2. Center: Brand & Logo */}
-                <div className="flex flex-1 items-center justify-center gap-0.5 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
-                    <div className="w-12 h-12 flex items-center justify-center">
+                {/* 1. Brand & Logo (Left Side) */}
+                <div className="flex items-center gap-1 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
+                    <div className="w-14 h-14 flex items-center justify-center">
                         <img src={LogoImg} alt="Logo" className="w-full h-full object-contain brightness-110 drop-shadow-xl" />
                     </div>
-                    <span className="text-[14px] font-bold text-white tracking-[0.1em] uppercase font-outfit truncate">Dromoney</span>
+                    <span className="text-[18px] font-black tracking-[0.1em] uppercase font-outfit truncate">
+                        <span className="text-[#8B4513]">DRO</span>
+                        <span className="text-white">MONEY</span>
+                    </span>
                 </div>
 
                 {/* 3. Right Side: Actions */}
                 <div className="flex items-center gap-0.5 flex-shrink-0">
-                    {/* Wallet */}
-                    <button
-                        onClick={() => navigate('/user/wallet')}
-                        className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-sky-400 active:scale-90 transition-all"
-                    >
-                        <WalletIcon size={17} strokeWidth={2} />
-                    </button>
+
  
                     {/* Bell */}
                     <button

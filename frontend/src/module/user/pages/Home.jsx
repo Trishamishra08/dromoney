@@ -537,8 +537,9 @@ const Home = () => {
                         <div className="space-y-4">
                             <h4 className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-[0.2em] not-italic font-sans">Legal Policies</h4>
                             <div className="flex flex-col gap-3">
-                                <a href="#" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">Privacy Policy</a>
-                                <a href="#" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">Terms & Conditions</a>
+                                <a href="/user/info/privacy" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">Privacy Policy</a>
+                                <a href="/user/info/terms" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">Terms & Conditions</a>
+                                <a href="/user/info/refund-policy" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">Refund Policy</a>
                             </div>
                         </div>
                         <div className="space-y-4">
