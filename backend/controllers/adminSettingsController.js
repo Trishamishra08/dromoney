@@ -6,12 +6,12 @@ const asyncHandler = require('../middleware/async');
 // @access  Private/Admin
 exports.getSettings = asyncHandler(async (req, res) => {
     let settings = await Settings.findOne();
-    
+
     // If no settings exist, create default one
     if (!settings) {
         settings = await Settings.create({});
     }
-    
+
     res.status(200).json({
         success: true,
         data: settings
@@ -23,7 +23,7 @@ exports.getSettings = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 exports.updateSettings = asyncHandler(async (req, res) => {
     let settings = await Settings.findOne();
-    
+
     if (!settings) {
         settings = await Settings.create(req.body);
     } else {
@@ -32,7 +32,7 @@ exports.updateSettings = asyncHandler(async (req, res) => {
             runValidators: true
         });
     }
-    
+
     res.status(200).json({
         success: true,
         data: settings

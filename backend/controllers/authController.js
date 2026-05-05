@@ -1,4 +1,7 @@
 const User = require('../models/User');
+const ReferralTransaction = require('../models/ReferralTransaction');
+const Transaction = require('../models/Transaction');
+const Settings = require('../models/Settings');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 
@@ -15,8 +18,15 @@ exports.register = async (req, res, next) => {
             const referrer = await User.findOne({ referralCode });
             if (referrer) {
                 referredBy = referrer._id;
-                referrer.referralCount += 1;
-                await referrer.save();
+                
+                // Get commission amount from settings
+                const settings = await Settings.findOne() || { referralCommission: 200 };
+                const commission = settings.referralCommission;
+
+                // Create the user first to get their ID, but we do that below. 
+                // Let's hold the referrer object to update after user creation.
+                req.referrer = referrer;
+                req.commission = commission;
             }
         }
 
@@ -31,6 +41,36 @@ exports.register = async (req, res, next) => {
             phone,
             referredBy
         });
+
+        // If referredBy, credit the referrer
+        if (referredBy && req.referrer) {
+            const referrer = req.referrer;
+            const commission = req.commission;
+
+            // Update referrer wallet and count
+            referrer.wallet.balance += commission;
+            referrer.wallet.referralEarnings += commission;
+            referrer.referralCount += 1;
+            await referrer.save();
+
+            // Create Referral Transaction (for Admin logs)
+            await ReferralTransaction.create({
+                referrer: referrer._id,
+                referredUser: user._id,
+                amount: commission,
+                status: 'Completed'
+            });
+
+            // Create General Transaction (for User history)
+            await Transaction.create({
+                user: referrer._id,
+                type: 'credit',
+                currency: 'INR',
+                amount: commission,
+                source: `Referral Reward: ${user.name}`,
+                status: 'Success'
+            });
+        }
 
         sendTokenResponse(user, 201, res);
     } catch (err) {
