@@ -30,7 +30,7 @@ const AdminLogin = () => {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-[#f0f2f5] p-4" style={{ fontFamily: "'Roboto', sans-serif" }}>
+        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#2563eb] via-[#1d4ed8] to-[#1e3a8a] p-4" style={{ fontFamily: "'Roboto', sans-serif" }}>
             {/* Google Fonts Import */}
             <style>
                 {`@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');`}
