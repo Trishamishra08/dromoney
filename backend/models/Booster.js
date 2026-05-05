@@ -21,6 +21,19 @@ const BoosterSchema = new mongoose.Schema({
     benefits: [{
         type: String,
     }],
+    validity: {
+        type: String,
+        default: '30 Days'
+    },
+    validityValue: {
+        type: Number,
+        default: 30
+    },
+    validityUnit: {
+        type: String,
+        enum: ['Days', 'Months', 'Years'],
+        default: 'Days'
+    },
     isActive: {
         type: Boolean,
         default: true

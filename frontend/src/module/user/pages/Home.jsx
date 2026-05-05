@@ -166,8 +166,8 @@ const Home = () => {
     const [paymentConfig, setPaymentConfig] = useState({ isOpen: false, plan: '', amount: 0 });
     const [lifetimePromo, setLifetimePromo] = useState(null);
     const [boosters, setBoosters] = useState({
-        support: { title: '₹11 Support Booster', subtitle: 'Boost participation & win more!', benefits: [] },
-        task: { title: '₹49 Task Booster', subtitle: 'Increase coin value 3X now!', benefits: [] }
+        support: { title: 'Support Booster', subtitle: 'Boost participation & win more!', price: 11, validity: '30 Days', benefits: [] },
+        task: { title: 'Task Booster', subtitle: 'Increase coin value 3X now!', price: 49, validity: '30 Days', benefits: [] }
     });
     const [footerPolicies, setFooterPolicies] = useState([
         { label: 'Privacy Policy', path: 'privacy' },
@@ -364,7 +364,13 @@ const Home = () => {
                                 </div>
                                 <div>
                                     <h4 className="text-[14px] font-black text-amber-900 tracking-tight leading-none">{boosters.support.title}</h4>
-                                    <p className="text-[10px] font-bold text-amber-600/70 mt-1 uppercase tracking-tight">{boosters.support.subtitle}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <p className="text-[10px] font-bold text-amber-600/70 uppercase tracking-tight">{boosters.support.subtitle}</p>
+                                        <span className="w-1 h-1 bg-amber-200 rounded-full"></span>
+                                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-tight flex items-center gap-1">
+                                            <Clock size={10} /> {boosters.support.validity || '30 Days'}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -375,7 +381,7 @@ const Home = () => {
                                     <ChevronDown size={18} strokeWidth={2.5} />
                                 </button>
                                 <button
-                                    onClick={() => handleBuy('Support Booster', 11)}
+                                    onClick={() => handleBuy(boosters.support.title, boosters.support.price)}
                                     className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight active:scale-95 transition-all"
                                 >
                                     Buy Now
@@ -407,7 +413,13 @@ const Home = () => {
                                 </div>
                                 <div>
                                     <h4 className="text-[14px] font-black text-sky-900 tracking-tight leading-none">{boosters.task.title}</h4>
-                                    <p className="text-[10px] font-bold text-sky-600/70 mt-1 uppercase tracking-tight">{boosters.task.subtitle}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <p className="text-[10px] font-bold text-sky-600/70 uppercase tracking-tight">{boosters.task.subtitle}</p>
+                                        <span className="w-1 h-1 bg-sky-200 rounded-full"></span>
+                                        <p className="text-[10px] font-black text-sky-500 uppercase tracking-tight flex items-center gap-1">
+                                            <Clock size={10} /> {boosters.task.validity || '30 Days'}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -418,7 +430,7 @@ const Home = () => {
                                     <ChevronDown size={18} strokeWidth={2.5} />
                                 </button>
                                 <button
-                                    onClick={() => handleBuy('Task Booster', 49)}
+                                    onClick={() => handleBuy(boosters.task.title, boosters.task.price)}
                                     className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight active:scale-95 transition-all"
                                 >
                                     Buy Now

@@ -2,14 +2,21 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Loader2, ArrowRight, Smartphone, Lock, User, Mail, Gift, ShieldCheck } from 'lucide-react';
 import { useUser } from '../context/UserContext';
+import { useSearchParams } from 'react-router-dom';
 import logoImg from '../../../assets/WhatsApp_Image_2026-04-28_at_10.52.49_PM-removebg-preview.png';
 
 const Register = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { register } = useUser();
     
     const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({ name: '', email: '', referral: '', phone: '' });
+    const [formData, setFormData] = useState({ 
+        name: '', 
+        email: '', 
+        referral: searchParams.get('ref') || '', 
+        phone: '' 
+    });
     const [step, setStep] = useState(1);
     const [otp, setOtp] = useState('');
     const [error, setError] = useState('');

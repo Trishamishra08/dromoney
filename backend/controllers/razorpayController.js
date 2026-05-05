@@ -132,16 +132,27 @@ exports.verifyPayment = asyncHandler(async (req, res, next) => {
                             referrer.wallet.balance += commission;
                             referrer.wallet.referralEarnings += commission;
                             referrer.wallet.lifetimeEarnings += commission;
-                            referrer.referralCount += 1;
                             await referrer.save();
 
-                            // Create Transaction Log
+                            // Create Referral Audit Log
                             await ReferralTransaction.create({
                                 referrer: referrer._id,
                                 referredUser: user._id,
                                 amount: commission,
                                 status: 'Completed'
                             });
+
+                            // Create standard Transaction for user history
+                            const Transaction = require('../models/Transaction');
+                            await Transaction.create({
+                                user: referrer._id,
+                                type: 'credit',
+                                currency: 'INR',
+                                amount: commission,
+                                source: `Referral Reward: ${user.name}`,
+                                status: 'Success'
+                            });
+
                             console.log(`[REFERRAL] Credited ₹${commission} to referrer ${referrer._id} for user ${user._id}`);
                         }
                     }

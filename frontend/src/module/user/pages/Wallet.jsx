@@ -13,15 +13,15 @@ const Wallet = () => {
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [filter, setFilter] = useState('All'); // 'All', 'Earning', 'Payout'
 
-    const handleWithdraw = () => {
+    const handleWithdraw = async () => {
         if (!isPaid) {
             setIsUnlockOpen(true);
             return;
         }
 
         const val = parseFloat(amount);
-        if (isNaN(val) || val < 500) {
-            addNotification("Invalid Amount", "Minimum withdrawal is ₹500.", "warning");
+        if (isNaN(val) || val < 100) {
+            addNotification("Invalid Amount", "Minimum withdrawal is ₹100.", "warning");
             return;
         }
 
@@ -30,10 +30,12 @@ const Wallet = () => {
             return;
         }
 
-        const success = requestWithdrawal(val);
-        if (success) {
+        const res = await requestWithdrawal(val);
+        if (res.success) {
             setAmount('');
             addNotification("Success", "Withdrawal requested successfully.", "success");
+        } else {
+            addNotification("Withdrawal Denied", res.message, "error");
         }
     };
 
@@ -180,13 +182,13 @@ const Wallet = () => {
                             type="number"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
-                            placeholder="Amount (Min. ₹500)"
+                            placeholder="Amount (Min. ₹100)"
                             className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2.5 px-3.5 text-[13px] font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all"
                         />
                         <button
                             onClick={handleWithdraw}
                             className={`w-full py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all
-                                ${amount >= 500 && amount <= wallet.balance
+                                ${amount >= 100 && amount <= wallet.balance
                                     ? 'bg-[#1a233b] text-white shadow-md active:scale-95'
                                     : 'bg-slate-50 text-slate-300 pointer-events-none border border-slate-100'}`}
                         >

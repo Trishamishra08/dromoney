@@ -73,8 +73,8 @@ const MarketingManager = () => {
     };
 
     const [boosters, setBoosters] = useState({
-        support: { _id: null, title: '₹11 Support Booster', subtitle: 'Boost participation & win more!', benefits: [] },
-        task: { _id: null, title: '₹49 Task Booster', subtitle: 'Increase coin value 3X now!', benefits: [] }
+        support: { _id: null, title: 'Support Booster', subtitle: 'Boost participation & win more!', price: 11, benefits: [] },
+        task: { _id: null, title: 'Task Booster', subtitle: 'Increase coin value 3X now!', price: 49, benefits: [] }
     });
 
     const fetchBoosters = async () => {
@@ -591,10 +591,71 @@ const MarketingManager = () => {
                                     </div>
 
                                     <div className="space-y-6 mb-10">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Booster Title</label>
+                                                <input value={b.title} onChange={(e) => {
+                                                    setBoosters({
+                                                        ...boosters,
+                                                        [type]: { ...boosters[type], title: e.target.value }
+                                                    });
+                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-black text-slate-800 outline-none" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Booster Price (₹)</label>
+                                                <input type="number" value={b.price} onChange={(e) => {
+                                                    setBoosters({
+                                                        ...boosters,
+                                                        [type]: { ...boosters[type], price: Number(e.target.value) }
+                                                    });
+                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-black text-slate-800 outline-none" />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Booster Validity (Value)</label>
+                                                <input type="number" value={b.validityValue === undefined ? 30 : b.validityValue} onChange={(e) => {
+                                                    const val = e.target.value === '' ? '' : Number(e.target.value);
+                                                    const unit = b.validityUnit || 'Days';
+                                                    setBoosters({
+                                                        ...boosters,
+                                                        [type]: { 
+                                                            ...boosters[type], 
+                                                            validityValue: val,
+                                                            validity: `${val || 0} ${unit}`
+                                                        }
+                                                    });
+                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-black text-slate-800 outline-none" placeholder="e.g. 30" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Booster Validity (Unit)</label>
+                                                <select value={b.validityUnit || 'Days'} onChange={(e) => {
+                                                    const unit = e.target.value;
+                                                    const val = b.validityValue || 30;
+                                                    setBoosters({
+                                                        ...boosters,
+                                                        [type]: { 
+                                                            ...boosters[type], 
+                                                            validityUnit: unit,
+                                                            validity: `${val} ${unit}`
+                                                        }
+                                                    });
+                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-black text-slate-800 outline-none">
+                                                    <option value="Days">Days</option>
+                                                    <option value="Months">Months</option>
+                                                    <option value="Years">Years</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-heading Text</label>
                                             <input value={b.subtitle} onChange={(e) => {
-                                                const nb = { ...boosters }; nb[type].subtitle = e.target.value; setBoosters(nb);
+                                                setBoosters({
+                                                    ...boosters,
+                                                    [type]: { ...boosters[type], subtitle: e.target.value }
+                                                });
                                             }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-black text-slate-800 outline-none" />
                                         </div>
 
@@ -603,15 +664,26 @@ const MarketingManager = () => {
                                             {b.benefits.map((text, idx) => (
                                                 <div key={idx} className="flex gap-3">
                                                     <input value={text} onChange={(e) => {
-                                                        const nb = { ...boosters }; nb[type].benefits[idx] = e.target.value; setBoosters(nb);
+                                                        const newBenefits = [...b.benefits];
+                                                        newBenefits[idx] = e.target.value;
+                                                        setBoosters({
+                                                            ...boosters,
+                                                            [type]: { ...boosters[type], benefits: newBenefits }
+                                                        });
                                                     }} className="flex-1 bg-white border border-slate-100 rounded-xl px-4 py-3 text-[13px] font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-sky-500 outline-none" />
                                                     <button onClick={() => {
-                                                        const nb = { ...boosters }; nb[type].benefits = b.benefits.filter((_, i) => i !== idx); setBoosters(nb);
+                                                        setBoosters({
+                                                            ...boosters,
+                                                            [type]: { ...boosters[type], benefits: b.benefits.filter((_, i) => i !== idx) }
+                                                        });
                                                     }} className="w-11 h-11 bg-rose-50 text-rose-400 rounded-xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16} /></button>
                                                 </div>
                                             ))}
                                             <button onClick={() => {
-                                                const nb = { ...boosters }; nb[type].benefits.push('New Benefit Point'); setBoosters(nb);
+                                                setBoosters({
+                                                    ...boosters,
+                                                    [type]: { ...boosters[type], benefits: [...b.benefits, 'New Benefit Point'] }
+                                                });
                                             }} className="w-full py-4 border-2 border-dashed border-slate-100 rounded-2xl text-[11px] font-black uppercase text-slate-400 hover:text-sky-500 hover:border-sky-200 transition-all">+ Add New Point</button>
                                         </div>
                                     </div>

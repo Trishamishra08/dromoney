@@ -215,8 +215,13 @@ export const UserProvider = ({ children }) => {
         try {
             await api.post('/user/wallet/withdraw', { amount });
             await refreshUserProfile();
-            return true;
-        } catch (err) { return false; }
+            return { success: true };
+        } catch (err) {
+            return { 
+                success: false, 
+                message: err.response?.data?.message || err.message || 'Withdrawal failed' 
+            }; 
+        }
     };
 
     const updateProfileImage = async (newUrl) => {

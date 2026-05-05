@@ -1,16 +1,9 @@
 const multer = require('multer');
-const path = require('path');
 const ErrorResponse = require('../utils/errorResponse');
+const path = require('path');
 
-// Storage engine
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'public/uploads/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
-  }
-});
+// Use Memory Storage for compatibility with platforms like Render
+const storage = multer.memoryStorage();
 
 // Check file type
 function checkFileType(file, cb) {

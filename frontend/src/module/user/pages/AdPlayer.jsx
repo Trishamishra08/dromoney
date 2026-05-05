@@ -102,6 +102,7 @@ const AdPlayer = () => {
                     className="w-full h-auto max-h-screen object-contain"
                     onEnded={handleComplete}
                     autoPlay={false}
+                    playing={isPlaying}
                 />
 
                 {/* Overlays */}

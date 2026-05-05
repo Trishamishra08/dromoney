@@ -75,23 +75,45 @@ exports.rewardUserForAd = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Reward already claimed for this ad', 400));
     }
 
-    // Update User
-    user.coins.balance += coins;
-    user.coins.lifetimeCoins += coins;
-    user.watchedAds.push(adId);
+    // 3. Calculate rewards
+    const baseReward = ad.coinsReward || 0;
+    const factor = user.isBoosterActive ? 3 : 1;
+    const totalAwardedCoins = baseReward * factor;
 
+    // Conversion logic: 1 Coin = ₹0.1
+    const coinToRupeeConversion = 0.1;
+    const earningsInRupee = parseFloat((totalAwardedCoins * coinToRupeeConversion).toFixed(2));
+
+    // Update User
+    user.coins.balance += totalAwardedCoins;
+    user.coins.lifetimeCoins += totalAwardedCoins;
+    
+    // Also update wallet balance (Auto-conversion)
+    user.wallet.balance += earningsInRupee;
+    user.wallet.lifetimeEarnings += earningsInRupee;
+    user.wallet.todayEarnings += earningsInRupee;
+
+    user.watchedAds.push(adId);
     await user.save();
 
-    // 4. Record Transaction
+    // 4. Record Transactions
     await Transaction.create({
         user: user._id,
         type: 'credit',
         currency: 'COIN',
-        amount: coins,
+        amount: totalAwardedCoins,
         source: `Watched Ad: ${ad.title}`,
         status: 'Success'
     });
 
+    await Transaction.create({
+        user: user._id,
+        type: 'credit',
+        currency: 'INR',
+        amount: earningsInRupee,
+        source: `Ad Conversion: ${ad.title}`,
+        status: 'Success'
+    });
 
     // 5. Update Ad view count
     ad.viewCount += 1;
@@ -101,8 +123,10 @@ exports.rewardUserForAd = asyncHandler(async (req, res, next) => {
         success: true,
         message: 'Reward claimed successfully!',
         data: {
-            coinsAwarded: coins,
-            newBalance: user.coins.balance
+            coinsAwarded: totalAwardedCoins,
+            inrAwarded: earningsInRupee,
+            newCoinBalance: user.coins.balance,
+            newWalletBalance: user.wallet.balance
         }
     });
 });

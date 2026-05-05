@@ -80,6 +80,27 @@ exports.requestWithdrawal = asyncHandler(async (req, res, next) => {
     const { amount } = req.body;
     const user = await User.findById(req.user.id);
 
+    if (!user) {
+        return next(new ErrorResponse('User not found', 404));
+    }
+
+    // 1. Check minimum amount
+    if (amount < 100) {
+        return next(new ErrorResponse('Minimum withdrawal amount is ₹100', 400));
+    }
+
+    // 2. Check for 24-hour limit (only one withdrawal per 24 hours)
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const recentWithdrawal = await Transaction.findOne({
+        user: req.user.id,
+        type: 'withdrawal',
+        date: { $gte: twentyFourHoursAgo }
+    });
+
+    if (recentWithdrawal) {
+        return next(new ErrorResponse('You can only withdraw once every 24 hours', 400));
+    }
+
     if (user.wallet.balance < amount) {
         return next(new ErrorResponse('Insufficient balance', 400));
     }

@@ -19,7 +19,6 @@ cloudinary.config({
 // @route   PATCH /api/user/data/kyc
 // @access  Private
 exports.updateKyc = asyncHandler(async (req, res, next) => {
-    console.log('--- KYC Submission Started ---');
     const { documentNumber } = req.body;
 
     const user = await User.findById(req.user.id);
@@ -43,13 +42,26 @@ exports.updateKyc = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Please provide Aadhaar Number', 400));
     }
 
-    // Upload to Cloudinary
+    // Upload to Cloudinary using Stream (Memory Storage)
     try {
-        console.log('Uploading KYC document for user:', user._id);
-        const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'dromoney/kyc',
-            public_id: `aadhaar_${user._id}_${Date.now()}`
-        });
+        const uploadFromBuffer = (buffer) => {
+            return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: 'dromoney/kyc',
+                        resource_type: 'auto',
+                        public_id: `aadhaar_${user._id}_${Date.now()}`
+                    },
+                    (error, result) => {
+                        if (result) resolve(result);
+                        else reject(error);
+                    }
+                );
+                stream.end(buffer);
+            });
+        };
+
+        const result = await uploadFromBuffer(req.file.buffer);
         
         // Update user KYC data
         user.kyc = {
@@ -60,15 +72,9 @@ exports.updateKyc = asyncHandler(async (req, res, next) => {
             rejectionReason: ''
         };
 
-        // Explicitly mark as modified for Mongoose
         user.markModified('kyc');
         await user.save();
         
-        // Cleanup local file
-        if (fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
-
         return res.status(200).json({
             success: true,
             message: 'KYC documents submitted for verification',
@@ -78,12 +84,8 @@ exports.updateKyc = asyncHandler(async (req, res, next) => {
             }
         });
     } catch (err) {
-        console.error('KYC FINAL UPLOAD ERROR:', err.message);
-        // Cleanup local file on error
-        if (req.file.path && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
-        return next(new ErrorResponse('Failed to upload document. Please try again.', 500));
+        console.error('KYC UPLOAD ERROR:', err);
+        return next(new ErrorResponse(`Upload failed: ${err.message || 'Server error'}`, 500));
     }
 });
 
@@ -174,13 +176,27 @@ exports.updateProfilePhoto = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Please upload an image', 400));
     }
 
-    // Upload to Cloudinary
+    // Upload to Cloudinary using Stream
     try {
-        const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'dromoney/profile_pics',
-            public_id: `user_${req.user.id}_${Date.now()}`,
-            transformation: [{ width: 500, height: 500, crop: 'limit' }]
-        });
+        const uploadFromBuffer = (buffer) => {
+            return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: 'dromoney/profile_pics',
+                        resource_type: 'auto',
+                        public_id: `user_${req.user.id}_${Date.now()}`,
+                        transformation: [{ width: 500, height: 500, crop: 'limit' }]
+                    },
+                    (error, result) => {
+                        if (result) resolve(result);
+                        else reject(error);
+                    }
+                );
+                stream.end(buffer);
+            });
+        };
+
+        const result = await uploadFromBuffer(req.file.buffer);
 
         const user = await User.findByIdAndUpdate(
             req.user.id,
@@ -188,22 +204,13 @@ exports.updateProfilePhoto = asyncHandler(async (req, res, next) => {
             { new: true, runValidators: true }
         );
 
-        // Cleanup local file
-        if (fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
-
         res.status(200).json({
             success: true,
             data: user.profileImage
         });
     } catch (err) {
         console.error('Profile Photo Upload Error:', err);
-        // Cleanup local file on error
-        if (req.file.path && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
-        return next(new ErrorResponse('Failed to upload profile photo', 500));
+        return next(new ErrorResponse(`Upload failed: ${err.message || 'Server error'}`, 500));
     }
 });
 

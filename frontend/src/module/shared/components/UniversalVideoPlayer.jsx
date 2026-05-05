@@ -1,15 +1,30 @@
+import React, { useEffect, useRef } from 'react';
 import { BASE_URL } from '../services/api';
-const UniversalVideoPlayer = ({ url, className, onEnded, autoPlay = true, controls = true }) => {
+
+const UniversalVideoPlayer = ({ url, className, onEnded, autoPlay = true, controls = true, playing = true }) => {
+    const videoRef = useRef(null);
+
+    useEffect(() => {
+        // Sync HTML5 video play/pause
+        if (videoRef.current && !url.includes('youtube.com') && !url.includes('youtu.be') && !url.includes('vimeo.com')) {
+            if (playing) {
+                videoRef.current.play().catch(err => console.log("Play failed", err));
+            } else {
+                videoRef.current.pause();
+            }
+        }
+    }, [playing, url]);
+
     if (!url) return null;
 
     // Fix relative URLs from server
     const fullUrl = url.startsWith('http') ? url : `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 
-    // Helper to extract YouTube ID
+    // Improved YouTube ID extraction
     const getYouTubeId = (url) => {
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?v=)|(\&v=))([^#\&\?]*).*/;
         const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
+        return (match && match[8].length === 11) ? match[8] : null;
     };
 
     // Helper to extract Vimeo ID
@@ -23,10 +38,10 @@ const UniversalVideoPlayer = ({ url, className, onEnded, autoPlay = true, contro
 
     if (youtubeId) {
         return (
-            <div className={`relative pb-[56.25%] h-0 ${className}`}>
+            <div className={`w-full bg-black flex items-center justify-center ${className}`} style={{ aspectRatio: '16/9' }}>
                 <iframe
-                    src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${autoPlay ? 1 : 0}&controls=${controls ? 1 : 0}`}
-                    className="absolute top-0 left-0 w-full h-full rounded-none"
+                    src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${playing ? 1 : 0}&controls=${controls ? 1 : 0}&mute=${autoPlay ? 1 : 0}&enablejsapi=1&origin=${window.location.origin}`}
+                    className="w-full h-full"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -38,10 +53,10 @@ const UniversalVideoPlayer = ({ url, className, onEnded, autoPlay = true, contro
 
     if (vimeoId) {
         return (
-            <div className={`relative pb-[56.25%] h-0 ${className}`}>
+            <div className={`w-full bg-black flex items-center justify-center ${className}`} style={{ aspectRatio: '16/9' }}>
                 <iframe
-                    src={`https://player.vimeo.com/video/${vimeoId}?autoplay=${autoPlay ? 1 : 0}`}
-                    className="absolute top-0 left-0 w-full h-full rounded-none"
+                    src={`https://player.vimeo.com/video/${vimeoId}?autoplay=${playing ? 1 : 0}`}
+                    className="w-full h-full"
                     frameBorder="0"
                     allow="autoplay; fullscreen; picture-in-picture"
                     allowFullScreen
@@ -54,13 +69,14 @@ const UniversalVideoPlayer = ({ url, className, onEnded, autoPlay = true, contro
     // Default to HTML5 Video for direct links (.mp4, etc.)
     return (
         <video
+            ref={videoRef}
             src={fullUrl}
             className={className}
             controls={controls}
             autoPlay={autoPlay}
             playsInline
             onEnded={onEnded}
-            style={{ width: '100%', borderRadius: '0' }}
+            style={{ width: '100%', aspectRatio: '16/9', backgroundColor: '#000' }}
         />
     );
 };
