@@ -115,6 +115,12 @@ export const taskStorage = {
         }
         return currentTasks;
     },
+    
+    // Sync server tasks to local storage
+    syncTasks: (serverTasks) => {
+        if (!serverTasks || !Array.isArray(serverTasks)) return;
+        localStorage.setItem(TASKS_KEY, JSON.stringify(serverTasks));
+    },
 
     // Add a new task (Admin Side)
     saveTask: (task) => {

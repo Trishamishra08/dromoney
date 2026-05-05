@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { taskStorage } from '../../shared/services/taskStorage';
-import { ChevronLeft, CheckCircle2, Play, UploadCloud, Link as LinkIcon, Loader2, Image as ImageIcon, Coins } from 'lucide-react';
+import api from '../../shared/services/api';
+import { ChevronLeft, CheckCircle2, Play, UploadCloud, Link as LinkIcon, Loader2, Image as ImageIcon, Coins, Camera } from 'lucide-react';
 
 const TaskRunner = () => {
     const { id } = useParams();
@@ -23,17 +24,41 @@ const TaskRunner = () => {
     const [screenshotFile, setScreenshotFile] = useState(null);
 
     useEffect(() => {
-        const allTasks = taskStorage.getTasks();
-        const foundTask = allTasks.find(t => String(t.id) === String(id));
-        setTask(foundTask);
-        
-        if (foundTask) {
-             const tType = foundTask.type;
-             const timerValue = Number(foundTask.config?.timer) || (tType === 'Video' ? 30 : 25);
-             if (tType === 'Video' || tType === 'Web') {
-                 setTimeLeft(timerValue);
-             }
-        }
+        const loadTask = async () => {
+            let allTasks = taskStorage.getTasks();
+            console.log("TaskRunner: Searching in storage. ID:", id);
+            
+            let foundTask = allTasks.find(t => String(t._id || t.id) === String(id));
+            
+            if (!foundTask) {
+                console.log("TaskRunner: Not in storage, fetching from API...");
+                try {
+                    const res = await api.get('/public/tasks');
+                    if (res.success && res.data) {
+                        allTasks = res.data;
+                        taskStorage.syncTasks(allTasks); // Sync for future use
+                        foundTask = allTasks.find(t => String(t._id || t.id) === String(id));
+                    }
+                } catch (err) {
+                    console.error("TaskRunner: API Fetch Error:", err);
+                }
+            }
+
+            console.log("TaskRunner: Final found task:", foundTask);
+            
+            if (foundTask) {
+                 setTask(foundTask);
+                 const tType = foundTask.type;
+                 const timerValue = Number(foundTask.config?.timer) || (tType === 'Video' ? 30 : 25);
+                 if (tType === 'Video' || tType === 'Web' || tType === 'Join' || tType === 'Social') {
+                     setTimeLeft(timerValue);
+                 }
+            } else {
+                console.warn("TaskRunner: Task not found anywhere.");
+            }
+        };
+
+        loadTask();
     }, [id]);
 
     useEffect(() => {
@@ -45,22 +70,65 @@ const TaskRunner = () => {
         }
     }, [status, timeLeft]);
 
-    if (!task) return <div className="p-8 text-center text-white min-h-screen bg-slate-950 flex items-center justify-center font-bold uppercase tracking-widest"><Loader2 className="animate-spin mr-2" /> Loading Task...</div>;
+    if (!task) return (
+        <div className="p-8 text-center text-white min-h-screen bg-slate-950 flex flex-col items-center justify-center font-bold uppercase tracking-widest gap-4">
+            <Loader2 className="animate-spin text-sky-500 w-12 h-12" />
+            <p>Loading Task Details...</p>
+        </div>
+    );
+
+    const formatVideoUrl = (url) => {
+        if (!url) return '';
+        let videoId = '';
+        let params = '';
+
+        try {
+            if (url.includes('youtube.com/watch?v=')) {
+                const parts = url.split('v=')[1].split('&');
+                videoId = parts[0];
+                params = parts.slice(1).join('&');
+            } else if (url.includes('youtu.be/')) {
+                const parts = url.split('youtu.be/')[1].split('?');
+                videoId = parts[0];
+                params = parts[1] || '';
+            } else if (url.includes('m.youtube.com/watch?v=')) {
+                const parts = url.split('v=')[1].split('&');
+                videoId = parts[0];
+                params = parts.slice(1).join('&');
+            } else if (url.includes('youtube.com/embed/')) {
+                const parts = url.split('embed/')[1].split('?');
+                videoId = parts[0];
+                params = parts[1] || '';
+            }
+
+            if (videoId) {
+                // Ensure autoplay and mute for better iframe behavior
+                const base = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&rel=0&modestbranding=1&enablejsapi=1`;
+                return params ? `${base}&${params}` : base;
+            }
+        } catch (e) {
+            console.error("URL Parsing error", e);
+        }
+        
+        return url;
+    };
 
     const startTask = () => {
         setStatus('running');
         
-        // Open the external URL if it's Web task
-        if (task.type === 'Web' && task.config?.url) {
-            window.open(task.config.url, '_blank', 'noopener,noreferrer');
+        // Open the external URL if it's Web/Join/Social task
+        const taskUrl = task.link || task.config?.url;
+        if ((task.type === 'Web' || task.type === 'Join' || task.type === 'Social') && taskUrl) {
+            window.open(taskUrl, '_blank', 'noopener,noreferrer');
         }
     };
 
     const submitTask = () => {
         setStatus('completed');
-        addCoins(task.reward, task.title);
+        const rewardAmount = task.coinsReward || task.reward || 0;
+        addCoins(rewardAmount, task.title);
         // Persist completion state
-        taskStorage.markComplete(task.id);
+        taskStorage.markComplete(task._id || task.id);
         setTimeout(() => navigate('/user/earn'), 2000);
     };
 
@@ -81,7 +149,7 @@ const TaskRunner = () => {
                         <Coins size={12} className="text-amber-400" />
                         <span className="font-black text-amber-400 text-xs">{userData.coins.total}</span>
                     </div>
-                    <span className="font-black text-amber-400 text-xs">+{task.reward} Coin</span>
+                    <span className="font-black text-amber-400 text-xs">+{task.coinsReward || task.reward} Coin</span>
                 </div>
             </div>
 
@@ -105,22 +173,26 @@ const TaskRunner = () => {
                             {status === 'running' && (
                                 <div className="absolute inset-0 flex flex-col bg-slate-950 z-10">
                                     <iframe 
-                                        src={`${task.config?.url}?autoplay=1&controls=0&mute=1`} 
-                                        className="w-full flex-1 border-0 pointer-events-none"
+                                        src={formatVideoUrl(task.config?.url)} 
+                                        className="w-full flex-1 border-0 h-full"
                                         title="Sponsor Video"
-                                        allow="autoplay"
+                                        allow="autoplay; encrypted-media"
+                                        allowFullScreen
                                     ></iframe>
                                     
                                     {/* Progress Bar Container */}
-                                    <div className="h-2 w-full bg-slate-800 relative">
+                                    <div className="h-2 w-full bg-slate-800 relative z-30">
                                         {/* Dynamic Progress Line */}
                                         <div 
                                             className="absolute top-0 left-0 h-full bg-sky-500 transition-all duration-1000 ease-linear shadow-[0_0_10px_rgba(14,165,233,0.8)]"
-                                            style={{ width: `${((30 - timeLeft) / 30) * 100}%` }}
+                                            style={{ width: `${((Number(task.config?.timer) || 30) - timeLeft) / (Number(task.config?.timer) || 30) * 100}%` }}
                                         ></div>
                                     </div>
                                     
-                                    <div className="absolute top-3 right-3 bg-slate-950/80 px-3 py-1.5 rounded-full border border-slate-800 backdrop-blur flex items-center gap-2 shadow-xl">
+                                    {/* Overlay to block clicks but allow seeing the video */}
+                                    <div className="absolute inset-0 z-20 pointer-events-auto bg-transparent h-[calc(100%-8px)]"></div>
+
+                                    <div className="absolute top-3 right-3 bg-slate-950/80 px-3 py-1.5 rounded-full border border-slate-800 backdrop-blur flex items-center gap-2 shadow-xl z-40">
                                         <div className="w-2 h-2 rounded-full bg-rose-500 animate-[ping_2s_infinite]"></div>
                                         <span className="text-white font-black font-mono text-[10px]">00:{timeLeft.toString().padStart(2, '0')}</span>
                                     </div>
@@ -128,7 +200,7 @@ const TaskRunner = () => {
                             )}
 
                             {status === 'verify' && (
-                                <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-20 animate-in fade-in duration-500 p-4">
+                                <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-50 animate-in fade-in duration-500 p-4">
                                     <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-3 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
                                         <CheckCircle2 size={32} className="text-emerald-400" />
                                     </div>
@@ -143,7 +215,7 @@ const TaskRunner = () => {
                             )}
                             
                             {status === 'completed' && (
-                                <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-20 animate-in zoom-in duration-500">
+                                <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-50 animate-in zoom-in duration-500">
                                     <Loader2 size={32} className="text-sky-500 animate-spin mb-3" />
                                     <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Processing...</h3>
                                 </div>
@@ -154,15 +226,15 @@ const TaskRunner = () => {
                             <h3 className="text-xs font-black text-slate-300 mb-3 uppercase tracking-widest text-sky-400">Task Instructions</h3>
                             <ul className="text-xs text-slate-400 list-disc list-inside space-y-2 font-medium leading-relaxed marker:text-slate-600">
                                 <li>Tap PLAY and do not close your screen during playback.</li>
-                                <li>Watch the full 30s Sponsored Video without skipping.</li>
-                                <li>Claim your guaranteed {task.reward} Coin reward instantly after end.</li>
+                                <li>Watch the full Sponsored Video without skipping.</li>
+                                <li>Claim your guaranteed {task.reward || task.coinsReward} Coin reward instantly after end.</li>
                             </ul>
                         </div>
                     </div>
                 )}
 
-                {/* WEB TASK */}
-                {task.type === 'Web' && (
+                {/* LINK / WEB / JOIN / SOCIAL TASKS */}
+                {(task.type === 'Web' || task.type === 'Join' || task.type === 'Social' || task.type === 'Survey' || task.type === 'Watch' || task.type === 'Bonus') && (
                     <div className="flex-1 flex flex-col justify-center">
                         <div className="w-full flex-1 min-h-[400px] bg-slate-900 border border-slate-800 rounded-3xl flex flex-col overflow-hidden relative shadow-lg items-center justify-center p-6 text-center">
                             
@@ -230,7 +302,7 @@ const TaskRunner = () => {
                             </p>
                             
                             <button className="w-full bg-slate-950 border border-slate-800 text-white hover:text-sky-400 hover:border-sky-500/50 font-black uppercase tracking-widest py-4 rounded-xl hover:bg-slate-900 transition-all text-xs flex justify-center items-center gap-2" onClick={() => setStatus('verify')}>
-                                Open in Instagram App <LinkIcon size={14} />
+                                Open in App <LinkIcon size={14} />
                             </button>
                        </div>
 

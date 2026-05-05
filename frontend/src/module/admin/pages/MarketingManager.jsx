@@ -620,8 +620,8 @@ const MarketingManager = () => {
                                                     const unit = b.validityUnit || 'Days';
                                                     setBoosters({
                                                         ...boosters,
-                                                        [type]: { 
-                                                            ...boosters[type], 
+                                                        [type]: {
+                                                            ...boosters[type],
                                                             validityValue: val,
                                                             validity: `${val || 0} ${unit}`
                                                         }
@@ -635,8 +635,8 @@ const MarketingManager = () => {
                                                     const val = b.validityValue || 30;
                                                     setBoosters({
                                                         ...boosters,
-                                                        [type]: { 
-                                                            ...boosters[type], 
+                                                        [type]: {
+                                                            ...boosters[type],
                                                             validityUnit: unit,
                                                             validity: `${val} ${unit}`
                                                         }

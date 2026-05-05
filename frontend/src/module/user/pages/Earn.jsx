@@ -14,6 +14,7 @@ import PaymentModal from '../components/PaymentModal';
 const ICON_MAP = {
     Monitor: { el: Monitor, bg: 'bg-sky-100', color: 'text-sky-500' },
     Youtube: { el: Play, bg: 'bg-red-100', color: 'text-red-500' },
+    YouTube: { el: Play, bg: 'bg-red-100', color: 'text-red-500' },
     Lightbulb: { el: Lightbulb, bg: 'bg-yellow-100', color: 'text-yellow-500' },
     Disc: { el: Disc, bg: 'bg-orange-100', color: 'text-orange-500' },
     MessageCircle: { el: MessageCircle, bg: 'bg-green-100', color: 'text-green-500' },
@@ -24,6 +25,8 @@ const ICON_MAP = {
     Camera: { el: Camera, bg: 'bg-pink-100', color: 'text-pink-500' },
     Zap: { el: Zap, bg: 'bg-purple-100', color: 'text-purple-500' },
     Rocket: { el: Rocket, bg: 'bg-rose-100', color: 'text-rose-500' },
+    Telegram: { el: MessageCircle, bg: 'bg-blue-100', color: 'text-blue-500' },
+    WhatsApp: { el: MessageSquare, bg: 'bg-green-100', color: 'text-green-500' },
     TrendingUp: { el: TrendingUp, bg: 'bg-emerald-100', color: 'text-emerald-500' },
 };
 
@@ -46,9 +49,12 @@ const Earn = () => {
         const loadTasks = async () => {
             try {
                 const res = await api.get('/public/tasks');
+                console.log("Earn: Fetched tasks from server:", res.data);
                 if (res.success && res.data && res.data.length > 0) {
                     setTasks(res.data);
+                    taskStorage.syncTasks(res.data);
                 } else {
+                    console.log("Earn: Using local tasks fallback");
                     setTasks(taskStorage.getTasks());
                 }
             } catch (err) {
