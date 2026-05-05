@@ -109,114 +109,127 @@ const Dashboard = () => {
     };
 
     const quickActions = [
-        { label: 'Send Alert', icon: Bell, color: 'text-indigo-500', bg: 'bg-indigo-50', path: '/admin/notifications' },
-        { label: 'Add Task', icon: Plus, color: 'text-emerald-500', bg: 'bg-emerald-50', path: '/admin/tasks' },
-        { label: 'New Event', icon: Sparkles, color: 'text-amber-500', bg: 'bg-amber-50', path: '/admin/events' },
-        { label: 'Manage Ads', icon: PlayCircle, color: 'text-sky-500', bg: 'bg-sky-50', path: '/admin/watch-and-earn' },
-        { label: 'Settings', icon: Settings, color: 'text-slate-500', bg: 'bg-slate-50', path: '/admin/settings' },
+        { label: 'Send Alert', icon: Bell, color: 'text-indigo-600', bg: 'bg-indigo-100/50', cardBg: 'bg-[#E2D4FD]', border: 'border-[#D4B8F9]', path: '/admin/notifications' },
+        { label: 'Add Task', icon: Plus, color: 'text-emerald-600', bg: 'bg-emerald-100/50', cardBg: 'bg-[#FDF2D0]', border: 'border-[#F9E9B8]', path: '/admin/tasks' },
+        { label: 'New Event', icon: Sparkles, color: 'text-amber-600', bg: 'bg-amber-100/50', cardBg: 'bg-[#CFE2FD]', border: 'border-[#B8D5F9]', path: '/admin/events' },
+        { label: 'Manage Ads', icon: PlayCircle, color: 'text-sky-600', bg: 'bg-sky-100/50', cardBg: 'bg-[#FDE2CF]', border: 'border-[#F9D4B8]', path: '/admin/watch-and-earn' },
+        { label: 'Settings', icon: Settings, color: 'text-slate-600', bg: 'bg-slate-100/50', cardBg: 'bg-[#FDCFCF]', border: 'border-[#F9B8B8]', path: '/admin/settings' },
     ];
 
     return (
-        <div className="p-6 space-y-8 animate-in fade-in duration-700 bg-slate-50/30 min-h-screen pb-20 overflow-x-hidden">
+        <div className="p-4 space-y-5 animate-in fade-in duration-700 bg-[#f9f6f1] min-h-screen pb-20 overflow-x-hidden">
             
             {/* ── HEADER & LIVE STATUS ── */}
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                        Elite Control Room <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                    </h1>
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1 flex items-center gap-2">
-                        <Monitor size={12} /> System Node 01 • <span className="text-emerald-500 font-black">Online & Secured</span>
-                    </p>
+                <div className="flex items-center gap-4">
+                    <div className="bg-slate-900 p-3 rounded-xl shadow-xl text-white transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                        <BarChart3 size={24} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3 uppercase">
+                            Elite Control Room <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        </h1>
+                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[9px] mt-1 flex items-center gap-2">
+                            <Monitor size={10} /> System Node 01 • <span className="text-emerald-500 font-black">Online & Secured</span>
+                        </p>
+                    </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-6 bg-white px-6 py-2.5 rounded-2xl border border-slate-100 shadow-sm">
-                        <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
+                        <div className="flex items-center gap-2.5">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Maintenance</span>
-                            <button onClick={() => setMaintenanceMode(!maintenanceMode)} className={`w-10 h-5 rounded-full relative transition-all ${maintenanceMode ? 'bg-rose-500 shadow-lg shadow-rose-200' : 'bg-slate-200'}`}>
-                                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${maintenanceMode ? 'right-1' : 'left-1'}`}></div>
+                            <button onClick={() => setMaintenanceMode(!maintenanceMode)} className={`w-8 h-4 rounded-full relative transition-all ${maintenanceMode ? 'bg-rose-500 shadow-lg shadow-rose-200' : 'bg-slate-200'}`}>
+                                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${maintenanceMode ? 'right-0.5' : 'left-0.5'}`}></div>
                             </button>
                         </div>
-                        <div className="h-4 w-px bg-slate-100"></div>
-                        <div className="flex items-center gap-3">
+                        <div className="h-3 w-px bg-slate-100"></div>
+                        <div className="flex items-center gap-2.5">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Register</span>
-                            <button onClick={() => setRegOpen(!regOpen)} className={`w-10 h-5 rounded-full relative transition-all ${regOpen ? 'bg-emerald-500 shadow-lg shadow-emerald-200' : 'bg-slate-200'}`}>
-                                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${regOpen ? 'right-1' : 'left-1'}`}></div>
+                            <button onClick={() => setRegOpen(!regOpen)} className={`w-8 h-4 rounded-full relative transition-all ${regOpen ? 'bg-emerald-500 shadow-lg shadow-emerald-200' : 'bg-slate-200'}`}>
+                                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${regOpen ? 'right-0.5' : 'left-0.5'}`}></div>
                             </button>
                         </div>
                     </div>
-                    <button onClick={handleRefresh} className={`p-3 bg-white border border-slate-100 rounded-2xl shadow-sm text-slate-400 hover:text-slate-900 transition-all ${isRefreshing ? 'animate-spin' : ''}`}>
-                        <RefreshCw size={20} />
+                    <button onClick={handleRefresh} className={`p-2 bg-white border border-slate-100 rounded-xl shadow-sm text-slate-400 hover:text-slate-900 transition-all ${isRefreshing ? 'animate-spin' : ''}`}>
+                        <RefreshCw size={18} />
                     </button>
                 </div>
             </div>
 
             {/* ── QUICK ACTIONS HUB ── */}
             {/* The logic for navigation is explicitly absolute to avoid sub-route confusion */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {quickActions.map((action, i) => (
                     <div 
                         key={i}
                         onClick={(e) => {
                             e.preventDefault();
-                            console.log('Navigating to:', action.path);
                             navigate(action.path);
                         }}
-                        className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-100/40 transition-all flex flex-col items-center gap-3 group cursor-pointer active:scale-95 border-b-4 hover:border-b-indigo-500"
+                        className={`${action.cardBg} rounded-xl p-4 border ${action.border} shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex flex-col items-center gap-2 group cursor-pointer active:scale-95 relative overflow-hidden`}
                     >
-                        <div className={`w-14 h-14 ${action.bg} ${action.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm`}>
-                            <action.icon size={26} strokeWidth={2.5} />
+                        <div className="absolute top-2 right-2 opacity-20 group-hover:opacity-40 transition-opacity">
+                            <ArrowUpRight size={10} className="text-slate-900" />
                         </div>
-                        <span className="text-[11px] font-black text-slate-700 uppercase tracking-[0.1em] leading-none text-center">{action.label}</span>
+                        <div className={`w-10 h-10 bg-white/60 backdrop-blur-md ${action.color} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-white/20`}>
+                            <action.icon size={18} strokeWidth={2.5} />
+                        </div>
+                        <span className="text-[9px] font-black text-slate-800 uppercase tracking-[0.1em] leading-none text-center">{action.label}</span>
                     </div>
                 ))}
             </div>
 
             {/* ── KPI GRID ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {displayStats.map((s, i) => (
-                    <div key={i} onClick={() => navigate(s.path)} className="bg-white group cursor-pointer rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-100/30 transition-all relative overflow-hidden active:scale-[0.98]">
-                        <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${s.color} opacity-0 group-hover:opacity-[0.03] transition-opacity rounded-full -mr-8 -mt-8`}></div>
-                        <div className="flex items-start justify-between mb-4">
-                            <div className={`w-12 h-12 bg-gradient-to-br ${s.color} rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200/20`}>
-                                <s.icon size={22} className="text-white" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {displayStats.map((s, i) => {
+                    const theme = { icon: i === 0 ? 'text-sky-500' : i === 1 ? 'text-emerald-500' : i === 2 ? 'text-amber-500' : 'text-rose-500' };
+                    
+                    return (
+                        <div key={i} onClick={() => navigate(s.path)} className={`bg-white group cursor-pointer rounded-xl p-4 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all relative overflow-hidden active:scale-[0.98]`}>
+                            <div className="absolute top-3 right-3 opacity-10 group-hover:opacity-30 transition-opacity">
+                                <ArrowUpRight size={12} className="text-slate-900" />
                             </div>
-                            <span className="text-[9px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100 uppercase tracking-widest">{s.trend}</span>
+                            <div className="flex items-start justify-between mb-3">
+                                <div className={`w-9 h-9 bg-slate-50 rounded-lg flex items-center justify-center shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-colors`}>
+                                    <s.icon size={18} className={theme.icon} strokeWidth={2.5} />
+                                </div>
+                                <span className="text-[8px] font-black text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-100 uppercase tracking-widest">{s.trend}</span>
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.12em] mb-1">{s.label}</p>
+                                <h3 className="text-lg font-black text-slate-900 tracking-tight">{s.value}</h3>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{s.label}</p>
-                            <h3 className="text-2xl font-black text-slate-900 tracking-tight">{s.value}</h3>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* ── SECOND LAYER: FUNNEL & FRAUD ── */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 
                 {/* Conversion Funnel */}
-                <div className="bg-slate-900 rounded-[40px] p-10 text-white shadow-2xl shadow-indigo-100/10 relative overflow-hidden border border-white/5">
-                    <div className="flex items-center justify-between mb-12">
+                <div className="bg-white rounded-xl p-5 shadow-sm relative overflow-hidden border border-slate-100 group">
+                    <div className="flex items-center justify-between mb-5">
                         <div>
-                            <h2 className="text-lg font-black uppercase tracking-tight flex items-center gap-3"><Filter size={20} className="text-sky-400" /> Conversion Funnel</h2>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Track user journey from visitor to earner</p>
+                            <h2 className="text-[14px] font-black uppercase tracking-tight flex items-center gap-2 text-slate-900"><Filter size={14} className="text-indigo-500" /> Conversion Funnel</h2>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">User Journey Tracker</p>
                         </div>
-                        <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/5"><Target size={24} className="text-sky-400" /></div>
+                        <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 group-hover:scale-110 transition-transform"><Target size={16} className="text-indigo-500" /></div>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-3">
                         {conversionFunnel.map((f, i) => (
-                            <div key={i} className="flex items-center gap-6 group">
-                                <span className="w-14 text-[11px] font-black text-slate-500">{f.percent}</span>
-                                <div className="flex-1 relative h-10 bg-white/5 rounded-2xl border border-white/5 overflow-hidden">
+                            <div key={i} className="flex items-center gap-4 group/bar">
+                                <span className="w-10 text-[9px] font-black text-slate-400">{f.percent}</span>
+                                <div className="flex-1 relative h-7 bg-slate-50 rounded-lg border border-slate-100 overflow-hidden">
                                      <div 
                                         style={{ width: f.percent }} 
-                                        className={`absolute h-full ${f.color} rounded-2xl shadow-xl transition-all duration-1000 delay-${i * 100}`}
+                                        className={`absolute h-full ${f.color} rounded-lg shadow-sm transition-all duration-1000 delay-${i * 100}`}
                                     ></div>
-                                    <div className="absolute inset-x-5 h-full flex items-center justify-between">
-                                        <span className="text-[11px] font-black uppercase tracking-widest mix-blend-difference">{f.label}</span>
-                                        <span className="text-[11px] font-black mix-blend-difference">{f.value}</span>
+                                    <div className="absolute inset-x-3 h-full flex items-center justify-between">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-700">{f.label}</span>
+                                        <span className="text-[9px] font-black text-slate-900">{f.value}</span>
                                     </div>
                                 </div>
                             </div>
@@ -225,26 +238,26 @@ const Dashboard = () => {
                 </div>
 
                 {/* Fraud & Safety Guard */}
-                <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm p-10 flex flex-col group">
-                    <div className="flex items-center justify-between mb-8">
+                <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 flex flex-col group">
+                    <div className="flex items-center justify-between mb-5">
                         <div>
-                            <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase flex items-center gap-3"><ShieldAlert size={20} className="text-rose-500" /> Safety Guard</h2>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Real-time fraud & anomaly detection</p>
+                            <h2 className="text-[14px] font-black text-slate-900 tracking-tight uppercase flex items-center gap-2"><ShieldAlert size={14} className="text-rose-500" /> Safety Guard</h2>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Anomaly Detection System</p>
                         </div>
-                        <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center"><ShieldQuestion size={24} /></div>
+                        <div className="w-8 h-8 bg-rose-50 text-rose-500 rounded-lg flex items-center justify-center border border-rose-100"><ShieldQuestion size={16} /></div>
                     </div>
 
-                    <div className="space-y-4 flex-1">
+                    <div className="space-y-2 flex-1">
                         {fraudAlerts.map((a, i) => (
-                            <div key={i} className="p-5 rounded-[2rem] bg-slate-50 border border-slate-100 flex items-center justify-between hover:bg-white hover:shadow-xl hover:shadow-slate-100 transition-all cursor-pointer group/alert">
-                                <div className="flex items-center gap-4">
-                                     <div className={`w-3 h-3 rounded-full ${a.severity === 'high' ? 'bg-rose-500 animate-pulse' : a.severity === 'medium' ? 'bg-amber-500' : 'bg-sky-500'}`}></div>
+                            <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between hover:bg-white hover:shadow-lg hover:shadow-slate-100 transition-all cursor-pointer group/alert">
+                                <div className="flex items-center gap-3">
+                                     <div className={`w-2 h-2 rounded-full ${a.severity === 'high' ? 'bg-rose-500 animate-pulse' : a.severity === 'medium' ? 'bg-amber-500' : 'bg-sky-500'}`}></div>
                                      <div>
-                                         <p className="text-[12px] font-black text-slate-800">@{a.user} <span className="mx-2 text-slate-300">•</span> <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{a.time}</span></p>
-                                         <p className="text-[11px] font-bold text-slate-500 mt-0.5">{a.reason}</p>
+                                         <p className="text-[11px] font-black text-slate-800 tracking-tight leading-none">@{a.user}</p>
+                                         <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{a.reason}</p>
                                      </div>
                                 </div>
-                                <button className="p-2.5 bg-white rounded-xl text-slate-400 opacity-0 group-hover/alert:opacity-100 group-hover/alert:text-rose-500 transition-all shadow-sm"><Ban size={18} /></button>
+                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{a.time}</span>
                             </div>
                         ))}
                     </div>
@@ -255,27 +268,27 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 
                 {/* Engagement Graph */}
-                <div className="xl:col-span-2 bg-white rounded-[40px] border border-slate-100 shadow-sm p-8 group relative overflow-hidden">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 relative z-10">
+                <div className="xl:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-5 group relative overflow-hidden">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-6 relative z-10">
                         <div>
-                            <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase flex items-center gap-3"><BarChart3 size={20} className="text-indigo-500" /> Engagement Matrix</h2>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Platform adoption velocity</p>
+                            <h2 className="text-[14px] font-black text-slate-900 tracking-tight uppercase flex items-center gap-2"><BarChart3 size={16} className="text-indigo-500" /> Engagement Matrix</h2>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Platform adoption velocity</p>
                         </div>
-                        <div className="flex gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                        <div className="flex gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
                             {['Daily', 'Weekly'].map(t => (
-                                <button key={t} className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${t === 'Daily' ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' : 'text-slate-400 hover:bg-white'}`}>{t}</button>
+                                <button key={t} className={`px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest transition-all ${t === 'Daily' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>{t}</button>
                             ))}
                         </div>
                     </div>
 
-                    <div className="h-64 flex items-end justify-between gap-4 px-4 relative z-10">
+                    <div className="h-48 flex items-end justify-between gap-3 px-2 relative z-10">
                         {[35, 65, 45, 85, 55, 95, 75, 45, 65, 80].map((h, i) => (
                             <div key={i} className="flex-1 flex flex-col items-center group/bar">
                                 <div 
                                     style={{ height: `${h}%` }} 
-                                    className={`w-full max-w-[40px] rounded-[1.25rem] transition-all duration-700 bg-slate-50 relative group-hover/bar:bg-indigo-500 cursor-pointer shadow-sm group-hover/bar:shadow-indigo-100`}
+                                    className={`w-full max-w-[32px] rounded-t-lg transition-all duration-700 bg-slate-50 relative group-hover/bar:bg-[#FDF2D0] group-hover/bar:border group-hover/bar:border-[#F9E9B8] cursor-pointer shadow-sm`}
                                 >
-                                     <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-black px-2 py-1 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap">
+                                     <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] font-black px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap">
                                         {Math.floor(h * 24)} Sessions
                                     </div>
                                 </div>
@@ -285,40 +298,40 @@ const Dashboard = () => {
                 </div>
 
                 {/* Broadcast Center */}
-                <div className="bg-[#0F172A] rounded-[40px] p-8 text-white shadow-2xl shadow-indigo-100/20 flex flex-col h-full relative overflow-hidden group border border-white/5">
-                     <div className="flex items-center gap-4 mb-8">
-                        <div className="w-11 h-11 bg-white/10 rounded-2xl flex items-center justify-center text-sky-400 shadow-inner shadow-white/5"><Send size={20} /></div>
+                <div className="bg-white rounded-xl p-5 shadow-sm flex flex-col h-full relative overflow-hidden group border border-slate-100">
+                     <div className="flex items-center gap-3 mb-5">
+                        <div className="w-9 h-9 bg-[#FDF2D0] rounded-lg flex items-center justify-center text-[#856404] shadow-sm border border-[#F9E9B8] group-hover:scale-110 transition-transform"><Send size={16} /></div>
                         <div>
-                            <h3 className="text-sm font-black uppercase tracking-widest leading-none">Broadcast</h3>
-                            <p className="text-[9px] font-bold text-white/30 uppercase mt-1">Send global announcement</p>
+                            <h3 className="text-[13px] font-black uppercase tracking-tight text-slate-900 leading-none">Broadcast</h3>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Global Announcement</p>
                         </div>
                     </div>
-                    <div className="space-y-4 mb-4">
+                    <div className="space-y-3 mb-4">
                         <input 
                             type="text"
                             value={broadcastTitle}
                             onChange={(e) => setBroadcastTitle(e.target.value)}
                             placeholder="Message Title..."
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-[12px] font-black text-sky-400 placeholder-white/20 focus:ring-2 focus:ring-sky-500 outline-none transition-all"
+                            className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-[11px] font-black text-slate-800 placeholder-slate-300 focus:ring-1 focus:ring-amber-500 focus:bg-white outline-none transition-all"
                         />
                         <textarea 
                             value={broadcastMsg}
                             onChange={(e) => setBroadcastMsg(e.target.value)}
                             placeholder="Type message for all users..."
-                            className="w-full bg-white/5 border border-white/10 rounded-3xl p-5 text-[12px] font-bold text-white placeholder-white/20 h-32 focus:ring-2 focus:ring-sky-500 outline-none resize-none transition-all"
+                            className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-[11px] font-bold text-slate-600 placeholder-slate-300 h-24 focus:ring-1 focus:ring-amber-500 focus:bg-white outline-none resize-none transition-all"
                         />
                     </div>
                     <button 
                         disabled={!broadcastMsg || isSending}
                         onClick={handleBroadcast}
-                        className={`w-full mt-auto py-5 bg-sky-500 hover:bg-sky-400 disabled:bg-white/5 disabled:text-white/20 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-sky-900/40 transition-all flex items-center justify-center gap-3 group/btn
+                        className={`w-full mt-auto py-3 bg-slate-900 hover:bg-black disabled:bg-slate-100 disabled:text-slate-300 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-slate-200 transition-all flex items-center justify-center gap-2 group/btn
                             ${isSending ? 'opacity-80' : ''}`}
                     >
                         {isSending ? (
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         ) : (
                             <>
-                                TRANSmit NOW <ArrowUpRight size={18} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+                                TRANSMIT <ArrowUpRight size={14} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
                             </>
                         )}
                     </button>
@@ -329,74 +342,74 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
                 {/* Verification Queue Redesign */}
-                <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden flex flex-col group">
-                    <div className="px-10 py-8 border-b border-slate-100 flex items-center justify-between">
+                <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group">
+                    <div className="px-5 py-4 border-b border-slate-50 flex items-center justify-between">
                         <div>
-                            <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest">Global Payout Requests</h2>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Awaiting batch verification</p>
+                            <h2 className="text-[12px] font-black text-slate-800 uppercase tracking-tight">Global Payout Requests</h2>
+                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1 italic">Pending verification batch</p>
                         </div>
-                        <button onClick={() => navigate('/admin/withdrawals')} className="text-[10px] font-black text-indigo-500 uppercase flex items-center gap-2 hover:gap-3 transition-all">Go to Wallets <ChevronRight size={14} /></button>
+                        <button onClick={() => navigate('/admin/withdrawals')} className="text-[9px] font-black text-indigo-500 uppercase flex items-center gap-2 hover:gap-3 transition-all">Wallets <ChevronRight size={10} /></button>
                     </div>
-                    <div className="divide-y divide-slate-100 max-h-[440px] overflow-y-auto custom-scrollbar">
+                    <div className="divide-y divide-slate-50 max-h-[360px] overflow-y-auto custom-scrollbar">
                         {kycQueue.map((k, i) => (
-                            <div key={i} className="px-10 py-6 flex items-center justify-between hover:bg-slate-50 transition-all group/row">
-                                <div className="flex items-center gap-5">
-                                    <div className="w-12 h-12 bg-slate-50 border border-slate-100 text-slate-900 rounded-[1.5rem] flex items-center justify-center font-black group-hover/row:bg-slate-900 group-hover/row:text-white transition-all shadow-sm">
-                                        {k.type === 'KYC' ? <ShieldCheck size={22} /> : <DollarSign size={22} />}
+                            <div key={i} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-all group/row">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-9 h-9 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl flex items-center justify-center font-black group-hover/row:bg-slate-900 group-hover/row:text-white transition-all">
+                                        {k.type === 'KYC' ? <ShieldCheck size={16} /> : <DollarSign size={16} />}
                                     </div>
                                     <div>
-                                        <div className="flex items-center gap-3">
-                                            <p className="text-[14px] font-black text-slate-800 tracking-tight leading-none">{k.name}</p>
-                                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${k.type === 'KYC' ? 'bg-indigo-50 text-indigo-500' : 'bg-emerald-50 text-emerald-500'}`}>{k.type}</span>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-[13px] font-black text-slate-800 tracking-tight leading-none">{k.name}</p>
+                                            <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest ${k.type === 'KYC' ? 'bg-indigo-50 text-indigo-500' : 'bg-emerald-50 text-emerald-500'}`}>{k.type}</span>
                                         </div>
-                                        <p className="text-[10px] font-bold text-slate-400 mt-1.5 uppercase tracking-widest">{k.time} • Pending Approval</p>
+                                        <p className="text-[8px] font-black text-slate-400 mt-1 uppercase tracking-tighter">{k.time} • Live System</p>
                                     </div>
                                 </div>
-                                <button onClick={() => navigate(k.type === 'KYC' ? '/admin/kyc' : '/admin/withdrawals')} className="bg-white border border-slate-200 text-slate-900 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-slate-900 hover:text-white transition-all">Review</button>
+                                <button onClick={() => navigate(k.type === 'KYC' ? '/admin/kyc' : '/admin/withdrawals')} className="bg-white border border-slate-100 text-slate-900 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm hover:bg-slate-900 hover:text-white transition-all">Review</button>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Performance & Shortcuts */}
-                <div className="grid grid-cols-2 gap-6 h-full font-sans">
-                    <div className="bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm flex flex-col justify-between group">
+                <div className="grid grid-cols-2 gap-3 h-full font-sans">
+                    <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex flex-col justify-between group">
                         <div className="flex justify-between items-start">
-                             <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center"><PieChart size={24} /></div>
-                             <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2.5 py-1 rounded-lg">82% Cap</span>
+                             <div className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center border border-emerald-100"><PieChart size={16} /></div>
+                             <span className="text-[8px] font-black text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-100">82% Cap</span>
                         </div>
-                        <div>
-                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Monthly Target</p>
-                             <h4 className="text-3xl font-black text-slate-900 tracking-tighter">₹4,82k <span className="text-sm font-bold text-slate-300">/ 6L</span></h4>
-                             <div className="w-full h-2 bg-slate-50 rounded-full mt-4 overflow-hidden">
+                        <div className="mt-3">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Monthly Target</p>
+                             <h4 className="text-lg font-black text-slate-900 tracking-tighter">₹4.82k <span className="text-[9px] font-bold text-slate-300">/ 6L</span></h4>
+                             <div className="w-full h-1 bg-slate-50 rounded-full mt-2 overflow-hidden">
                                  <div className="h-full bg-emerald-500 w-[82%] rounded-full shadow-lg shadow-emerald-100 transition-all duration-1000"></div>
                              </div>
                         </div>
                     </div>
 
-                    <div onClick={() => navigate('/admin/reports')} className="bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm flex flex-col justify-between group cursor-pointer hover:shadow-2xl hover:shadow-slate-100 transition-all active:scale-95">
+                    <div onClick={() => navigate('/admin/reports')} className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex flex-col justify-between group cursor-pointer hover:shadow-xl transition-all active:scale-95">
                         <div className="flex justify-between items-start">
-                             <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform"><MessageSquare size={24} /></div>
-                             <div className="flex -space-x-3">
-                                 {[...Array(3)].map((_, i) => <div key={i} className="w-8 h-8 rounded-full bg-slate-100 border-2 border-white shadow-sm"></div>)}
+                             <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center border border-indigo-100 group-hover:scale-110 transition-transform"><MessageSquare size={16} /></div>
+                             <div className="flex -space-x-2">
+                                 {[...Array(3)].map((_, i) => <div key={i} className="w-5 h-5 rounded-full bg-slate-50 border border-white shadow-sm"></div>)}
                              </div>
                         </div>
-                        <div>
-                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Open Tickets</p>
-                             <h4 className="text-2xl font-black text-slate-900 tracking-tight">14 Active</h4>
-                             <p className="text-[9px] font-bold text-indigo-500 mt-2 flex items-center gap-1 uppercase tracking-widest">Respond Now <ChevronRight size={12} /></p>
+                        <div className="mt-3">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Open Tickets</p>
+                             <h4 className="text-base font-black text-slate-900 tracking-tight">14 Active</h4>
+                             <p className="text-[8px] font-bold text-indigo-500 mt-1 flex items-center gap-1 uppercase tracking-widest">Respond Now <ChevronRight size={8} /></p>
                         </div>
                     </div>
 
                     {[
-                        { label: 'Marketing Content', icon: Sparkles, path: '/admin/marketing-content', bg: 'bg-amber-50', color: 'text-amber-500' },
-                        { label: 'System Logs', icon: Info, path: '/admin/settings', bg: 'bg-slate-50', color: 'text-slate-500' }
+                        { label: 'Marketing', icon: Sparkles, path: '/admin/marketing-content', bg: 'bg-[#FDF2D0]', color: 'text-[#856404]', border: 'border-[#F9E9B8]' },
+                        { label: 'Logs', icon: Info, path: '/admin/settings', bg: 'bg-slate-50', color: 'text-slate-500', border: 'border-slate-100' }
                     ].map((btn, i) => (
-                        <div key={i} onClick={() => navigate(btn.path)} className="bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 group cursor-pointer hover:bg-slate-50 transition-all">
-                            <div className={`w-14 h-14 ${btn.bg} ${btn.color} rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm`}>
-                                <btn.icon size={28} />
+                        <div key={i} onClick={() => navigate(btn.path)} className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-2 group cursor-pointer hover:bg-slate-50 transition-all active:scale-95">
+                            <div className={`w-9 h-9 ${btn.bg} ${btn.color} ${btn.border} border rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm`}>
+                                <btn.icon size={18} />
                             </div>
-                            <span className="text-[11px] font-black text-slate-600 uppercase tracking-[0.2em]">{btn.label}</span>
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{btn.label}</span>
                         </div>
                     ))}
                 </div>

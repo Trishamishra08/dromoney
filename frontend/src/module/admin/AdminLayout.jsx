@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAdmin } from './context/AdminContext';
+import logo from '../../assets/WhatsApp_Image_2026-04-28_at_10.52.49_PM-removebg-preview.png';
 
 const navItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" /></svg> },
@@ -116,37 +117,45 @@ const AdminLayout = () => {
 
             {/* ── Sidebar ── */}
             <aside
-                className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[#0F172A] flex flex-col shrink-0 transition-all duration-300 relative z-30 h-full border-r border-white/5`}
+                className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[#0f172a] flex flex-col shrink-0 transition-all duration-300 relative z-30 h-full border-r border-slate-800/40`}
                 style={{ overscrollBehaviorY: 'contain' }}
             >
-                <div className="flex items-center gap-3 px-5 py-5 border-b border-white/5 shrink-0">
-                    <div className="w-9 h-9 bg-sky-500 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-sky-500/30">
-                        <svg className="w-5 h-5 text-white -rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.5-1 1.3-2.1c.42-.6.44-1.37.04-2.13L3 3l5.3 2.34c.76.4 1.53.38 2.13-.04C11.5 4.5 12.5 4 12.5 4L12 9z" /></svg>
+                <div className="flex flex-col items-center px-4 py-4 border-b border-slate-800/40 shrink-0 gap-2">
+                    <div className="w-24 h-24 flex items-center justify-center shrink-0">
+                        <img src={logo} alt="Dromoney" className="w-full h-full object-contain filter drop-shadow-2xl" />
                     </div>
                     {sidebarOpen && (
-                        <div>
-                            <h1 className="text-base font-black text-white leading-none tracking-tight leading-none mb-0.5">Dromoney</h1>
-                            <p className="text-[9px] font-black text-sky-400 uppercase tracking-[0.2em] leading-none">Admin Panel</p>
+                        <div className="text-center -mt-2">
+                            <h1 className="text-lg font-black text-white leading-none tracking-tight mb-1 uppercase">Dromoney</h1>
+                            <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] leading-none">Admin Control</p>
                         </div>
                     )}
                 </div>
 
-                {/* Primary Sidebar Content (Scrollable) */}
                 <div className="flex-1 overflow-y-auto scrollbar-hide py-4 px-3 flex flex-col gap-1">
                     <nav className="space-y-1">
                         {navItems.map((item) => (
-                            <NavLink key={item.path} to={item.path} className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative ${isActive ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}>
-                                <item.icon className="w-5 h-5 shrink-0" />
-                                {sidebarOpen && <span className="text-[13px] font-black tracking-tight truncate">{item.label}</span>}
+                            <NavLink 
+                                key={item.path} 
+                                to={item.path} 
+                                className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative ${isActive ? 'bg-[#FDF2D0] text-[#856404] shadow-lg shadow-black/20 border border-[#F9E9B8]' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                            >
+                                <item.icon className={`w-5 h-5 shrink-0 ${sidebarOpen ? 'mr-1' : ''}`} />
+                                {sidebarOpen && <span className="text-[12px] font-black tracking-tight truncate uppercase">{item.label}</span>}
+                                {sidebarOpen && (
+                                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="m9 18 6-6-6-6"/></svg>
+                                    </div>
+                                )}
                             </NavLink>
                         ))}
                     </nav>
 
                     {/* Logout moved here - directly after Nav */}
-                    <div className="pt-4 border-t border-white/5 mt-2">
-                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all group">
+                    <div className="pt-4 border-t border-slate-800/40 mt-2">
+                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all group font-black uppercase text-[12px]">
                             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
-                            {sidebarOpen && <span className="text-[13px] font-black">Logout Session</span>}
+                            {sidebarOpen && <span className="truncate">Logout Session</span>}
                         </button>
                     </div>
                 </div>

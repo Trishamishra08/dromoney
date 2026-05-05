@@ -8,7 +8,7 @@ import logoImg from '../../../assets/WhatsApp_Image_2026-04-28_at_10.52.49_PM-re
 const Register = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const { register } = useUser();
+    const { register, sendRegisterOtp } = useUser();
     
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({ 
@@ -21,26 +21,31 @@ const Register = () => {
     const [otp, setOtp] = useState('');
     const [error, setError] = useState('');
 
-    const handleSendOTP = (e) => {
+    const handleSendOTP = async (e) => {
         e.preventDefault();
         if (!formData.name || !formData.email || formData.phone.length < 10) return;
+        setError('');
         setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
+        const result = await sendRegisterOtp(formData.phone, formData.email);
+        setLoading(false);
+        if (result.success) {
             setStep(2);
-        }, 1200);
+        } else {
+            setError(result.error);
+        }
     };
 
     const handleVerifyOTP = async (e) => {
         e.preventDefault();
-        if (otp.length < 4) return;
+        if (otp.length < 6) return;
         
         setLoading(true);
         const result = await register({
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            referralCode: formData.referral
+            referralCode: formData.referral,
+            otp: otp
         });
         setLoading(false);
 
@@ -174,15 +179,14 @@ const Register = () => {
                                     <ShieldCheck size={28} className="text-emerald-500" />
                                 </div>
                                 <h3 className="text-lg font-bold text-[#0f1d3a]">Verify OTP</h3>
-                                <p className="text-[10px] text-sky-500 font-bold mt-1 tracking-widest uppercase">Dev Code: 1234</p>
                             </div>
 
                             <div className="relative group max-w-[200px] mx-auto">
                                 <input
                                     type="text"
-                                    placeholder="0000"
+                                    placeholder="000000"
                                     value={otp}
-                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                     className="w-full bg-slate-50 text-[#0f1d3a] font-medium px-5 py-3.5 rounded-3xl border border-slate-100 focus:bg-white transition-all text-center tracking-[0.8em] text-[18px] placeholder:text-slate-200 placeholder:tracking-normal shadow-sm"
                                     required
                                 />
@@ -191,7 +195,7 @@ const Register = () => {
 
                             <button
                                 type="submit"
-                                disabled={loading || otp.length < 4}
+                                disabled={loading || otp.length < 6}
                                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-full font-bold text-[14px] transition-all shadow-xl shadow-emerald-50 active:scale-[0.98] flex items-center justify-center gap-2 mt-2"
                             >
                                 {loading ? <Loader2 size={18} className="animate-spin" /> : 'Confirm Register'}

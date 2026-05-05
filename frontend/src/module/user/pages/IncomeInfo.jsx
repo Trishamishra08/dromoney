@@ -100,35 +100,35 @@ const IncomeInfo = () => {
                 
                 {/* 1. REFERRAL SYSTEM - Emerald Theme */}
                 <section id="refer" className="scroll-mt-24">
-                    <div className="bg-white rounded-[28px] p-6 shadow-xl shadow-emerald-900/5 relative overflow-hidden group border border-emerald-50">
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-50/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-100/40 transition-colors duration-700"></div>
+                    <div className="bg-white rounded-2xl p-6 shadow-xl shadow-indigo-900/5 relative overflow-hidden group border border-slate-100">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-[#E2D4FD]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 transition-colors duration-700"></div>
                         
                         <div className="flex items-start justify-between mb-6 relative z-10">
                             <div>
-                                <h3 className="text-[22px] font-black text-slate-800 tracking-tighter leading-none mb-2">Referral System</h3>
-                                <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-emerald-100">
+                                <h3 className="text-[20px] font-black text-slate-900 tracking-tight leading-none mb-2 uppercase">Referral System</h3>
+                                <span className="inline-block px-3 py-1 bg-[#E2D4FD]/40 text-[#6610F2] text-[8px] font-black uppercase tracking-widest rounded-lg border border-[#D4B8F9]/30">
                                     {sections.menu_layout_refer.headline || 'EARN ₹200 REWARD'}
                                 </span>
                             </div>
-                            <div className="w-12 h-12 bg-emerald-600 rounded-[18px] flex items-center justify-center text-white shadow-lg shadow-emerald-200 group-hover:scale-105 transition-transform duration-500">
+                            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-[#6610F2] shadow-sm border border-slate-100 group-hover:scale-110 transition-transform duration-500">
                                 <Share2 size={24} strokeWidth={2.5} />
                             </div>
                         </div>
 
-                        <div className="space-y-5 relative z-10">
-                            <div className="space-y-4">
+                        <div className="space-y-4 relative z-10">
+                            <div className="space-y-3">
                                 {(sections.menu_layout_refer.steps.length > 0 ? sections.menu_layout_refer.steps : [
                                     { title: "Share Your Link", desc: "Share your link with friends to start earning." },
                                     { title: "Earn ₹200 Instant", desc: "Get ₹200 instant reward for every registration." },
                                     { title: "Direct Wallet Credit", desc: "Rewards credited directly to your wallet." }
                                 ]).map((step, i) => (
-                                    <div key={i} className="flex gap-4 group/step">
-                                        <div className="w-7 h-7 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 font-black text-[11px] border border-slate-100 shrink-0 group-hover/step:bg-emerald-600 group-hover/step:text-white transition-all duration-300">
+                                    <div key={i} className="flex gap-4 group/step items-center">
+                                        <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-[#6610F2] font-black text-[11px] border border-slate-100 shrink-0 group-hover/step:bg-[#6610F2] group-hover/step:text-white transition-all duration-300 shadow-sm">
                                             {i + 1}
                                         </div>
                                         <div>
-                                            <h4 className="text-[14px] font-bold text-slate-800 leading-none mb-1">{step.title}</h4>
-                                            <p className="text-[12px] font-medium text-slate-500 leading-tight italic">{step.desc}</p>
+                                            <h4 className="text-[14px] font-black text-slate-800 leading-none mb-1 uppercase tracking-tight">{step.title}</h4>
+                                            <p className="text-[11px] font-bold text-slate-500 leading-tight italic">{step.desc}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -136,9 +136,9 @@ const IncomeInfo = () => {
                             
                             <button 
                                 onClick={() => handleProtectedAction('/user/marketing')}
-                                className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-[20px] text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-emerald-100 active:scale-95 transition-all flex items-center justify-center gap-3"
+                                className="w-full mt-2 bg-slate-900 hover:bg-black text-white font-black py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-900/10 active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
-                                Get Referral Link <ArrowRight size={16} strokeWidth={3} />
+                                Get Referral Link <ArrowRight size={14} strokeWidth={3} />
                             </button>
                         </div>
                     </div>
@@ -146,35 +146,35 @@ const IncomeInfo = () => {
 
                 {/* 2. DAILY TASKS - Emerald Theme */}
                 <section id="task" className="scroll-mt-24">
-                    <div className="bg-white rounded-[28px] p-6 shadow-xl shadow-slate-900/5 relative overflow-hidden group border border-slate-100">
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-slate-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="bg-white rounded-2xl p-6 shadow-xl shadow-amber-900/5 relative overflow-hidden group border border-slate-100">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-[#FDF2D0]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                         
                         <div className="flex items-start justify-between mb-6 relative z-10">
                             <div>
-                                <h3 className="text-[22px] font-black text-slate-800 tracking-tighter leading-none mb-2">Daily Tasks</h3>
-                                <span className="inline-block px-3 py-1 bg-slate-50 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg border border-slate-100">
+                                <h3 className="text-[20px] font-black text-slate-900 tracking-tight leading-none mb-2 uppercase">Daily Tasks</h3>
+                                <span className="inline-block px-3 py-1 bg-[#FDF2D0]/40 text-[#856404] text-[8px] font-black uppercase tracking-widest rounded-lg border border-[#F9E9B8]/30">
                                     {sections.menu_layout_tasks.headline || 'COLLECT REWARD COINS'}
                                 </span>
                             </div>
-                            <div className="w-12 h-12 bg-slate-800 rounded-[18px] flex items-center justify-center text-white shadow-lg shadow-slate-200 group-hover:scale-105 transition-transform duration-500">
+                            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-[#856404] shadow-sm border border-slate-100 group-hover:scale-110 transition-transform duration-500">
                                 <CheckSquare size={24} strokeWidth={2.5} />
                             </div>
                         </div>
 
-                        <div className="space-y-5 relative z-10">
-                            <div className="space-y-4">
+                        <div className="space-y-4 relative z-10">
+                            <div className="space-y-3">
                                 {(sections.menu_layout_tasks.steps.length > 0 ? sections.menu_layout_tasks.steps : [
                                     { title: "Complete Tasks", desc: "Complete daily simple tasks to earn reward coins." },
                                     { title: "Redeem for Cash", desc: "Convert your earned coins into real cash balance." },
                                     { title: "3X Booster Benefit", desc: "Activate Booster to multiply your earnings up to 300%." }
                                 ]).map((step, i) => (
-                                    <div key={i} className="flex gap-4 group/step">
-                                        <div className="w-7 h-7 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 font-black text-[11px] border border-slate-100 shrink-0 group-hover/step:bg-slate-800 group-hover/step:text-white transition-all duration-300">
+                                    <div key={i} className="flex gap-4 group/step items-center">
+                                        <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-[#856404] font-black text-[11px] border border-slate-100 shrink-0 group-hover/step:bg-[#856404] group-hover/step:text-white transition-all duration-300 shadow-sm">
                                             {i + 1}
                                         </div>
                                         <div>
-                                            <h4 className="text-[14px] font-bold text-slate-800 leading-none mb-1">{step.title}</h4>
-                                            <p className="text-[12px] font-medium text-slate-500 leading-tight italic">{step.desc}</p>
+                                            <h4 className="text-[14px] font-black text-slate-800 leading-none mb-1 uppercase tracking-tight">{step.title}</h4>
+                                            <p className="text-[11px] font-bold text-slate-500 leading-tight italic">{step.desc}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -182,9 +182,9 @@ const IncomeInfo = () => {
                             
                             <button 
                                 onClick={() => handleProtectedAction('/user/earn')}
-                                className="w-full mt-2 bg-slate-800 hover:bg-slate-900 text-white font-black py-4 rounded-[20px] text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-slate-100 active:scale-95 transition-all flex items-center justify-center gap-3"
+                                className="w-full mt-2 bg-slate-900 hover:bg-black text-white font-black py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-amber-900/10 active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
-                                View Tasks <Zap size={16} fill="currentColor" />
+                                View Tasks <Zap size={14} fill="currentColor" />
                             </button>
                         </div>
                     </div>
@@ -192,35 +192,35 @@ const IncomeInfo = () => {
 
                 {/* 3. FUTURE FUND */}
                 <section id="fund" className="scroll-mt-24">
-                    <div className="bg-white rounded-[28px] p-6 shadow-xl shadow-indigo-900/5 relative overflow-hidden group border border-indigo-50">
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-50/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="bg-white rounded-2xl p-6 shadow-xl shadow-indigo-900/5 relative overflow-hidden group border border-slate-100">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-[#CFE2FD]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                         
                         <div className="flex items-start justify-between mb-6 relative z-10">
                             <div>
-                                <h3 className="text-[22px] font-black text-slate-800 tracking-tighter leading-none mb-2">Future Fund</h3>
-                                <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-indigo-100">
+                                <h3 className="text-[20px] font-black text-slate-900 tracking-tight leading-none mb-2 uppercase">Future Fund</h3>
+                                <span className="inline-block px-3 py-1 bg-[#CFE2FD]/40 text-[#084298] text-[8px] font-black uppercase tracking-widest rounded-lg border border-[#B8D5F9]/30">
                                     {sections.menu_layout_fund.headline || 'PASSIVE INCOME SECURITY'}
                                 </span>
                             </div>
-                            <div className="w-12 h-12 bg-indigo-600 rounded-[18px] flex items-center justify-center text-white shadow-lg shadow-indigo-200 group-hover:scale-105 transition-transform duration-500">
+                            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-[#084298] shadow-sm border border-slate-100 group-hover:scale-110 transition-transform duration-500">
                                 <TrendingUp size={24} strokeWidth={2.5} />
                             </div>
                         </div>
 
-                        <div className="space-y-5 relative z-10">
-                            <div className="space-y-4">
+                        <div className="space-y-4 relative z-10">
+                            <div className="space-y-3">
                                 {(sections.menu_layout_fund.steps.length > 0 ? sections.menu_layout_fund.steps : [
                                     { title: "Platform Stake", desc: "Get a permanent share in platform profits." },
                                     { title: "Monthly Payouts", desc: "Passive income auto-credited every month." },
                                     { title: "Growth Scalability", desc: "Income scales with ecosystem expansion." }
                                 ]).map((step, i) => (
-                                    <div key={i} className="flex gap-4 group/step">
-                                        <div className="w-7 h-7 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 font-black text-[11px] border border-slate-100 shrink-0 group-hover/step:bg-indigo-600 group-hover/step:text-white transition-all duration-300">
+                                    <div key={i} className="flex gap-4 group/step items-center">
+                                        <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-[#084298] font-black text-[11px] border border-slate-100 shrink-0 group-hover/step:bg-[#084298] group-hover/step:text-white transition-all duration-300 shadow-sm">
                                             {i + 1}
                                         </div>
                                         <div>
-                                            <h4 className="text-[14px] font-bold text-slate-800 leading-none mb-1">{step.title}</h4>
-                                            <p className="text-[12px] font-medium text-slate-500 leading-tight italic">{step.desc}</p>
+                                            <h4 className="text-[14px] font-black text-slate-800 leading-none mb-1 uppercase tracking-tight">{step.title}</h4>
+                                            <p className="text-[11px] font-bold text-slate-500 leading-tight italic">{step.desc}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -228,9 +228,9 @@ const IncomeInfo = () => {
                             
                             <button 
                                 onClick={() => handleProtectedAction('/user/future-fund')}
-                                className="w-full mt-2 bg-indigo-900 hover:bg-indigo-950 text-white font-black py-4 rounded-[20px] text-[11px] uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                                className="w-full mt-2 bg-slate-900 hover:bg-black text-white font-black py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-900/10 active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
-                                Check Eligibility <ShieldCheck size={16} />
+                                Check Eligibility <ShieldCheck size={14} />
                             </button>
                         </div>
                     </div>

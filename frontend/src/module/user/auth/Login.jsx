@@ -13,7 +13,6 @@ const Login = () => {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [expectedOtp, setExpectedOtp] = useState('');
 
     const handleSendOtp = async (e) => {
         e.preventDefault();
@@ -22,7 +21,6 @@ const Login = () => {
         const result = await sendLoginOtp(phone);
         setLoading(false);
         if (result.success) {
-            setExpectedOtp(result.dev_otp);
             setStep(2);
         } else {
             setError(result.error);
@@ -33,7 +31,7 @@ const Login = () => {
         e.preventDefault();
         setError('');
         setLoading(true);
-        const result = await verifyLoginOtp(phone, otp, expectedOtp);
+        const result = await verifyLoginOtp(phone, otp);
         setLoading(false);
         if (result.success) {
             navigate('/user/home');
@@ -123,21 +121,20 @@ const Login = () => {
                                 <div className="relative group">
                                     <input
                                         type="text"
-                                        placeholder="0000"
+                                        placeholder="000000"
                                         value={otp}
                                         onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                                        className="w-full bg-slate-50 text-[#0f1d3a] font-medium px-6 py-3.5 rounded-full border border-slate-100 focus:bg-white focus:border-[#0f1d3a]/20 transition-all text-center tracking-[1em] text-[18px] placeholder:text-slate-300 placeholder:tracking-normal"
+                                        className="w-full bg-slate-50 text-[#0f1d3a] font-medium px-6 py-3.5 rounded-full border border-slate-100 focus:bg-white focus:border-[#0f1d3a]/20 transition-all text-center tracking-[0.8em] text-[18px] placeholder:text-slate-300 placeholder:tracking-normal"
                                         required
-                                        maxLength={4}
+                                        maxLength={6}
                                     />
                                     <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
                                 </div>
-                                <p className="text-center text-[10px] font-bold text-sky-500 mt-2 tracking-widest uppercase">Dev Code: 1234</p>
                             </div>
 
                             <button
                                 type="submit"
-                                disabled={otp.length !== 4 || loading}
+                                disabled={otp.length !== 6 || loading}
                                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-full font-bold text-[14px] transition-all shadow-xl shadow-emerald-50 active:scale-[0.98] flex items-center justify-center gap-2"
                             >
                                 {loading ? <Loader2 size={18} className="animate-spin" /> : 'Verify Account'}

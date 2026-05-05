@@ -83,11 +83,11 @@ const Affiliates = () => {
     };
 
     return (
-        <div className="p-6 animate-in fade-in duration-500">
+        <div className="p-4 space-y-5 animate-in fade-in duration-500 bg-[#f9f6f1] min-h-screen pb-20 overflow-x-hidden">
             <PageHeader title="Affiliate Management" subtitle="Monitor referral network and adjust commission rates" />
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
                 <AdminStatCard label="Total Referrals" value={stats.totalReferrals} change="All time joinings" icon={Users} color="bg-indigo-600" />
                 <AdminStatCard label="Reward Payouts" value={`₹${stats.totalPayouts.toLocaleString()}`} change="Verified successful joinings" icon={IndianRupee} color="bg-emerald-500" />
                 <AdminStatCard label="Active Referrers" value={stats.activeReferrersCount} change={`Top: ${stats.topReferrer}`} icon={Award} color="bg-amber-500" />
@@ -95,49 +95,49 @@ const Affiliates = () => {
             </div>
 
             {/* Toolbar with Edit Rate */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex flex-col md:flex-row md:items-center justify-between gap-5">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-sky-50 rounded-2xl text-sky-600 shadow-inner"><Share2 size={24} /></div>
+                    <div className="w-10 h-10 bg-sky-50 rounded-lg text-sky-600 shadow-inner flex items-center justify-center"><Share2 size={18} /></div>
                     <div>
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">Registration Reward</h3>
+                        <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Registration Reward</h3>
                         {editing ? (
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className="font-black text-slate-600">₹</span>
+                            <div className="flex items-center gap-2">
+                                <span className="font-black text-slate-600 text-sm">₹</span>
                                 <input
                                     type="number"
                                     value={tempRate}
                                     onChange={(e) => setTempRate(e.target.value)}
-                                    className="w-20 bg-slate-50 border border-sky-200 rounded-lg px-2 py-1 text-lg font-black text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
+                                    className="w-16 bg-slate-50 border border-sky-200 rounded-lg px-2 py-1 text-sm font-black text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
                                 />
-                                <button onClick={handleUpdateRate} className="bg-sky-500 text-white px-3 py-1.5 rounded-lg font-black text-[10px] uppercase">Save</button>
-                                <button onClick={() => setEditing(false)} className="text-slate-400 text-[10px] font-black uppercase px-1">X</button>
+                                <button onClick={handleUpdateRate} className="bg-sky-500 text-white px-2 py-1 rounded-md font-black text-[9px] uppercase">Save</button>
+                                <button onClick={() => setEditing(false)} className="text-slate-400 text-[9px] font-black uppercase px-1">X</button>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-3">
-                                <p className="text-2xl font-black text-slate-900 leading-none">₹{rate}</p>
-                                <button onClick={() => { setTempRate(rate); setEditing(true); }} className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-lg transition-all" title="Click to change commission">
-                                    <Edit2 size={12} />
+                            <div className="flex items-center gap-2">
+                                <p className="text-lg font-black text-slate-900 leading-none">₹{rate}</p>
+                                <button onClick={() => { setTempRate(rate); setEditing(true); }} className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-md transition-all" title="Click to change commission">
+                                    <Edit2 size={10} />
                                 </button>
                             </div>
                         )}
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-4 flex-1 max-w-2xl">
+                <div className="flex flex-col sm:flex-row items-center gap-3 flex-1 max-w-2xl">
                     <div className="relative flex-1 w-full">
                         <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input type="text" value={search} onChange={handleSearch} placeholder="Search referrers..." className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-11 pr-4 py-3.5 text-[12px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500 transition-all shadow-inner" />
+                        <input type="text" value={search} onChange={handleSearch} placeholder="Search referrers..." className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-11 pr-4 py-2.5 text-[11px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500 transition-all shadow-inner" />
                     </div>
-                    <div className="flex gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100 shadow-inner">
+                    <div className="flex gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-100 shadow-inner">
                         {['All', 'Credited', 'Pending'].map(t => (
-                            <button key={t} onClick={() => { setFilter(t); setCurrentPage(1); }} className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === t ? 'bg-[#0F172A] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>{t}</button>
+                            <button key={t} onClick={() => { setFilter(t); setCurrentPage(1); }} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filter === t ? 'bg-[#0F172A] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>{t}</button>
                         ))}
                     </div>
                 </div>
             </div>
 
             {/* Simple Table */}
-            <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden mb-6">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
                 <div className="overflow-x-auto scrollbar-hide">
                     <table className="w-full text-sm">
                         <thead>

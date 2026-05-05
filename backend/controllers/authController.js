@@ -2,15 +2,36 @@ const User = require('../models/User');
 const ReferralTransaction = require('../models/ReferralTransaction');
 const Transaction = require('../models/Transaction');
 const Settings = require('../models/Settings');
+const Otp = require('../models/Otp');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
+const { sendOtpSMS } = require('../utils/smsService');
 
 // @desc    Register user
 // @route   POST /api/user/auth/register
 // @access  Public
 exports.register = async (req, res, next) => {
     try {
-        const { name, email, password, phone, referralCode } = req.body;
+        const { name, email, password, phone, referralCode, otp } = req.body;
+
+        if (!phone || !otp) {
+            return next(new ErrorResponse('Please provide phone and OTP', 400));
+        }
+
+        // Verify OTP from database
+        const otpRecord = await Otp.findOne({ phone, code: otp });
+        if (!otpRecord && otp !== '123456') { // Master OTP fallback
+            return next(new ErrorResponse('Invalid or expired OTP', 401));
+        }
+
+        // Delete OTP after verification
+        if (otpRecord) await Otp.deleteOne({ _id: otpRecord._id });
+
+        // Check if user already exists
+        const userExists = await User.findOne({ $or: [{ email }, { phone }] });
+        if (userExists) {
+            return next(new ErrorResponse('Email or Phone already registered', 400));
+        }
 
         // Check if referral code is valid and find referrer
         let referredBy = null;
@@ -23,14 +44,11 @@ exports.register = async (req, res, next) => {
                 const settings = await Settings.findOne() || { referralCommission: 200 };
                 const commission = settings.referralCommission;
 
-                // Create the user first to get their ID, but we do that below. 
-                // Let's hold the referrer object to update after user creation.
                 req.referrer = referrer;
                 req.commission = commission;
             }
         }
 
-        // Use a default password if none provided (since frontend removed it)
         const userPassword = password || '123456';
 
         // Create user
@@ -47,13 +65,11 @@ exports.register = async (req, res, next) => {
             const referrer = req.referrer;
             const commission = req.commission;
 
-            // Update referrer wallet and count
             referrer.wallet.balance += commission;
             referrer.wallet.referralEarnings += commission;
             referrer.referralCount += 1;
             await referrer.save();
 
-            // Create Referral Transaction (for Admin logs)
             await ReferralTransaction.create({
                 referrer: referrer._id,
                 referredUser: user._id,
@@ -61,7 +77,6 @@ exports.register = async (req, res, next) => {
                 status: 'Completed'
             });
 
-            // Create General Transaction (for User history)
             await Transaction.create({
                 user: referrer._id,
                 type: 'credit',
@@ -73,6 +88,41 @@ exports.register = async (req, res, next) => {
         }
 
         sendTokenResponse(user, 201, res);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// @desc    Send OTP for Registration
+// @route   POST /api/user/auth/send-otp-register
+// @access  Public
+exports.sendRegisterOtp = async (req, res, next) => {
+    try {
+        const { phone, email } = req.body;
+
+        if (!phone) {
+            return next(new ErrorResponse('Please provide a phone number', 400));
+        }
+
+        // Check if phone or email already registered
+        const userExists = await User.findOne({ $or: [{ phone }, { email }] });
+        if (userExists) {
+            return next(new ErrorResponse('Phone or Email already registered', 400));
+        }
+
+        // Generate a 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Save to DB
+        await Otp.create({ phone, code: otp });
+
+        // Send via SMSINDIAHUB
+        await sendOtpSMS(phone, otp);
+
+        res.status(200).json({
+            success: true,
+            message: 'OTP sent successfully'
+        });
     } catch (err) {
         next(err);
     }
@@ -95,16 +145,18 @@ exports.sendLoginOtp = async (req, res, next) => {
             return next(new ErrorResponse('No account found with this phone number. Please register.', 404));
         }
 
-        // Generate a 4-digit mock OTP (In production, replace with real SMS gateway)
-        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        // Generate a 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Mock sending via saving locally or just return it in response for dev
-        console.log(`[OTP] Generated for ${phone}: ${otp}`);
+        // Save to DB
+        await Otp.create({ phone, code: otp });
+
+        // Send via SMSINDIAHUB
+        await sendOtpSMS(phone, otp);
 
         res.status(200).json({
             success: true,
-            message: 'OTP sent successfully',
-            dev_otp: otp // Added for easier testing in dev environment
+            message: 'OTP sent successfully'
         });
     } catch (err) {
         next(err);
@@ -116,17 +168,21 @@ exports.sendLoginOtp = async (req, res, next) => {
 // @access  Public
 exports.verifyLoginOtp = async (req, res, next) => {
     try {
-        const { phone, otp, expectedOtp } = req.body;
+        const { phone, otp } = req.body;
 
         if (!phone || !otp) {
             return next(new ErrorResponse('Please provide phone and OTP', 400));
         }
 
-        // Verify OTP - in production this would verify against a DB/Redis cache or SMS service.
-        // For development, we match the provided OTP with the dev_otp passed from the frontend.
-        if (otp !== expectedOtp && otp !== '1234') { // Fallback '1234' for master OTP
-             return next(new ErrorResponse('Invalid OTP', 401));
+        // Verify OTP from database
+        const otpRecord = await Otp.findOne({ phone, code: otp });
+        
+        if (!otpRecord && otp !== '123456') { // Master OTP fallback
+             return next(new ErrorResponse('Invalid or expired OTP', 401));
         }
+
+        // Delete OTP after verification
+        if (otpRecord) await Otp.deleteOne({ _id: otpRecord._id });
 
         const user = await User.findOne({ phone });
 

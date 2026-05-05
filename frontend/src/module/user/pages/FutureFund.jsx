@@ -187,84 +187,72 @@ const FutureFund = () => {
                     <div className="grid grid-cols-1 gap-3">
                         {/* 1. Successful Sales */}
                         <div 
-                            className="relative bg-gradient-to-br from-emerald-50 to-teal-100 p-4 shadow-lg shadow-emerald-100/50 border border-white active:scale-[0.98] transition-all overflow-hidden flex flex-col"
-                            style={{ borderRadius: '2rem' }}
+                            className="relative bg-white p-5 shadow-lg shadow-slate-900/5 border border-slate-100 active:scale-[0.98] transition-all overflow-hidden flex flex-col group rounded-2xl"
                         >
-                            <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/30 rounded-full blur-2xl"></div>
-                            <div className="flex justify-between items-start mb-3 relative z-10">
-                                <div className="flex gap-1.5">
-                                    <div className="w-8 h-8 bg-white/60 backdrop-blur-md rounded-lg flex items-center justify-center border border-white shadow-sm">
-                                        <CheckCircle2 size={16} className="text-emerald-600" />
-                                    </div>
-                                    <div className="w-8 h-8 bg-white/40 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/50">
-                                        <Zap size={14} className="text-slate-400" />
+                            <div className="absolute -right-6 -top-6 w-20 h-20 bg-emerald-50 rounded-full blur-2xl opacity-50"></div>
+                            <div className="flex justify-between items-start mb-4 relative z-10">
+                                <div className="flex gap-2">
+                                    <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center border border-emerald-100 shadow-sm group-hover:scale-110 transition-transform">
+                                        <CheckCircle2 size={18} className="text-emerald-600" />
                                     </div>
                                 </div>
-                                <div className="bg-emerald-600/10 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                                    <span className="text-[11px] font-black text-emerald-700">{salesCriterion.current}/{salesCriterion.target}</span>
+                                <div className="bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100">
+                                    <span className="text-[11px] font-black text-slate-700">{salesCriterion.current}/{salesCriterion.target}</span>
                                 </div>
                             </div>
                             <div className="relative z-10 flex-1">
-                                <h4 className="text-[15px] font-black text-slate-800 tracking-tight leading-none mb-1">Successful Sales</h4>
-                                <p className="text-[10px] font-bold text-slate-500 leading-tight tracking-tight uppercase">Target Milestone</p>
+                                <h4 className="text-[15px] font-black text-slate-900 tracking-tight leading-none mb-1 uppercase">Successful Sales</h4>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Target Milestone</p>
                             </div>
-                            <div className="w-full h-1 bg-white/50 rounded-full mt-3 overflow-hidden relative">
+                            <div className="w-full h-1 bg-slate-100 rounded-full mt-4 overflow-hidden relative">
                                 <div className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-1000" style={{ width: `${Math.min((salesCriterion.current / salesCriterion.target) * 100, 100)}%` }}></div>
                             </div>
                         </div>
 
                         {/* 2. Daily Activity */}
                         <div 
-                            className="relative bg-gradient-to-br from-amber-50 to-orange-100 p-4 shadow-lg shadow-amber-100/50 border border-white active:scale-[0.98] transition-all overflow-hidden flex flex-col"
-                            style={{ borderRadius: '2rem' }}
+                            className="relative bg-white p-5 shadow-lg shadow-slate-900/5 border border-slate-100 active:scale-[0.98] transition-all overflow-hidden flex flex-col group rounded-2xl"
                         >
-                            <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/30 rounded-full blur-2xl"></div>
-                            <div className="flex justify-between items-start mb-3 relative z-10">
-                                <div className="flex gap-1.5">
-                                    <div className="w-8 h-8 bg-white/60 backdrop-blur-md rounded-lg flex items-center justify-center border border-white shadow-sm">
-                                        <Timer size={16} className="text-amber-600" />
-                                    </div>
-                                    <div className="w-8 h-8 bg-white/40 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/50">
-                                        <Sparkles size={14} className="text-amber-400" />
+                            <div className="absolute -right-6 -top-6 w-20 h-20 bg-amber-50 rounded-full blur-2xl opacity-50"></div>
+                            <div className="flex justify-between items-start mb-4 relative z-10">
+                                <div className="flex gap-2">
+                                    <div className="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center border border-amber-100 shadow-sm group-hover:scale-110 transition-transform">
+                                        <Timer size={18} className="text-amber-600" />
                                     </div>
                                 </div>
-                                <div className="bg-amber-600/10 px-2.5 py-0.5 rounded-full border border-amber-200">
-                                    <span className="text-[11px] font-black text-amber-700">{activityCriterion.current}m/{activityCriterion.target}m</span>
+                                <div className="bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100">
+                                    <span className="text-[11px] font-black text-slate-700">{activityCriterion.current}m/{activityCriterion.target}m</span>
                                 </div>
                             </div>
                             <div className="relative z-10 flex-1">
-                                <h4 className="text-[15px] font-black text-slate-800 tracking-tight leading-none mb-1">Daily Activity</h4>
-                                <p className="text-[10px] font-bold text-slate-500 leading-tight tracking-tight uppercase">Time Tracker</p>
+                                <h4 className="text-[15px] font-black text-slate-900 tracking-tight leading-none mb-1 uppercase">Daily Activity</h4>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Time Tracker</p>
                             </div>
-                            <div className="w-full h-1 bg-white/50 rounded-full mt-3 overflow-hidden">
+                            <div className="w-full h-1 bg-slate-100 rounded-full mt-4 overflow-hidden relative">
                                 <div className="h-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)] transition-all duration-1000" style={{ width: `${Math.min((activityCriterion.current / activityCriterion.target) * 100, 100)}%` }}></div>
                             </div>
                         </div>
 
                         {/* 3. Active Days */}
                         <div 
-                            className="relative bg-gradient-to-br from-blue-50 to-indigo-100 p-4 shadow-lg shadow-blue-100/50 border border-white active:scale-[0.98] transition-all overflow-hidden flex flex-col"
-                            style={{ borderRadius: '2rem' }}
+                            className="relative bg-white p-5 shadow-lg shadow-slate-900/5 border border-slate-100 active:scale-[0.98] transition-all overflow-hidden flex flex-col group rounded-2xl"
                         >
-                            <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/30 rounded-full blur-2xl"></div>
-                            <div className="flex justify-between items-start mb-3 relative z-10">
-                                <div className="flex gap-1.5">
-                                    <div className="w-8 h-8 bg-white/60 backdrop-blur-md rounded-lg flex items-center justify-center border border-white shadow-sm">
-                                        <Calendar size={16} className="text-blue-600" />
-                                    </div>
-                                    <div className="w-8 h-8 bg-white/40 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/50">
-                                        <Zap size={14} className="text-slate-400" />
+                            <div className="absolute -right-6 -top-6 w-20 h-20 bg-blue-50 rounded-full blur-2xl opacity-50"></div>
+                            <div className="flex justify-between items-start mb-4 relative z-10">
+                                <div className="flex gap-2">
+                                    <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center border border-blue-100 shadow-sm group-hover:scale-110 transition-transform">
+                                        <Calendar size={18} className="text-blue-600" />
                                     </div>
                                 </div>
-                                <div className="bg-blue-600/10 px-2.5 py-0.5 rounded-full border border-blue-200">
-                                    <span className="text-[11px] font-black text-blue-700">{daysCriterion.current}/{daysCriterion.target}</span>
+                                <div className="bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100">
+                                    <span className="text-[11px] font-black text-slate-700">{daysCriterion.current}/{daysCriterion.target}</span>
                                 </div>
                             </div>
                             <div className="relative z-10 flex-1">
-                                <h4 className="text-[15px] font-black text-slate-800 tracking-tight leading-none mb-1">Active Days</h4>
-                                <p className="text-[10px] font-bold text-slate-500 leading-tight tracking-tight uppercase">Continuity Goal</p>
+                                <h4 className="text-[15px] font-black text-slate-900 tracking-tight leading-none mb-1 uppercase">Active Days</h4>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Continuity Goal</p>
                             </div>
-                            <div className="w-full h-1 bg-white/50 rounded-full mt-3 overflow-hidden">
+                            <div className="w-full h-1 bg-slate-100 rounded-full mt-4 overflow-hidden relative">
                                 <div className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)] transition-all duration-1000" style={{ width: `${Math.min((daysCriterion.current / daysCriterion.target) * 100, 100)}%` }}></div>
                             </div>
                         </div>
