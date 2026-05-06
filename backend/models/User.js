@@ -85,6 +85,7 @@ const UserSchema = new mongoose.Schema({
     },
     // Future Fund Progress
     futureFund: {
+        status: { type: String, enum: ['locked', 'active'], default: 'locked' },
         progress: { type: Number, default: 0 },
         criteria: [{
             id: Number,

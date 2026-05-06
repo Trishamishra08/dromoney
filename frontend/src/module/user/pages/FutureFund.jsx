@@ -8,7 +8,7 @@ const FutureFund = () => {
     const navigate = useNavigate();
     const { userData, addNotification } = useUser();
     const { futureFund } = userData;
-    const [viewState, setViewState] = React.useState('initial'); // initial, eligible, active
+    const [viewState, setViewState] = React.useState(futureFund.status === 'active' ? 'active' : 'initial'); // initial, eligible, active
 
     React.useEffect(() => {
         const timer = setTimeout(() => {
@@ -19,6 +19,23 @@ const FutureFund = () => {
         }, 10000);
         return () => clearTimeout(timer);
     }, [viewState]);
+
+    const salesCriterion = futureFund.criteria?.find(c => c.id === 1) || { current: 0, target: 10 };
+    const activityCriterion = futureFund.criteria?.find(c => c.id === 2) || { current: 0, target: 15 };
+    const daysCriterion = futureFund.criteria?.find(c => c.id === 3) || { current: 0, target: 7 };
+
+    React.useEffect(() => {
+        // Activity tracking (Simulation: update every 1 minute of being on this page)
+        const interval = setInterval(async () => {
+            try {
+                await api.post('/user/data/future-fund/progress', { type: 'activity', value: 1 });
+            } catch (err) {
+                console.error("Activity Update Error:", err);
+            }
+        }, 60000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     if (viewState === 'active') {
         return (
@@ -75,8 +92,8 @@ const FutureFund = () => {
                     {/* Total Future Fund */}
                     <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex justify-between items-center">
                         <div>
-                           <h4 className="text-[13px] font-black text-slate-800 uppercase tracking-widest mb-1">Total Future Fund</h4>
-                           <p className="text-[10px] font-bold text-slate-400">यह amount platform performance के हिसाब से रोज add होता है</p>
+                            <h4 className="text-[13px] font-black text-slate-800 uppercase tracking-widest mb-1">Total Future Fund</h4>
+                            <p className="text-[10px] font-bold text-slate-400">यह amount platform performance के हिसाब से रोज add होता है</p>
                         </div>
                         <h2 className="text-xl font-black text-slate-900 shrink-0">₹ 210</h2>
                     </div>
@@ -101,24 +118,6 @@ const FutureFund = () => {
         );
     }
 
-    const salesCriterion = futureFund.criteria?.find(c => c.id === 1) || { current: 0, target: 10 };
-    const activityCriterion = futureFund.criteria?.find(c => c.id === 2) || { current: 0, target: 15 };
-    const daysCriterion = futureFund.criteria?.find(c => c.id === 3) || { current: 0, target: 7 };
-
-    React.useEffect(() => {
-        // Activity tracking (Simulation: update every 1 minute of being on this page)
-        const interval = setInterval(async () => {
-            try {
-                await api.post('/user/data/future-fund/progress', { type: 'activity', value: 1 });
-                // We should refresh profile to get new data, but for now we rely on the next refresh
-            } catch (err) {
-                console.error("Activity Update Error:", err);
-            }
-        }, 60000); 
-
-        return () => clearInterval(interval);
-    }, []);
-
     return (
         <div className="flex flex-col min-h-screen bg-slate-50 relative overflow-hidden animate-in slide-in-from-right duration-500 pb-6">
             {/* Background Decorative Elements */}
@@ -131,7 +130,7 @@ const FutureFund = () => {
                 {/* Full Width Hero Card */}
                 <div className="w-full bg-gradient-to-br from-purple-700 via-purple-600 to-indigo-500 rounded-b-[2.5rem] p-4 pb-7 text-white relative overflow-hidden shadow-2xl">
                     {/* Back Button Integrated */}
-                    <button 
+                    <button
                         onClick={() => {
                             if (window.history.length > 1) {
                                 navigate(-1);
@@ -154,14 +153,14 @@ const FutureFund = () => {
                                 <p className="text-[7px] font-bold text-white/60 uppercase tracking-widest mt-0.5">Eligibility Program</p>
                             </div>
                         </div>
-                        
+
                         <div className="w-full max-w-[280px] bg-white/10 backdrop-blur-md rounded-sm px-3 py-2 border border-white/10 mx-auto">
                             <div className="flex justify-between items-center mb-1.5">
                                 <span className="text-[7px] font-black uppercase tracking-widest text-white/80">Progress</span>
                                 <span className="text-[11px] font-black">{futureFund.progress || 0}%</span>
                             </div>
                             <div className="w-full h-1 bg-white/20 overflow-hidden">
-                                <div 
+                                <div
                                     className="h-full bg-white transition-all duration-1000 shadow-[0_0_8px_rgba(255,255,255,0.6)]"
                                     style={{ width: `${futureFund.progress || 0}%` }}
                                 ></div>
@@ -186,7 +185,7 @@ const FutureFund = () => {
                     {/* Eligibility Criteria Cards */}
                     <div className="grid grid-cols-1 gap-3">
                         {/* 1. Successful Sales */}
-                        <div 
+                        <div
                             className="relative bg-white p-5 shadow-lg shadow-slate-900/5 border border-slate-100 active:scale-[0.98] transition-all overflow-hidden flex flex-col group rounded-2xl"
                         >
                             <div className="absolute -right-6 -top-6 w-20 h-20 bg-emerald-50 rounded-full blur-2xl opacity-50"></div>
@@ -210,7 +209,7 @@ const FutureFund = () => {
                         </div>
 
                         {/* 2. Daily Activity */}
-                        <div 
+                        <div
                             className="relative bg-white p-5 shadow-lg shadow-slate-900/5 border border-slate-100 active:scale-[0.98] transition-all overflow-hidden flex flex-col group rounded-2xl"
                         >
                             <div className="absolute -right-6 -top-6 w-20 h-20 bg-amber-50 rounded-full blur-2xl opacity-50"></div>
@@ -234,7 +233,7 @@ const FutureFund = () => {
                         </div>
 
                         {/* 3. Active Days */}
-                        <div 
+                        <div
                             className="relative bg-white p-5 shadow-lg shadow-slate-900/5 border border-slate-100 active:scale-[0.98] transition-all overflow-hidden flex flex-col group rounded-2xl"
                         >
                             <div className="absolute -right-6 -top-6 w-20 h-20 bg-blue-50 rounded-full blur-2xl opacity-50"></div>
@@ -258,7 +257,7 @@ const FutureFund = () => {
                         </div>
 
                         {/* Info Box (Compact & Rounded) */}
-                        <div 
+                        <div
                             className="bg-slate-900 text-white p-5 shadow-2xl relative overflow-hidden"
                             style={{ borderRadius: '2rem' }}
                         >
@@ -274,7 +273,7 @@ const FutureFund = () => {
 
                         {/* Action Buttons */}
                         <div className="pt-2 space-y-3">
-                            <button 
+                            <button
                                 onClick={async () => {
                                     if (futureFund.progress < 100) {
                                         addNotification("Incomplete!", "Please complete all criteria to unlock.", "error");
@@ -296,8 +295,8 @@ const FutureFund = () => {
                                 UNLOCK FUTURE FUND
                                 <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                             </button>
-                            
-                            <button 
+
+                            <button
                                 onClick={() => navigate('/user/home')}
                                 className="w-full bg-white text-slate-500 font-black py-3.5 text-[11px] active:scale-[0.98] transition-all tracking-[0.2em] uppercase border border-slate-200 shadow-sm"
                             >

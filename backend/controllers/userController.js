@@ -285,12 +285,12 @@ exports.unlockFutureFund = asyncHandler(async (req, res, next) => {
     }
 
     // Mark as unlocked/active
-    // You could add a status field to the model if needed, but for now we just return success
-    // user.futureFund.status = 'active'; 
-    // await user.save();
+    user.futureFund.status = 'active'; 
+    await user.save();
 
     res.status(200).json({
         success: true,
-        message: 'Future Fund unlocked'
+        message: 'Future Fund unlocked',
+        status: user.futureFund.status
     });
 });

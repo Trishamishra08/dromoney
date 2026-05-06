@@ -17,7 +17,7 @@ const INITIAL_USER_STATE = {
     wallet: { balance: 0, transactions: [] },
     kycStatus: 'Not Started',
     profileImage: '',
-    futureFund: { progress: 0, criteria: [] },
+    futureFund: { status: 'locked', progress: 0, criteria: [] },
     isBoosterActive: false
 };
 
@@ -128,6 +128,7 @@ export const UserProvider = ({ children }) => {
             kycRejectionReason: dbUser.kyc?.rejectionReason || '',
             profileImage: dbUser.profileImage || '',
             futureFund: {
+                status: dbUser.futureFund?.status || 'locked',
                 progress: dbUser.futureFund?.progress || 0,
                 criteria: dbUser.futureFund?.criteria || []
             }
