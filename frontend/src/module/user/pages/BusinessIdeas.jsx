@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
-import { 
-    Briefcase, ChevronLeft, Sparkles, Star, 
+import {
+    Briefcase, ChevronLeft, Sparkles, Star,
     Gift, ArrowRight, CheckCircle2, TrendingUp,
-    Rocket, Zap, Lock, Trophy, Shield, 
+    Rocket, Zap, Lock, Trophy, Shield,
     Users, ClipboardList, CreditCard, Copy,
-    ExternalLink, Loader2
+    ExternalLink, Loader2, MessageSquare, ChevronRight
 } from 'lucide-react';
 import api from '../../shared/services/api';
 import PaymentModal from '../components/PaymentModal';
@@ -14,7 +14,7 @@ import PaymentModal from '../components/PaymentModal';
 // Icon Map for dynamic rendering - using only confirmed working icons
 const ICON_MAP = {
     TrendingUp, Rocket, Zap, Trophy,
-    Sparkles, Gift, Shield, Users, 
+    Sparkles, Gift, Shield, Users,
     Briefcase, ClipboardList, CreditCard
 };
 
@@ -70,10 +70,10 @@ const BusinessIdeas = () => {
             {/* Header - Ultra Compact Dark Blue */}
             <div className="bg-gradient-to-br from-slate-950 via-blue-900 to-slate-900 p-4 rounded-b-[1.5rem] shadow-lg sticky top-[57px] z-40 relative overflow-hidden">
                 <div className="absolute -right-10 -top-10 w-24 h-24 bg-white/5 rounded-full blur-3xl"></div>
-                
+
                 <div className="flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-3">
-                        <button 
+                        <button
                             onClick={() => navigate('/user/home')}
                             className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 active:scale-95 transition-all"
                         >
@@ -103,10 +103,35 @@ const BusinessIdeas = () => {
                 </div>
             </div>
 
+            <div className="px-3 pt-3">
+                {/* Chat Support Entry Box */}
+                <button 
+                    onClick={() => navigate('/user/chat-support')}
+                    className="w-full bg-indigo-600 rounded-2xl p-4 flex items-center justify-between text-white shadow-lg shadow-indigo-100 active:scale-[0.98] transition-all group overflow-hidden relative"
+                >
+                    <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
+                            <MessageSquare size={24} className="text-white" />
+                        </div>
+                        <div className="text-left">
+                            <h3 className="text-[15px] font-black tracking-tight leading-none mb-1">Continue to Support chat box</h3>
+                            <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest flex items-center gap-1.5 opacity-80">
+                                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                                Talk to our Experts
+                            </p>
+                        </div>
+                    </div>
+                    <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center relative z-10">
+                        <ChevronRight size={20} />
+                    </div>
+                </button>
+            </div>
+
             <div className="p-3 space-y-3">
                 {/* Visual Tab Switcher - Compact Premium */}
                 <div className="bg-slate-200/50 p-1 rounded-2xl flex items-center">
-                    <button 
+                    <button
                         onClick={() => setActiveTab('free')}
                         className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2
                             ${activeTab === 'free' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
@@ -114,7 +139,7 @@ const BusinessIdeas = () => {
                         <Gift size={14} />
                         Free
                     </button>
-                    <button 
+                    <button
                         onClick={() => setActiveTab('premium')}
                         className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2
                             ${activeTab === 'premium' ? 'bg-[#1A1C30] text-white shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}
@@ -140,7 +165,7 @@ const BusinessIdeas = () => {
                                 return (
                                     <div key={idea._id} className={`${theme.bg} border ${theme.border} rounded-2xl p-4 shadow-sm relative overflow-hidden group`}>
                                         <div className={`absolute -right-6 -top-6 w-20 h-20 ${theme.accent} opacity-[0.03] rounded-full`}></div>
-                                        
+
                                         <div className="flex justify-between items-start mb-3 relative z-10">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-12 h-12 ${theme.iconBg} rounded-xl flex items-center justify-center ${theme.text} shadow-inner`}>
@@ -157,13 +182,13 @@ const BusinessIdeas = () => {
                                         </div>
 
                                         <p className="text-[11px] font-bold text-slate-400 mt-1 line-clamp-2 leading-relaxed">{idea.desc}</p>
-                                        
+
                                         <div className="mt-4 flex items-center justify-between bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-white/80 relative z-10">
                                             <div>
                                                 <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">Earning Potential</p>
                                                 <p className={`text-[13px] font-black ${theme.text} tracking-tight`}>{idea.potential}</p>
                                             </div>
-                                            <button 
+                                            <button
                                                 onClick={() => setViewIdea(idea)}
                                                 className={`${theme.accent} text-white p-2.5 rounded-xl shadow-lg ${theme.shadow} active:scale-95 transition-all`}
                                             >
@@ -221,13 +246,13 @@ const BusinessIdeas = () => {
                                             </div>
 
                                             <p className={`text-[11px] font-bold ${theme.subText} mt-1 line-clamp-2 leading-relaxed`}>{idea.desc}</p>
-                                            
+
                                             <div className={`mt-4 flex items-center justify-between rounded-xl p-3 border ${theme.glass} relative z-10`}>
                                                 <div>
                                                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter mb-0.5">Earning Potential</p>
                                                     <p className={`text-[13px] font-black ${idea.isLocked ? 'text-slate-400' : 'text-indigo-500'} tracking-tight`}>{idea.potential}</p>
                                                 </div>
-                                                <button 
+                                                <button
                                                     onClick={() => !idea.isLocked ? setViewIdea(idea) : setShowPayment(idea)}
                                                     className={`${theme.accent} text-white p-2.5 rounded-xl shadow-lg active:scale-95 transition-all`}
                                                 >
@@ -244,7 +269,7 @@ const BusinessIdeas = () => {
             </div>
 
             {/* Razorpay Payment Modal */}
-            <PaymentModal 
+            <PaymentModal
                 isOpen={!!showPayment}
                 onClose={() => setShowPayment(null)}
                 plan={showPayment?.title}
@@ -262,14 +287,14 @@ const BusinessIdeas = () => {
                 <div className="fixed inset-0 z-[100] flex flex-col bg-white animate-in slide-in-from-bottom duration-500">
                     <div className="bg-gradient-to-br from-slate-950 via-blue-900 to-slate-900 p-6 pt-12 relative overflow-hidden text-white shrink-0">
                         <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full blur-[100px]"></div>
-                        
-                        <button 
+
+                        <button
                             onClick={() => setViewIdea(null)}
                             className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10 mb-6 active:scale-95 transition-all relative z-10"
                         >
                             <ChevronLeft size={20} />
                         </button>
-                        
+
                         <div className="relative z-10">
                             <span className="text-[10px] font-black text-blue-300 uppercase tracking-[0.3em] mb-2 block">Strategy Unlocked</span>
                             <h1 className="text-2xl font-black tracking-tight leading-none uppercase">{viewIdea.title}</h1>
@@ -314,7 +339,7 @@ const BusinessIdeas = () => {
                                             <p className="text-[10px] font-bold text-slate-400 truncate max-w-[140px] uppercase tracking-wider">YouTube Tutorial</p>
                                         </div>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             copyToClipboard(viewIdea.youtubeLink);
                                             window.open(viewIdea.youtubeLink, '_blank');
@@ -337,7 +362,7 @@ const BusinessIdeas = () => {
                             </div>
                         </div>
 
-                        <button 
+                        <button
                             onClick={() => setViewIdea(null)}
                             className="w-full bg-slate-900 text-white py-5 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 mt-4 active:scale-95 transition-all"
                         >

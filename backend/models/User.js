@@ -102,7 +102,13 @@ const UserSchema = new mongoose.Schema({
     watchedAds: [{
         type: mongoose.Schema.ObjectId,
         ref: 'Ad'
-    }]
+    }],
+    businessHubFirstAccessedAt: {
+        type: Date
+    },
+    supportExpiry: {
+        type: Date
+    }
 
 }, {
     timestamps: true,
@@ -133,8 +139,8 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 // Generate referral code before saving (Modern Async implementation)
-UserSchema.pre('save', async function() {
-    if(!this.referralCode) {
+UserSchema.pre('save', async function () {
+    if (!this.referralCode) {
         this.referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     }
 });

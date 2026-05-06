@@ -34,7 +34,7 @@ app.use(helmet({
 app.use(cors({
     origin: [
         'https://dromoney.vercel.app',
-        'http://localhost:5173', 
+        'http://localhost:5173',
         'http://localhost:3000',
         process.env.FRONTEND_URL
     ].filter(Boolean),
@@ -54,6 +54,7 @@ const userWallet = require('./routes/userWalletRoutes');
 const userData = require('./routes/userDataRoutes');
 const public = require('./routes/publicRoutes');
 const admin = require('./routes/adminRoutes');
+const chat = require('./routes/chatRoutes');
 const errorHandler = require('./middleware/error');
 
 // Mount routers
@@ -61,7 +62,8 @@ app.use('/api/user/auth', userAuth);
 app.use('/api/user/wallet', userWallet);
 app.use('/api/user/data', userData);
 app.use('/api/public', public);
-app.use('/api/admin', admin); // Mount admin routes
+app.use('/api/admin', admin);
+app.use('/api/chat', chat);
 
 // Error handler (Must be after routers)
 app.use(errorHandler);

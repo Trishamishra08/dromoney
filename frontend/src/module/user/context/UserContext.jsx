@@ -131,7 +131,9 @@ export const UserProvider = ({ children }) => {
                 status: dbUser.futureFund?.status || 'locked',
                 progress: dbUser.futureFund?.progress || 0,
                 criteria: dbUser.futureFund?.criteria || []
-            }
+            },
+            supportExpiry: dbUser.supportExpiry,
+            businessHubFirstAccessedAt: dbUser.businessHubFirstAccessedAt
         });
     };
 

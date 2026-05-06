@@ -56,6 +56,8 @@ import Promotions from './module/admin/pages/Promotions';
 import WatchAndEarnAdmin from './module/admin/pages/WatchAndEarnAdmin';
 import LayoutManager from './module/admin/pages/LayoutManager';
 import MarketingManager from './module/admin/pages/MarketingManager';
+import AdminChatSupport from './module/admin/pages/ChatSupport';
+import ChatSupportPage from './module/user/pages/ChatSupportPage';
 import { AdminProvider, useAdmin } from './module/admin/context/AdminContext';
 
 import { UserProvider, useUser } from './module/user/context/UserContext';
@@ -65,9 +67,9 @@ import { Loader2 } from 'lucide-react';
 // Protected Route Component
 const ProtectedUserRoute = ({ children }) => {
   const { isAuthenticated, userData, loading, logout } = useUser();
-  
+
   if (!isAuthenticated) return <Navigate to="/user/auth/login" replace />;
-  
+
   // Show loader while fetching user profile on initial load
   if (loading || !userData) {
     return (
@@ -82,16 +84,16 @@ const ProtectedUserRoute = ({ children }) => {
       </div>
     );
   }
-  
+
   return children;
 };
 
 // Protected Admin Route Component
 const ProtectedAdminRoute = ({ children }) => {
   const { isAuthenticated, adminData, loading } = useAdmin();
-  
+
   if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
-  
+
   if (loading || !adminData) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
@@ -100,7 +102,7 @@ const ProtectedAdminRoute = ({ children }) => {
       </div>
     );
   }
-  
+
   return children;
 };
 
@@ -140,6 +142,7 @@ function App() {
               <Route path="info/:type" element={<InfoPage />} />
               <Route path="help" element={<HelpCenter />} />
               <Route path="future-fund" element={<FutureFund />} />
+              <Route path="chat-support" element={<ChatSupportPage />} />
             </Route>
 
             {/* Immersive User Routes (Protected) */}
@@ -177,6 +180,7 @@ function App() {
               <Route path="reports" element={<Reports />} />
               <Route path="layout" element={<LayoutManager />} />
               <Route path="marketing-content" element={<MarketingManager />} />
+              <Route path="chat-support" element={<AdminChatSupport />} />
               <Route path="settings" element={<SettingsAdmin />} />
             </Route>
 
