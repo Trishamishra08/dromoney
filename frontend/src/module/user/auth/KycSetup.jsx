@@ -50,9 +50,9 @@ const KycSetup = () => {
         if (!file) return;
 
         // Front-end early validation of allowed image types to prevent stuck state
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
         if (!allowedTypes.includes(file.type)) {
-            addNotification("Invalid Format", "Images only! (JPEG, JPG, PNG, GIF, WEBP)", "error");
+            addNotification("Invalid Format", "Please select a valid image (JPEG, JPG, or PNG)!", "error");
             e.target.value = '';
             return;
         }
@@ -145,7 +145,7 @@ const KycSetup = () => {
                             <>
                                 <UploadCloud size={20} className="text-slate-500 group-hover:text-amber-500 mb-2 transition-colors" />
                                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center mt-1">Tap to Upload Aadhaar</span>
-                                <span className="text-[8px] text-slate-600 mt-1 uppercase tracking-widest">JPG, PNG up to 5MB</span>
+                                <span className="text-[8px] text-slate-600 mt-1 uppercase tracking-widest">PNG, JPEG, JPG up to 5MB</span>
                             </>
                         ) : (
                             <div className="relative w-full h-28 rounded-lg overflow-hidden group-hover:opacity-80 transition-opacity border border-slate-700/50">
