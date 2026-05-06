@@ -30,13 +30,19 @@ const AdminLogin = () => {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#2563eb] via-[#1d4ed8] to-[#1e3a8a] p-4" style={{ fontFamily: "'Roboto', sans-serif" }}>
+        <div className="min-h-screen w-full flex items-center justify-center bg-[#050b1a] p-4 relative overflow-hidden" style={{ fontFamily: "'Roboto', sans-serif" }}>
             {/* Google Fonts Import */}
             <style>
                 {`@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');`}
             </style>
 
-            <div className="w-full max-w-[950px] h-[600px] bg-white rounded-[40px] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.12)] flex flex-col md:flex-row transition-all duration-500 hover:shadow-[0_40px_80px_rgba(0,0,0,0.15)]">
+            {/* Background Atmosphere */}
+            <div className="absolute top-0 left-0 w-full h-full">
+                <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[150px]"></div>
+            </div>
+
+            <div className="w-full max-w-[950px] h-[600px] bg-white rounded-[40px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] flex flex-col md:flex-row transition-all duration-500 relative z-10">
                 
                 {/* ── Left Section: Welcome ── */}
                 <div className="flex-1 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] relative overflow-hidden flex flex-col justify-center px-14 text-white">
