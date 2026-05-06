@@ -58,32 +58,51 @@ const ChatSupportPage = () => {
         }
     };
 
-    const handleRenew = () => {
-        const options = {
-            key: import.meta.env.VITE_RAZORPAY_KEY || "rzp_test_mock",
-            amount: 15000, 
-            currency: "INR",
-            name: "DroMoney Support",
-            description: "Renew 3 Months Chat Support",
-            handler: async (response) => {
-                try {
-                    await api.post('/chat/renew', { paymentId: response.razorpay_payment_id });
-                    addNotification("Success", "Plan Renewed Successfully!", "success");
-                    refreshUserProfile();
-                } catch (err) {
-                    addNotification("Error", "Renewal failed", "error");
-                }
-            },
-            prefill: {
-                name: userData.name,
-                email: userData.email,
-                contact: userData.phone
-            },
-            theme: { color: "#4F46E5" }
-        };
+    const handleRenew = async () => {
+        try {
+            // 1. Create order on server
+            const orderRes = await api.post('/user/data/razorpay/create-order', {
+                type: 'SUPPORT_CHAT_RENEWAL',
+                amount: 150
+            });
 
-        const rzp = new window.Razorpay(options);
-        rzp.open();
+            if (!orderRes.success) throw new Error("Order creation failed");
+
+            const { orderId, keyId, amount: orderAmount } = orderRes;
+
+            const options = {
+                key: keyId,
+                amount: orderAmount,
+                currency: "INR",
+                name: "DroMoney Support",
+                description: "Renew 3 Months Chat Support",
+                order_id: orderId,
+                handler: async (response) => {
+                    try {
+                        await api.post('/user/data/razorpay/verify', {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                        });
+                        addNotification("Success", "Plan Renewed Successfully!", "success");
+                        refreshUserProfile();
+                    } catch (err) {
+                        addNotification("Error", "Payment verification failed", "error");
+                    }
+                },
+                prefill: {
+                    name: userData.name,
+                    email: userData.email,
+                    contact: userData.phone
+                },
+                theme: { color: "#4F46E5" }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+        } catch (err) {
+            addNotification("Error", "Could not initiate payment", "error");
+        }
     };
 
     return (
@@ -96,11 +115,18 @@ const ChatSupportPage = () => {
                 >
                     <ChevronLeft size={24} />
                 </button>
-                <div>
+                <div className="flex-1">
                     <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none">Support Chat</h1>
-                    <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mt-1 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Online
-                    </p>
+                    <div className="flex items-center justify-between mt-1">
+                        <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Online
+                        </p>
+                        {userData.supportExpiry && !isExpired && (
+                            <p className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                                {Math.ceil((new Date(userData.supportExpiry) - new Date()) / (1000 * 60 * 60 * 24))} Days Left
+                            </p>
+                        )}
+                    </div>
                 </div>
             </div>
 

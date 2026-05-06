@@ -33,6 +33,10 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
         finalAmount = idea.price;
         planName = `Unlock: ${idea.title}`;
         pType = 'BUSINESS_IDEA_UNLOCK';
+    } else if (type === 'SUPPORT_CHAT_RENEWAL') {
+        finalAmount = 150;
+        planName = '3 Months Support Extension';
+        pType = 'SUPPORT_CHAT_RENEWAL';
     } else {
         if (user.isPaid) return next(new ErrorResponse('Platform already unlocked.', 400));
     }
@@ -115,6 +119,17 @@ exports.verifyPayment = asyncHandler(async (req, res, next) => {
                 user.unlockedIdeas.push(payment.businessIdea);
                 await user.save();
             }
+        } else if (payment.paymentType === 'SUPPORT_CHAT_RENEWAL') {
+            console.log(`[PAYMENT] Renewing Support for user ${user._id}`);
+            const now = new Date();
+            const currentExpiry = user.supportExpiry || now;
+            const baseDate = currentExpiry > now ? currentExpiry : now;
+            
+            const newExpiry = new Date(baseDate);
+            newExpiry.setMonth(newExpiry.getMonth() + 3);
+            
+            user.supportExpiry = newExpiry;
+            await user.save();
         } else {
             console.log(`[PAYMENT] Unlocking Platform for user ${user._id}`);
             

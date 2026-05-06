@@ -12,7 +12,7 @@ const PaymentSchema = new mongoose.Schema({
     },
     paymentType: {
         type: String,
-        enum: ['PLATFORM_UNLOCK', 'BUSINESS_IDEA_UNLOCK'],
+        enum: ['PLATFORM_UNLOCK', 'BUSINESS_IDEA_UNLOCK', 'SUPPORT_CHAT_RENEWAL'],
         default: 'PLATFORM_UNLOCK'
     },
     businessIdea: {
