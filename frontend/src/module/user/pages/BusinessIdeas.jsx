@@ -107,23 +107,23 @@ const BusinessIdeas = () => {
                 {/* Chat Support Entry Box */}
                 <button 
                     onClick={() => navigate('/user/chat-support')}
-                    className="w-full bg-indigo-600 rounded-2xl p-4 flex items-center justify-between text-white shadow-lg shadow-indigo-100 active:scale-[0.98] transition-all group overflow-hidden relative"
+                    className="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-800 rounded-2xl p-4 flex items-center justify-between text-white shadow-[0_10px_25px_rgba(99,102,241,0.25)] hover:shadow-[0_12px_30px_rgba(99,102,241,0.35)] hover:-translate-y-0.5 active:scale-[0.98] transition-all group overflow-hidden relative"
                 >
                     <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
                     <div className="flex items-center gap-4 relative z-10">
-                        <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
-                            <MessageSquare size={24} className="text-white" />
+                        <div className="w-12 h-12 bg-white/15 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20 shadow-inner">
+                            <MessageSquare size={22} className="text-white" />
                         </div>
                         <div className="text-left">
-                            <h3 className="text-[15px] font-black tracking-tight leading-none mb-1">Continue to Support chat box</h3>
-                            <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest flex items-center gap-1.5 opacity-80">
+                            <h3 className="text-[15px] font-black tracking-tight leading-none mb-1.5">Continue to Support chat box</h3>
+                            <p className="text-[9px] font-bold text-indigo-200 uppercase tracking-widest flex items-center gap-1.5 opacity-90">
                                 <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
                                 Talk to our Experts
                             </p>
                         </div>
                     </div>
-                    <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center relative z-10">
-                        <ChevronRight size={20} />
+                    <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center border border-white/10 group-hover:bg-white/20 transition-all relative z-10">
+                        <ChevronRight size={18} />
                     </div>
                 </button>
             </div>
@@ -155,38 +155,67 @@ const BusinessIdeas = () => {
                             <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Available Strategies</h2>
                             {freeIdeas.map((idea, idx) => {
                                 const THEMES = [
-                                    { bg: 'bg-emerald-50', border: 'border-emerald-100', accent: 'bg-emerald-600', text: 'text-emerald-600', iconBg: 'bg-emerald-100', shadow: 'shadow-emerald-100' },
-                                    { bg: 'bg-indigo-50', border: 'border-indigo-100', accent: 'bg-indigo-600', text: 'text-indigo-600', iconBg: 'bg-indigo-100', shadow: 'shadow-indigo-100' },
-                                    { bg: 'bg-amber-50', border: 'border-amber-100', accent: 'bg-amber-600', text: 'text-amber-600', iconBg: 'bg-amber-100', shadow: 'shadow-amber-100' },
-                                    { bg: 'bg-rose-50', border: 'border-rose-100', accent: 'bg-rose-600', text: 'text-rose-600', iconBg: 'bg-rose-100', shadow: 'shadow-rose-100' },
+                                    { 
+                                        leftBar: 'bg-gradient-to-b from-emerald-400 to-teal-500', 
+                                        accent: 'bg-emerald-600 hover:bg-emerald-500', 
+                                        text: 'text-emerald-500', 
+                                        potText: 'text-emerald-600',
+                                        iconBg: 'bg-emerald-50 border border-emerald-100/30', 
+                                        shadow: 'shadow-emerald-200/50' 
+                                    },
+                                    { 
+                                        leftBar: 'bg-gradient-to-b from-indigo-400 to-blue-500', 
+                                        accent: 'bg-indigo-600 hover:bg-indigo-500', 
+                                        text: 'text-indigo-500', 
+                                        potText: 'text-indigo-600',
+                                        iconBg: 'bg-indigo-50 border border-indigo-100/30', 
+                                        shadow: 'shadow-indigo-200/50' 
+                                    },
+                                    { 
+                                        leftBar: 'bg-gradient-to-b from-amber-400 to-orange-500', 
+                                        accent: 'bg-amber-600 hover:bg-amber-500', 
+                                        text: 'text-amber-500', 
+                                        potText: 'text-amber-600',
+                                        iconBg: 'bg-amber-50 border border-amber-100/30', 
+                                        shadow: 'shadow-amber-200/50' 
+                                    },
+                                    { 
+                                        leftBar: 'bg-gradient-to-b from-rose-400 to-pink-500', 
+                                        accent: 'bg-rose-600 hover:bg-rose-500', 
+                                        text: 'text-rose-500', 
+                                        potText: 'text-rose-600',
+                                        iconBg: 'bg-rose-50 border border-rose-100/30', 
+                                        shadow: 'shadow-rose-200/50' 
+                                    },
                                 ];
                                 const theme = THEMES[idx % THEMES.length];
 
                                 return (
-                                    <div key={idea._id} className={`${theme.bg} border ${theme.border} rounded-2xl p-4 shadow-sm relative overflow-hidden group`}>
-                                        <div className={`absolute -right-6 -top-6 w-20 h-20 ${theme.accent} opacity-[0.03] rounded-full`}></div>
+                                    <div key={idea._id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-[0_8px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:-translate-y-0.5 relative overflow-hidden pl-5 group transition-all">
+                                        {/* Left accent color bar */}
+                                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${theme.leftBar}`}></div>
 
                                         <div className="flex justify-between items-start mb-3 relative z-10">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-12 h-12 ${theme.iconBg} rounded-xl flex items-center justify-center ${theme.text} shadow-inner`}>
-                                                    {renderIcon(idea.icon, 24)}
+                                                    {renderIcon(idea.icon, 22)}
                                                 </div>
                                                 <div className="space-y-0.5">
                                                     <h3 className="text-[15px] font-black text-slate-800 leading-none tracking-tight">{idea.title}</h3>
                                                     <span className={`inline-block text-[8px] font-black ${theme.text} uppercase tracking-widest`}>Free Access</span>
                                                 </div>
                                             </div>
-                                            <div className="bg-emerald-500 px-2 py-0.5 rounded-lg">
-                                                <span className="text-[8px] font-black text-white uppercase tracking-widest">Active</span>
+                                            <div className="bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                                                <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Active</span>
                                             </div>
                                         </div>
 
-                                        <p className="text-[11px] font-bold text-slate-400 mt-1 line-clamp-2 leading-relaxed">{idea.desc}</p>
+                                        <p className="text-[11px] font-medium text-slate-400 mt-1 line-clamp-2 leading-relaxed">{idea.desc}</p>
 
-                                        <div className="mt-4 flex items-center justify-between bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-white/80 relative z-10">
+                                        <div className="mt-4 flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl p-3 relative z-10">
                                             <div>
                                                 <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">Earning Potential</p>
-                                                <p className={`text-[13px] font-black ${theme.text} tracking-tight`}>{idea.potential}</p>
+                                                <p className={`text-[13px] font-black ${theme.potText} tracking-tight`}>{idea.potential}</p>
                                             </div>
                                             <button
                                                 onClick={() => setViewIdea(idea)}
@@ -202,16 +231,16 @@ const BusinessIdeas = () => {
                     ) : (
                         <div className="space-y-4">
                             {/* Premium Banner - Ultra Premium */}
-                            <div className="bg-gradient-to-br from-indigo-600 via-blue-700 to-purple-800 rounded-[1.5rem] p-6 text-white shadow-xl relative overflow-hidden">
-                                <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
-                                        <Sparkles size={20} className="text-amber-300" />
+                            <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 rounded-3xl p-5 text-white shadow-[0_10px_25px_rgba(99,102,241,0.2)] relative overflow-hidden group">
+                                <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-9 h-9 bg-white/15 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/25">
+                                        <Sparkles size={16} className="text-amber-300" />
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-100">Premium Vault</span>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-100">Premium Vault</span>
                                 </div>
                                 <h3 className="text-lg font-black leading-tight tracking-tight">High-Ticket Frameworks</h3>
-                                <p className="text-[11px] font-bold text-indigo-100/70 mt-2 leading-relaxed">
+                                <p className="text-[11px] font-medium text-indigo-100/80 mt-1.5 leading-relaxed">
                                     Access pre-built business models and 1-on-1 expert mentorship.
                                 </p>
                             </div>
@@ -220,41 +249,53 @@ const BusinessIdeas = () => {
                                 <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Exclusive Vault</h2>
                                 {premiumIdeas.map((idea, idx) => {
                                     const THEMES = [
-                                        { bg: 'bg-slate-900', border: 'border-slate-800', accent: 'bg-indigo-500', text: 'text-white', subText: 'text-slate-400', glass: 'bg-white/5 border-white/10' },
-                                        { bg: 'bg-white', border: 'border-slate-100', accent: 'bg-[#1A1C30]', text: 'text-slate-800', subText: 'text-slate-400', glass: 'bg-slate-50 border-slate-100' }
+                                        { leftBar: 'bg-gradient-to-b from-indigo-500 to-purple-600', text: 'text-indigo-400', potText: 'text-indigo-400' },
+                                        { leftBar: 'bg-gradient-to-b from-purple-500 to-pink-600', text: 'text-purple-400', potText: 'text-purple-400' },
                                     ];
                                     const theme = THEMES[idx % THEMES.length];
 
                                     return (
-                                        <div key={idea._id} className={`${theme.bg} border ${theme.border} rounded-2xl p-4 shadow-sm relative overflow-hidden group`}>
+                                        <div key={idea._id} className="bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 border border-slate-800/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(15,23,42,0.3)] hover:shadow-[0_12px_35px_rgba(99,102,241,0.15)] hover:-translate-y-0.5 relative overflow-hidden pl-5 group transition-all">
+                                            {/* Left accent color bar */}
+                                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${theme.leftBar}`}></div>
+
                                             <div className="flex justify-between items-start mb-3 relative z-10">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-12 h-12 ${theme.accent} rounded-xl flex items-center justify-center text-white shadow-lg`}>
-                                                        {renderIcon(idea.icon, 24)}
+                                                    <div className={`w-12 h-12 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-center ${theme.text} shadow-inner`}>
+                                                        {renderIcon(idea.icon, 22)}
                                                     </div>
                                                     <div className="space-y-0.5">
-                                                        <h3 className={`text-[15px] font-black ${theme.text} leading-none tracking-tight`}>{idea.title}</h3>
-                                                        <span className={`inline-block text-[8px] font-black ${theme.subText} uppercase tracking-widest`}>Premium</span>
+                                                        <h3 className="text-[15px] font-black text-white leading-none tracking-tight">{idea.title}</h3>
+                                                        <span className="inline-block text-[8px] font-black text-indigo-400/80 uppercase tracking-widest">Premium Content</span>
                                                     </div>
                                                 </div>
-                                                {idea.isLocked && (
-                                                    <div className="bg-amber-400/10 px-2 py-0.5 rounded-lg border border-amber-400/20 flex items-center gap-1">
-                                                        <Lock size={10} className="text-amber-500" />
-                                                        <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Locked</span>
+                                                {idea.isLocked ? (
+                                                    <div className="bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20 flex items-center gap-1 shrink-0">
+                                                        <Lock size={10} className="text-amber-400 fill-amber-400/20 animate-pulse" />
+                                                        <span className="text-[8px] font-black text-amber-400 uppercase tracking-wider">Locked</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 flex items-center gap-1 shrink-0">
+                                                        <CheckCircle2 size={10} className="text-emerald-400" />
+                                                        <span className="text-[8px] font-black text-emerald-400 uppercase tracking-wider">Unlocked</span>
                                                     </div>
                                                 )}
                                             </div>
 
-                                            <p className={`text-[11px] font-bold ${theme.subText} mt-1 line-clamp-2 leading-relaxed`}>{idea.desc}</p>
+                                            <p className="text-[11px] font-medium text-slate-400 mt-1 line-clamp-2 leading-relaxed">{idea.desc}</p>
 
-                                            <div className={`mt-4 flex items-center justify-between rounded-xl p-3 border ${theme.glass} relative z-10`}>
+                                            <div className="mt-4 flex items-center justify-between rounded-xl p-3 bg-white/5 border border-white/10 relative z-10">
                                                 <div>
                                                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter mb-0.5">Earning Potential</p>
-                                                    <p className={`text-[13px] font-black ${idea.isLocked ? 'text-slate-400' : 'text-indigo-500'} tracking-tight`}>{idea.potential}</p>
+                                                    <p className={`text-[13px] font-black ${idea.isLocked ? 'text-amber-400' : 'text-emerald-400'} tracking-tight`}>{idea.potential}</p>
                                                 </div>
                                                 <button
                                                     onClick={() => !idea.isLocked ? setViewIdea(idea) : setShowPayment(idea)}
-                                                    className={`${theme.accent} text-white p-2.5 rounded-xl shadow-lg active:scale-95 transition-all`}
+                                                    className={`p-2.5 rounded-xl text-white font-bold flex items-center justify-center transition-all active:scale-95 shadow-md
+                                                        ${idea.isLocked 
+                                                            ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-amber-950/20' 
+                                                            : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-emerald-950/20'
+                                                        }`}
                                                 >
                                                     {idea.isLocked ? <Lock size={16} /> : <ArrowRight size={16} />}
                                                 </button>
