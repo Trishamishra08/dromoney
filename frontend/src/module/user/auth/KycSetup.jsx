@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ShieldAlert, UploadCloud, Image as ImageIcon } from 'lucide-react';
+import { Loader2, ShieldAlert, UploadCloud, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 import api from '../../shared/services/api';
 import { useUser } from '../context/UserContext';
 
@@ -10,6 +10,8 @@ const KycSetup = () => {
     const [loading, setLoading] = useState(false);
     const [aadhaar, setAadhaar] = useState('');
     const [aadhaarFile, setAadhaarFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState('');
+    const fileInputRef = React.useRef(null);
 
     const kycStatus = (userData?.kycStatus || '').toLowerCase();
 
@@ -22,7 +24,48 @@ const KycSetup = () => {
         }
     }, [kycStatus, navigate, userLoading]);
 
-    if (userLoading) return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin text-amber-500" /></div>;
+    React.useEffect(() => {
+        if (!aadhaarFile) {
+            setPreviewUrl('');
+            return;
+        }
+
+        const objectUrl = URL.createObjectURL(aadhaarFile);
+        setPreviewUrl(objectUrl);
+
+        // Cleanup the object URL when file changes or component unmounts
+        return () => URL.revokeObjectURL(objectUrl);
+    }, [aadhaarFile]);
+
+    if (userLoading) return <div className="min-h-screen bg-[#0B1221] flex items-center justify-center p-20 text-white"><Loader2 className="animate-spin text-amber-500" /></div>;
+
+    const triggerFileSelect = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Front-end early validation of allowed image types to prevent stuck state
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            addNotification("Invalid Format", "Images only! (JPEG, JPG, PNG, GIF, WEBP)", "error");
+            e.target.value = '';
+            return;
+        }
+
+        // Limit to 5MB
+        if (file.size > 5 * 1024 * 1024) {
+            addNotification("File Too Large", "Aadhaar photo must be under 5MB!", "error");
+            e.target.value = '';
+            return;
+        }
+
+        setAadhaarFile(file);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -51,7 +94,17 @@ const KycSetup = () => {
     };
 
     return (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="min-h-screen bg-[#0B1221] text-white p-6 flex flex-col justify-center animate-in fade-in slide-in-from-bottom-4 duration-500 relative pt-16">
+            {/* Arrow Back Button */}
+            <div className="absolute left-6 top-6 z-50">
+                <button 
+                    onClick={() => navigate(-1)} 
+                    className="w-10 h-10 flex items-center justify-center bg-slate-900/90 border border-slate-800 rounded-2xl text-slate-300 hover:text-white hover:border-amber-500/50 active:scale-95 transition-all shadow-md backdrop-blur-md"
+                >
+                    <ArrowLeft size={20} />
+                </button>
+            </div>
+
             <div className="flex justify-center mb-6">
                 <div className="bg-amber-500/10 border border-amber-500/20 px-4 py-1.5 rounded-full flex items-center gap-2">
                     <ShieldAlert size={12} className="text-amber-500" />
@@ -61,6 +114,15 @@ const KycSetup = () => {
 
             <h1 className="text-[24px] font-black text-white text-center mb-2 tracking-tight">Complete KYC</h1>
             <p className="text-slate-400 text-[11px] text-center mb-8 px-4 font-bold leading-relaxed">Provide your government IDs to verify identity and enable withdrawals.</p>
+
+            {/* Hidden Input outside the clickable card to avoid any event bubbling recursion */}
+            <input 
+                type="file" 
+                ref={fileInputRef}
+                accept="image/*" 
+                className="hidden"
+                onChange={handleFileChange}
+            />
 
             <form onSubmit={handleSubmit} className="bg-slate-900/80 border border-amber-500/20 p-5 rounded-2xl flex flex-col gap-5 shadow-[0_4px_20px_rgba(245,158,11,0.05)]">
                 <div>
@@ -73,15 +135,12 @@ const KycSetup = () => {
                         className="w-full bg-slate-950 text-white font-black tracking-[0.2em] px-4 py-3.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all placeholder:text-slate-600 text-sm placeholder:tracking-normal placeholder:font-normal shadow-inner"
                         required
                     />
+                    
                     {/* Aadhaar Photo Upload */}
-                    <div className="mt-3 relative border-2 border-dashed border-slate-700/50 hover:border-amber-500/50 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-950/30 transition-colors cursor-pointer group">
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            onChange={(e) => setAadhaarFile(e.target.files[0])}
-                            required
-                        />
+                    <div 
+                        onClick={triggerFileSelect}
+                        className="mt-3 relative border-2 border-dashed border-slate-700/50 hover:border-amber-500/50 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-950/30 transition-colors cursor-pointer group"
+                    >
                         {!aadhaarFile ? (
                             <>
                                 <UploadCloud size={20} className="text-slate-500 group-hover:text-amber-500 mb-2 transition-colors" />
@@ -91,7 +150,7 @@ const KycSetup = () => {
                         ) : (
                             <div className="relative w-full h-28 rounded-lg overflow-hidden group-hover:opacity-80 transition-opacity border border-slate-700/50">
                                 <img 
-                                    src={URL.createObjectURL(aadhaarFile)} 
+                                    src={previewUrl} 
                                     alt="Aadhaar Preview" 
                                     className="w-full h-full object-cover"
                                 />

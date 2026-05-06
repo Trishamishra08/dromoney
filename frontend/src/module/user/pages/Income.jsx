@@ -166,7 +166,12 @@ const Income = () => {
     }, [status, navigate, userLoading]);
 
     if (userLoading || status === 'pending' || status === 'rejected' || status === 'not started') {
-        return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="animate-spin text-sky-500" /></div>;
+        return (
+            <div className="min-h-screen bg-[#0B1221] flex flex-col items-center justify-center gap-4 text-white">
+                <Loader2 className="animate-spin text-amber-500" size={32} />
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Verifying access...</p>
+            </div>
+        );
     }
 
 

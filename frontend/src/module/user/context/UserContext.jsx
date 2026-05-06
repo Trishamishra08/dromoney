@@ -169,9 +169,8 @@ export const UserProvider = ({ children }) => {
             setIsAuthenticated(true);
             return { success: true };
         } catch (err) {
-            return { success: false, error: err.message || 'Verification failed' };
-        } finally {
             setLoading(false);
+            return { success: false, error: err.message || 'Verification failed' };
         }
     };
 
@@ -183,9 +182,8 @@ export const UserProvider = ({ children }) => {
             setIsAuthenticated(true);
             return { success: true };
         } catch (err) {
-            return { success: false, error: err.message || 'Login failed' };
-        } finally {
             setLoading(false);
+            return { success: false, error: err.message || 'Login failed' };
         }
     };
 
@@ -197,9 +195,8 @@ export const UserProvider = ({ children }) => {
             setIsAuthenticated(true);
             return { success: true };
         } catch (err) {
-            return { success: false, error: err.message || 'Registration failed' };
-        } finally {
             setLoading(false);
+            return { success: false, error: err.message || 'Registration failed' };
         }
     };
 

@@ -27,10 +27,10 @@ const PendingApproval = () => {
         return () => clearInterval(interval);
     }, [status, refreshUserProfile]);
 
-    if (userLoading) return <div className="flex items-center justify-center p-20"><Clock className="animate-spin text-amber-500" /></div>;
+    if (userLoading) return <div className="min-h-screen bg-[#0B1221] flex items-center justify-center p-20 text-white"><Clock className="animate-spin text-amber-500" /></div>;
 
     return (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col items-center text-center py-6">
+        <div className="min-h-screen bg-[#0B1221] text-white p-6 flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
             <div className="relative mb-8 mt-4">
                 <div className={`w-28 h-28 bg-slate-900 border-2 border-dashed ${status === 'pending' ? 'border-amber-500/50' : status === 'rejected' ? 'border-red-500/50' : 'border-emerald-500'} rounded-full flex items-center justify-center z-10 relative`}>
                     {status === 'pending' ? (
@@ -74,7 +74,7 @@ const PendingApproval = () => {
                 </div>
             ) : status === 'rejected' ? (
                 <button 
-                    onClick={() => navigate('/user/kyc')}
+                    onClick={() => navigate('/user/auth/kyc')}
                     className="w-full max-w-[260px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase text-[11px] tracking-[0.2em] py-4 rounded-xl flex items-center justify-center gap-2"
                 >
                     Resubmit KYC <ChevronRight size={14} />
