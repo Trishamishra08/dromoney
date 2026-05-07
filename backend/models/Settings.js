@@ -51,6 +51,32 @@ const SettingsSchema = new mongoose.Schema({
         default: 100
     },
     
+    // Future Fund Activity Targets (Admin Configurable)
+    futureFundDailyTasksTarget: {
+        type: Number,
+        default: 10
+    },
+    futureFundWatchAdTarget: {
+        type: Number,
+        default: 5
+    },
+    futureFundEventsTarget: {
+        type: Number,
+        default: 3
+    },
+    futureFundBoostersTarget: {
+        type: Number,
+        default: 1
+    },
+    futureFundSalesTarget: {
+        type: Number,
+        default: 10
+    },
+    futureFundDaysTarget: {
+        type: Number,
+        default: 7
+    },
+    
     // Auth (Optional: Primary Admin Credentials override)
     adminEmail: {
         type: String,

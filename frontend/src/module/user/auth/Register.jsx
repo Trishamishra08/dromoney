@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Loader2, ArrowRight, Smartphone, Lock, User, Mail, Gift, ShieldCheck } from 'lucide-react';
 import { useUser } from '../context/UserContext';
@@ -14,12 +14,66 @@ const Register = () => {
     const [formData, setFormData] = useState({ 
         name: '', 
         email: '', 
-        referral: searchParams.get('ref') || '', 
+        referral: '', 
         phone: '' 
     });
     const [step, setStep] = useState(1);
     const [otp, setOtp] = useState('');
     const [error, setError] = useState('');
+
+    const [referrerName, setReferrerName] = useState('');
+    const [checkingReferral, setCheckingReferral] = useState(false);
+
+    const extractCode = (val) => {
+        if (!val) return '';
+        if (val.includes('nhgfAFF-')) {
+            const parts = val.split('nhgfAFF-');
+            return parts[parts.length - 1].trim().toUpperCase().substring(0, 6);
+        }
+        if (val.includes('/')) {
+            const parts = val.split('/');
+            const lastPart = parts[parts.length - 1];
+            if (lastPart.includes('nhgfAFF-')) {
+                return lastPart.split('nhgfAFF-')[1].trim().toUpperCase().substring(0, 6);
+            }
+            return lastPart.trim().toUpperCase().substring(0, 6);
+        }
+        return val.trim().toUpperCase().substring(0, 6);
+    };
+
+    const lookupReferrer = async (code) => {
+        if (!code || code.length < 6) {
+            setReferrerName('');
+            return;
+        }
+        setCheckingReferral(true);
+        try {
+            const res = await fetch(`/api/public/referrer/${code}`);
+            const data = await res.json();
+            if (data.success && data.name) {
+                setReferrerName(data.name);
+            } else {
+                setReferrerName('');
+            }
+        } catch (err) {
+            setReferrerName('');
+        } finally {
+            setCheckingReferral(false);
+        }
+    };
+
+    const handleReferralChange = (val) => {
+        const cleaned = extractCode(val);
+        setFormData(prev => ({ ...prev, referral: cleaned }));
+        lookupReferrer(cleaned);
+    };
+
+    useEffect(() => {
+        const initialRef = searchParams.get('ref') || '';
+        if (initialRef) {
+            handleReferralChange(initialRef);
+        }
+    }, [searchParams]);
 
     const handleSendOTP = async (e) => {
         e.preventDefault();
@@ -134,13 +188,22 @@ const Register = () => {
                                     <div className="relative">
                                         <input
                                             type="text"
-                                            placeholder="Code"
+                                            placeholder="Code or Link"
                                             value={formData.referral}
-                                            onChange={(e) => setFormData({ ...formData, referral: e.target.value.toUpperCase() })}
+                                            onChange={(e) => handleReferralChange(e.target.value)}
                                             className="w-full bg-slate-50 text-[#0f1d3a] font-medium px-5 py-2.5 rounded-full border border-slate-100 focus:bg-white transition-all text-[12px] tracking-widest uppercase"
                                         />
                                         <Gift className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
                                     </div>
+                                    {checkingReferral && (
+                                        <div className="text-[9px] text-slate-400 font-bold ml-3 mt-1 animate-pulse">Verifying referral code...</div>
+                                    )}
+                                    {referrerName && (
+                                        <div className="mt-1.5 px-4 py-1.5 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-2 text-emerald-600 text-[10px] font-black uppercase tracking-wider animate-in fade-in zoom-in duration-300">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                            <span>Referred By: {referrerName}</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-0.5">

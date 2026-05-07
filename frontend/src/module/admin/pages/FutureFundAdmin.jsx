@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     TrendingUp, Award, Clock, Calendar, CheckCircle2,
     XCircle, Edit3, Save, Info, ChevronRight,
     History, Search, Filter, ArrowUpRight,
     LayoutDashboard, UserCheck, ShieldAlert,
-    Users, IndianRupee
+    Users, IndianRupee, Loader2
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import AdminStatCard from '../components/AdminStatCard';
 import StatusBadge from '../components/StatusBadge';
+import api from '../../shared/services/api';
 
 const FutureFundAdmin = () => {
     // ── CMS States ──
@@ -18,13 +19,18 @@ const FutureFundAdmin = () => {
     });
     const [editingCms, setEditingCms] = useState(false);
 
-    // ── Global Rules (Removed Payout Setting) ──
+    // ── Global Rules (Now fully dynamic linked to DB Settings) ──
     const [rules, setRules] = useState({
         targetSales: 10,
-        targetDays: 10,
-        dailyTargetMinutes: 15
+        targetDays: 7,
+        dailyTargetMinutes: 15,
+        futureFundDailyTasksTarget: 10,
+        futureFundWatchAdTarget: 5,
+        futureFundEventsTarget: 3,
+        futureFundBoostersTarget: 1
     });
     const [editingRules, setEditingRules] = useState(false);
+    const [loadingSettings, setLoadingSettings] = useState(true);
 
     // ── User Data ──
     const [usersData, setUsersData] = useState([
@@ -43,6 +49,52 @@ const FutureFundAdmin = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(5);
 
+    // Fetch dynamic Settings from Database
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await api.get('/admin/settings');
+                if (res.success && res.data) {
+                    setRules({
+                        targetSales: Number(res.data.futureFundSalesTarget) || 10,
+                        targetDays: Number(res.data.futureFundDaysTarget) || 7,
+                        dailyTargetMinutes: 15,
+                        futureFundDailyTasksTarget: Number(res.data.futureFundDailyTasksTarget) || 10,
+                        futureFundWatchAdTarget: Number(res.data.futureFundWatchAdTarget) || 5,
+                        futureFundEventsTarget: Number(res.data.futureFundEventsTarget) || 3,
+                        futureFundBoostersTarget: Number(res.data.futureFundBoostersTarget) || 1
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to load FF targets", err);
+            } finally {
+                setLoadingSettings(false);
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    // Save Rules API Update
+    const handleSaveRules = async () => {
+        try {
+            const res = await api.put('/admin/settings', {
+                futureFundSalesTarget: Number(rules.targetSales),
+                futureFundDaysTarget: Number(rules.targetDays),
+                futureFundDailyTasksTarget: Number(rules.futureFundDailyTasksTarget),
+                futureFundWatchAdTarget: Number(rules.futureFundWatchAdTarget),
+                futureFundEventsTarget: Number(rules.futureFundEventsTarget),
+                futureFundBoostersTarget: Number(rules.futureFundBoostersTarget)
+            });
+            if (res.success) {
+                setEditingRules(false);
+                alert("Rules and Targets successfully updated in Database!");
+            }
+        } catch (err) {
+            console.error("Failed to update rules", err);
+            alert("Save failed: " + err.message);
+        }
+    };
+
     // ── Logic ──
     const calculateProgress = (user) => {
         const salesProgress = Math.min((user.sales / rules.targetSales) * 100, 100);
@@ -59,6 +111,15 @@ const FutureFundAdmin = () => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
 
+    if (loadingSettings) {
+        return (
+            <div className="p-8 text-center bg-slate-50 min-h-screen flex flex-col items-center justify-center font-bold gap-3">
+                <Loader2 className="animate-spin text-indigo-600 w-10 h-10" />
+                <p className="text-xs uppercase font-black text-slate-400">Loading Future Fund CMS...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="p-6 animate-in fade-in duration-700 bg-slate-50/50 min-h-screen">
             <PageHeader title="Future Fund Evolution" subtitle="Manage milestones, platform content, and view user history" />
@@ -68,7 +129,7 @@ const FutureFundAdmin = () => {
                 <AdminStatCard label="Total Users" value={usersData.length} change="Platform wide" icon={UserCheck} color="bg-indigo-600" />
                 <AdminStatCard label="Active Stages" value={usersData.filter(u => u.stage === 'Active').length} change="Monetized" icon={TrendingUp} color="bg-sky-500" />
                 <AdminStatCard label="Eligible Today" value={usersData.filter(u => u.stage === 'Eligible').length} change="Move Forward ready" icon={Award} color="bg-emerald-500" />
-                <AdminStatCard label="Criteria Goal" value="10/10/15" change="Referral/Days/Mins" icon={LayoutDashboard} color="bg-amber-500" />
+                <AdminStatCard label="Criteria Goal" value={`${rules.targetSales}/${rules.targetDays}/${rules.dailyTargetMinutes}`} change="Referral/Days/Mins" icon={LayoutDashboard} color="bg-amber-500" />
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
@@ -94,32 +155,82 @@ const FutureFundAdmin = () => {
                     </div>
                 </div>
 
-                {/* Eligibility Thresholds */}
-                <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 group relative overflow-hidden">
+                {/* Eligibility Thresholds & Today's Activity Goals */}
+                <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 group relative overflow-hidden flex flex-col justify-between">
                     <div className="absolute bottom-0 right-0 w-48 h-48 bg-emerald-50 opacity-30 rounded-full -mb-20 -mr-10 group-hover:scale-110 transition-transform duration-700"></div>
-                    <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-center text-emerald-600"><CheckCircle2 size={18} /></div>
-                            <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-none">Milestone Targets</h2>
+                    
+                    <div>
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-center text-emerald-600"><CheckCircle2 size={18} /></div>
+                                <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest leading-none">Milestones & Today's Targets</h2>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    if (editingRules) {
+                                        handleSaveRules();
+                                    } else {
+                                        setEditingRules(true);
+                                    }
+                                }} 
+                                className={`px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${editingRules ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400'}`}
+                            >
+                                {editingRules ? 'Save Rules' : 'Edit Rules'}
+                            </button>
                         </div>
-                        <button onClick={() => setEditingRules(!editingRules)} className={`px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${editingRules ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400'}`}>{editingRules ? 'Save Rules' : 'Edit Rules'}</button>
+
+                        {/* Milestone Targets Row */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                            {[
+                                { label: 'Sales Target', key: 'targetSales', icon: Users, color: 'text-indigo-500' },
+                                { label: 'Active Days', key: 'targetDays', icon: Calendar, color: 'text-sky-500' },
+                                { label: 'Daily Mins', key: 'dailyTargetMinutes', icon: Clock, color: 'text-amber-500', suffix: ' M' }
+                            ].map((rule) => {
+                                const Icon = rule.icon || TrendingUp;
+                                return (
+                                    <div key={rule.key} className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl">
+                                        <div className="flex items-center gap-2 mb-1.5"><Icon size={13} className={rule.color} /><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{rule.label}</p></div>
+                                        {editingRules ? (
+                                            <input type="number" value={rules[rule.key]} onChange={(e) => setRules({ ...rules, [rule.key]: Number(e.target.value) })} className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-md font-black text-slate-800 outline-none focus:ring-2 focus:ring-sky-500" />
+                                        ) : (
+                                            <p className="text-xl font-black text-slate-900 leading-none">{rules[rule.key]}{rule.suffix || ''}</p>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+
+                        {/* Today's Activity Target Configuration */}
+                        <div>
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Today's Activity Progress Targets</h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                {[
+                                    { label: 'Daily Tasks', key: 'futureFundDailyTasksTarget', color: 'text-blue-500' },
+                                    { label: 'Watch Ads', key: 'futureFundWatchAdTarget', color: 'text-emerald-500' },
+                                    { label: 'Events Target', key: 'futureFundEventsTarget', color: 'text-amber-500' },
+                                    { label: 'Boosters Target', key: 'futureFundBoostersTarget', color: 'text-rose-500' }
+                                ].map((act) => (
+                                    <div key={act.key} className="bg-slate-50/50 border border-slate-100 p-3.5 rounded-2xl">
+                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 leading-none">{act.label}</p>
+                                        {editingRules ? (
+                                            <input 
+                                                type="number" 
+                                                value={rules[act.key]} 
+                                                onChange={(e) => setRules({ ...rules, [act.key]: Number(e.target.value) })} 
+                                                className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm font-black text-slate-800 outline-none focus:ring-2 focus:ring-sky-500" 
+                                            />
+                                        ) : (
+                                            <p className={`text-lg font-black ${act.color} leading-none`}>{rules[act.key]}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {[
-                            { label: 'Sales Target', key: 'targetSales', icon: Users, color: 'text-indigo-500' },
-                            { label: 'Active Days', key: 'targetDays', icon: Calendar, color: 'text-sky-500' },
-                            { label: 'Daily Mins', key: 'dailyTargetMinutes', icon: Clock, color: 'text-amber-500', suffix: ' M' }
-                        ].map((rule) => {
-                            const Icon = rule.icon || TrendingUp;
-                            return (
-                                <div key={rule.key} className="bg-slate-50/50 border border-slate-100 p-5 rounded-2xl group-hover:bg-white transition-all duration-300">
-                                    <div className="flex items-center gap-2 mb-2"><Icon size={13} className={rule.color} /><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{rule.label}</p></div>
-                                    {editingRules ? <input type="number" value={rules[rule.key]} onChange={(e) => setRules({ ...rules, [rule.key]: e.target.value })} className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-md font-black text-slate-800 outline-none focus:ring-2 focus:ring-sky-500" /> : <p className="text-xl font-black text-slate-900 leading-none">{rules[rule.key]}{rule.suffix || ''}</p>}
-                                </div>
-                            )
-                        })}
+                    
+                    <div className="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-100 italic text-[10px] text-slate-400 font-bold leading-normal">
+                        These dynamic settings configure the targets shown in the User's Active Future Fund screen and are saved directly into the database.
                     </div>
-                    <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 italic text-[10px] text-slate-400 font-bold">These targets define the 100% progress for "Move Forward" eligibility.</div>
                 </div>
             </div>
 
@@ -182,7 +293,7 @@ const FutureFundAdmin = () => {
                 </div>
             </div>
 
-            {/* ── � COMPACT HISTORY LOG MODAL ── */}
+            {/* ── COMPACT HISTORY LOG MODAL ── */}
             {selectedUser && (
                 <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
                     <div onClick={() => setSelectedUser(null)} className="absolute inset-0 bg-[#0F172A]/90 backdrop-blur-sm animate-in fade-in duration-300"></div>

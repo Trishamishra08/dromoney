@@ -98,7 +98,7 @@ const KycSetup = () => {
             {/* Arrow Back Button */}
             <div className="absolute left-6 top-6 z-50">
                 <button 
-                    onClick={() => navigate(-1)} 
+                    onClick={() => navigate('/user/home')} 
                     className="w-10 h-10 flex items-center justify-center bg-slate-900/90 border border-slate-800 rounded-2xl text-slate-300 hover:text-white hover:border-amber-500/50 active:scale-95 transition-all shadow-md backdrop-blur-md"
                 >
                     <ArrowLeft size={20} />

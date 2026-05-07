@@ -116,8 +116,10 @@ exports.sendRegisterOtp = async (req, res, next) => {
         // Save to DB
         await Otp.create({ phone, code: otp });
 
-        // Send via SMSINDIAHUB
-        await sendOtpSMS(phone, otp);
+        // Skip SMS for testing number
+        if (phone !== '9999999999') {
+            await sendOtpSMS(phone, otp);
+        }
 
         res.status(200).json({
             success: true,
@@ -139,7 +141,18 @@ exports.sendLoginOtp = async (req, res, next) => {
             return next(new ErrorResponse('Please provide a phone number', 400));
         }
 
-        const user = await User.findOne({ phone });
+        let user = await User.findOne({ phone });
+
+        // Auto-create test account for 9999999999 if not present
+        if (phone === '9999999999' && !user) {
+            user = await User.create({
+                name: 'Test Account',
+                email: 'testaccount@gmail.com',
+                phone: '9999999999',
+                password: 'password123',
+                isPaid: true
+            });
+        }
 
         if (!user) {
             return next(new ErrorResponse('No account found with this phone number. Please register.', 404));
@@ -151,8 +164,10 @@ exports.sendLoginOtp = async (req, res, next) => {
         // Save to DB
         await Otp.create({ phone, code: otp });
 
-        // Send via SMSINDIAHUB
-        await sendOtpSMS(phone, otp);
+        // Skip SMS for testing number
+        if (phone !== '9999999999') {
+            await sendOtpSMS(phone, otp);
+        }
 
         res.status(200).json({
             success: true,

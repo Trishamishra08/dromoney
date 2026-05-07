@@ -10,7 +10,7 @@ const { getOptionalUser } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-const { getPublicSettings } = require('../controllers/publicController');
+const { getPublicSettings, getReferrerName } = require('../controllers/publicController');
 
 router.get('/content/bulk', getBulkContent);
 router.get('/content/:key', getContent);
@@ -24,5 +24,6 @@ router.get('/events', getEvents);
 router.get('/events/:id', getEvent);
 router.get('/tasks', getTasks);
 router.get('/settings', getPublicSettings);
+router.get('/referrer/:code', getReferrerName);
 
 module.exports = router;

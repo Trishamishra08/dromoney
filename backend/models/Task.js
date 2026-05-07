@@ -15,7 +15,7 @@ const TaskSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['Social', 'Survey', 'Watch', 'Join', 'Bonus', 'Video', 'Web', 'Quiz', 'Spin', 'Memory', 'Scratch', 'Tapper'],
+        enum: ['Social', 'Survey', 'Watch', 'Join', 'Bonus', 'Video', 'Web', 'Quiz', 'Spin', 'Memory', 'Scratch', 'Tapper', 'Treasure', 'Proof'],
         default: 'Social'
     },
     category: {

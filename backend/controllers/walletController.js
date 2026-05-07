@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
+const Settings = require('../models/Settings');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 
@@ -84,9 +85,13 @@ exports.requestWithdrawal = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('User not found', 404));
     }
 
-    // 1. Check minimum amount
-    if (amount < 100) {
-        return next(new ErrorResponse('Minimum withdrawal amount is ₹100', 400));
+    // Load dynamic settings for minWithdrawal
+    const settings = await Settings.findOne();
+    const minWithdrawalLimit = settings ? settings.minWithdrawal : 100;
+
+    // 1. Check dynamic minimum amount
+    if (amount < minWithdrawalLimit) {
+        return next(new ErrorResponse(`Minimum withdrawal amount is ₹${minWithdrawalLimit}`, 400));
     }
 
     // 2. Check for 24-hour limit (only one withdrawal per 24 hours)
@@ -101,15 +106,18 @@ exports.requestWithdrawal = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('You can only withdraw once every 24 hours', 400));
     }
 
-    if (user.wallet.balance < amount) {
-        return next(new ErrorResponse('Insufficient balance', 400));
+    // Check with ₹5 transaction fee
+    const totalDeduction = Number(amount) + 5;
+
+    if (user.wallet.balance < totalDeduction) {
+        return next(new ErrorResponse(`Insufficient balance. You need ₹${totalDeduction} (₹${amount} withdrawal + ₹5 transaction fee) to complete this transaction`, 400));
     }
 
-    // Deduct from balance
-    user.wallet.balance -= amount;
+    // Deduct from balance (Amount + ₹5 transaction fee)
+    user.wallet.balance -= totalDeduction;
     await user.save();
 
-    // Record Pending Transaction
+    // Record Pending Withdrawal Transaction
     const transaction = await Transaction.create({
         user: user._id,
         type: 'withdrawal',
@@ -117,6 +125,16 @@ exports.requestWithdrawal = asyncHandler(async (req, res, next) => {
         amount: amount,
         source: 'Bank Payout',
         status: 'Pending'
+    });
+
+    // Record Transaction Fee Debit
+    await Transaction.create({
+        user: user._id,
+        type: 'debit',
+        currency: 'INR',
+        amount: 5,
+        source: 'Withdrawal Transaction Fee',
+        status: 'Success'
     });
 
     res.status(200).json({

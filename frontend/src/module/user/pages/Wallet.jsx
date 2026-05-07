@@ -1,17 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
-import { CreditCard, Wallet as WalletIcon, IndianRupee, ArrowUpRight, ArrowDownLeft, History, Filter, AlertCircle, Sparkles, Coins, TrendingUp, ChevronRight, CheckCircle2, Share2 } from 'lucide-react';
+import { 
+    CreditCard, Wallet as WalletIcon, IndianRupee, ArrowUpRight, 
+    ArrowDownLeft, History, Filter, AlertCircle, Sparkles, Coins, 
+    TrendingUp, ChevronRight, CheckCircle2, Share2, Info, ArrowRightLeft
+} from 'lucide-react';
 import UnlockModal from '../components/UnlockModal';
+import api from '../../shared/services/api';
 
 const Wallet = () => {
     const navigate = useNavigate();
-    const { userData, requestWithdrawal, addNotification } = useUser();
+    const { userData, requestWithdrawal, addNotification, refreshUserProfile } = useUser();
     const { wallet, coins, name, isPaid } = userData;
     const [activeTab, setActiveTab] = useState('cash'); // 'cash' or 'coins'
     const [amount, setAmount] = useState('');
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [filter, setFilter] = useState('All'); // 'All', 'Earning', 'Payout'
+    const [minWithdrawal, setMinWithdrawal] = useState(100);
+    const [loadingSettings, setLoadingSettings] = useState(true);
+
+    // Fetch dynamic minWithdrawal from settings
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await api.get('/public/settings');
+                if (res.success && res.data) {
+                    setMinWithdrawal(Number(res.data.minWithdrawal) || 100);
+                }
+            } catch (err) {
+                console.error("Failed to load wallet settings:", err);
+            } finally {
+                setLoadingSettings(false);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handleWithdraw = async () => {
         if (!isPaid) {
@@ -20,13 +44,35 @@ const Wallet = () => {
         }
 
         const val = parseFloat(amount);
-        if (isNaN(val) || val < 100) {
-            addNotification("Invalid Amount", "Minimum withdrawal is ₹100.", "warning");
+        if (isNaN(val) || val < minWithdrawal) {
+            addNotification("Invalid Amount", `Minimum withdrawal is ₹${minWithdrawal}.`, "warning");
             return;
         }
 
-        if (val > wallet.balance) {
-            addNotification("Insufficient Balance", "You don't have enough balance.", "warning");
+        // Check for 24-hour limit on client side
+        const hasRecentWithdrawal = wallet.transactions && wallet.transactions.some(tx => {
+            if (tx.type !== 'withdrawal') return false;
+            const txDate = new Date(tx.date);
+            const now = new Date();
+            const diffTime = Math.abs(now - txDate);
+            const diffHours = diffTime / (1000 * 60 * 60);
+            return diffHours < 24;
+        });
+
+        if (hasRecentWithdrawal) {
+            addNotification("Limit Exceeded", "You can only withdraw once every 24 hours.", "warning");
+            return;
+        }
+
+        // Add ₹5 transition fee
+        const totalDeduction = val + 5;
+
+        if (totalDeduction > wallet.balance) {
+            addNotification(
+                "Insufficient Balance", 
+                `You need ₹${totalDeduction} (₹${val} amount + ₹5 fee) to complete this transaction.`, 
+                "warning"
+            );
             return;
         }
 
@@ -34,18 +80,19 @@ const Wallet = () => {
         if (res.success) {
             setAmount('');
             addNotification("Success", "Withdrawal requested successfully.", "success");
+            await refreshUserProfile(); // Refresh user profile to update wallet balance
         } else {
             addNotification("Withdrawal Denied", res.message, "error");
         }
     };
 
     const filteredTransactions = activeTab === 'cash' 
-        ? wallet.transactions.filter(tx => {
+        ? (wallet.transactions || []).filter(tx => {
             if (filter === 'Earning') return tx.type === 'credit';
             if (filter === 'Payout') return tx.type === 'withdrawal';
             return true;
         })
-        : coins.history.filter(tx => {
+        : (coins.history || []).filter(tx => {
             if (filter === 'Earning') return tx.type === 'credit';
             if (filter === 'Payout') return tx.type === 'debit';
             return true;
@@ -101,7 +148,7 @@ const Wallet = () => {
                         </div>
                         <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-1">
                             {activeTab === 'cash' ? <IndianRupee size={18} className="opacity-80" /> : <Coins size={18} className="opacity-80" />}
-                            {activeTab === 'cash' ? Number(wallet.balance).toLocaleString('en-IN') : coins.total.toLocaleString()}
+                            {activeTab === 'cash' ? Number(wallet.balance).toFixed(2) : coins.total.toLocaleString()}
                         </h2>
                     </div>
 
@@ -136,6 +183,68 @@ const Wallet = () => {
                     Invite
                 </div>
             </div>
+
+            {/* --- Withdrawal Section --- */}
+            {activeTab === 'cash' && (
+                <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                    {/* Header with Fee Information */}
+                    <div className="flex items-center justify-between border-b border-slate-50 pb-2.5">
+                        <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                            <ArrowRightLeft size={14} className="text-blue-500" />
+                            Withdraw Cash
+                        </h3>
+                        <span className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider">
+                            ₹5 Fee Added
+                        </span>
+                    </div>
+
+                    {/* Dynamic Fee & Deduction Previewer */}
+                    {amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && (
+                        <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 space-y-1.5 animate-in slide-in-from-top-1 duration-300">
+                            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+                                <span>Requested Amount:</span>
+                                <span className="text-slate-800">₹{parseFloat(amount).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+                                <span>Transaction Fee:</span>
+                                <span className="text-amber-600">+ ₹5.00</span>
+                            </div>
+                            <div className="border-t border-slate-200/60 pt-1.5 flex justify-between items-center text-[11px] font-extrabold text-slate-800">
+                                <span>Total Deducted from Wallet:</span>
+                                <span className="text-blue-600">₹{(parseFloat(amount) + 5).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex flex-col gap-2.5">
+                        <input
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            placeholder={`Amount (Min. ₹${minWithdrawal})`}
+                            className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2.5 px-3.5 text-[13px] font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all"
+                        />
+                        
+                        {/* 24-Hour Policy Alert Line (Highly Visible) */}
+                        <div className="bg-amber-50/50 border border-amber-100/70 p-2.5 rounded-lg flex items-start gap-2.5">
+                            <Info size={13} className="text-amber-500 shrink-0 mt-0.5" />
+                            <p className="text-[9px] font-bold text-amber-800 leading-normal">
+                                नोट: आप 24 घंटे में केवल एक बार ही निकासी (withdraw) कर सकते हैं।
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={handleWithdraw}
+                            className={`w-full py-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all
+                                ${amount >= minWithdrawal && (Number(amount) + 5) <= wallet.balance
+                                    ? 'bg-[#1a233b] hover:bg-black text-white shadow-md active:scale-95'
+                                    : 'bg-slate-50 text-slate-300 pointer-events-none border border-slate-100'}`}
+                        >
+                            Withdraw Now
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* --- Wallet Actions --- */}
             <div className="px-1 mt-1">
@@ -174,30 +283,6 @@ const Wallet = () => {
                 ))}
             </div>
 
-            {/* --- Withdrawal Section --- */}
-            {activeTab === 'cash' && (
-                <div className="bg-white border border-slate-100 rounded-lg p-3.5 shadow-sm">
-                    <div className="flex flex-col gap-2.5">
-                        <input
-                            type="number"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            placeholder="Amount (Min. ₹100)"
-                            className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2.5 px-3.5 text-[13px] font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all"
-                        />
-                        <button
-                            onClick={handleWithdraw}
-                            className={`w-full py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all
-                                ${amount >= 100 && amount <= wallet.balance
-                                    ? 'bg-[#1a233b] text-white shadow-md active:scale-95'
-                                    : 'bg-slate-50 text-slate-300 pointer-events-none border border-slate-100'}`}
-                        >
-                            Withdraw Now
-                        </button>
-                    </div>
-                </div>
-            )}
-
             {/* --- Info Note --- */}
             <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex gap-2.5 items-start">
                  <AlertCircle size={14} className="text-slate-400 shrink-0 mt-0.5" />
@@ -232,19 +317,21 @@ const Wallet = () => {
                         </div>
                     ) : (
                         filteredTransactions.map((tx, index) => (
-                            <div key={tx.id} className="bg-white border border-slate-100 rounded-lg p-3 flex items-center justify-between transition-all active:bg-slate-50">
+                            <div key={tx.id || index} className="bg-white border border-slate-100 rounded-lg p-3 flex items-center justify-between transition-all active:bg-slate-50">
                                 <div className="flex items-center gap-3">
                                     <div className={`w-9 h-9 rounded-md flex items-center justify-center border ${tx.type === 'credit' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' : 'bg-rose-50 text-rose-500 border-rose-100'}`}>
                                         {tx.type === 'credit' ? <ArrowDownLeft size={16} strokeWidth={3} /> : <ArrowUpRight size={16} strokeWidth={3} />}
                                     </div>
                                     <div>
                                         <h4 className="text-[11.5px] font-bold text-slate-800 leading-tight">{tx.title || tx.source}</h4>
-                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">{tx.date}</p>
+                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
+                                            {tx.date ? new Date(tx.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Just now'}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="text-right">
                                     <p className={`text-[13px] font-bold tracking-tighter ${tx.type === 'credit' ? 'text-emerald-500' : 'text-slate-900'}`}>
-                                        {tx.type === 'credit' ? '+' : '-'}{activeTab === 'cash' ? '₹' : ''}{Number(tx.amount).toLocaleString()}
+                                        {tx.type === 'credit' ? '+' : '-'}{activeTab === 'cash' ? '₹' : ''}{Number(tx.amount).toFixed(2)}
                                     </p>
                                     {activeTab === 'cash' && (
                                         <span className={`text-[7px] font-bold px-1 py-0.5 rounded tracking-widest uppercase inline-block mt-1 ${tx.status === 'Success' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>

@@ -133,39 +133,31 @@ const Earn = () => {
             <div className="flex-1 overflow-y-auto pb-4">
 
                 {/* Daily Tasks Summary Card */}
-                <div className="mx-0 mt-0 bg-white px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+                <div className="mx-4 mt-4 bg-white px-5 py-4 border border-slate-100 shadow-sm rounded-2xl flex items-center justify-between">
                     <div>
-                        <p className="text-[12px] font-bold text-slate-800 tracking-tight">
+                        <p className="text-[13px] font-extrabold text-slate-800 tracking-tight flex items-center gap-1">
                             Daily Tasks Avld{' '}
-                            <span className="text-slate-400 font-medium">({totalCount} Total)</span>
+                            <span className="text-[#3B82F6] font-extrabold">Available: {totalCount}</span>
                         </p>
-                        <div className="flex items-center gap-3 mt-0.5">
-                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                                Done: <span className="text-emerald-500 font-bold">{completedCount}</span>
+                        <div className="flex items-center gap-3 mt-1.5">
+                            <span className="text-[11px] font-bold text-slate-400">
+                                Completed: <span className="text-[#10B981] font-extrabold">{completedCount}</span>
                              </span>
-                             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                                Left: <span className="text-orange-500 font-bold">{remainingCount}</span>
+                             <span className="text-[11px] font-bold text-slate-400">
+                                Remaining: <span className="text-[#F97316] font-extrabold">{remainingCount}</span>
                              </span>
                         </div>
                     </div>
                     {/* Coin Bag Illustration */}
-                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-xl border border-amber-100">
+                    <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl border border-amber-100 shadow-sm">
                         💰
                     </div>
                 </div>
 
                 {/* ── Task List ── */}
-                <div className="flex flex-col gap-0 mt-2">
+                <div className="flex flex-col gap-0 mt-4">
                     {tasks.map((task, idx) => {
                         const taskId = task._id || task.id;
-                        const COLORS = [
-                            { bg: 'bg-blue-500', icon: 'text-white' },
-                            { bg: 'bg-rose-500', icon: 'text-white' },
-                            { bg: 'bg-orange-500', icon: 'text-white' },
-                            { bg: 'bg-purple-500', icon: 'text-white' },
-                            { bg: 'bg-emerald-500', icon: 'text-white' },
-                        ];
-                        const colorSet = COLORS[idx % COLORS.length];
                         const iconConfig = ICON_MAP[task.icon] || ICON_MAP[task.category] || ICON_MAP['Monitor'];
                         const IconEl = iconConfig.el;
                         const isCompleted = completedTasks.includes(taskId);
@@ -174,40 +166,43 @@ const Earn = () => {
                             <div
                                 key={taskId}
                                 onClick={() => handleTaskClick(task)}
-                                className={`bg-white border-b border-slate-50 px-5 py-2.5 flex items-center gap-3.5 transition-all ${isCompleted ? 'opacity-60 cursor-default' : 'active:bg-slate-50 cursor-pointer'}`}
+                                className={`bg-white border-b border-slate-100 px-5 py-3.5 flex items-center gap-4 transition-all ${isCompleted ? 'opacity-60 cursor-default' : 'active:bg-slate-50 cursor-pointer'}`}
                             >
-                                {/* Compact Circular Icon */}
-                                <div className={`w-11 h-11 ${isCompleted ? 'bg-slate-100' : colorSet.bg} rounded-full flex items-center justify-center shrink-0 shadow-sm transition-transform active:scale-95`}>
+                                {/* Pastel Rounded Icon */}
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform active:scale-95 ${
+                                    isCompleted ? 'bg-slate-100 text-slate-400' : `${iconConfig.bg} ${iconConfig.color}`
+                                }`}>
                                     {isCompleted ? (
-                                        <CheckCircle2 size={20} className="text-emerald-500" />
+                                        <CheckCircle2 size={24} className="text-emerald-500" />
                                     ) : (
-                                        <IconEl size={20} className="text-white" />
+                                        <IconEl size={24} />
                                     )}
                                 </div>
 
                                 {/* Text Content */}
                                 <div className="flex-1 min-w-0">
-                                    <h4 className={`text-[13.5px] font-semibold tracking-tight leading-none ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
+                                    <h4 className={`text-[14px] font-black tracking-tight leading-snug ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
                                         {task.title}
                                     </h4>
-                                    <p className="text-[10px] font-medium text-slate-400 mt-1.5 leading-none uppercase tracking-wide">
+                                    <p className="text-[11px] font-bold text-slate-400 mt-1 leading-snug">
                                         {isCompleted ? 'Completed' : task.description}
                                     </p>
                                 </div>
 
                                 {/* Right Side: Coins & Action */}
-                                <div className="flex flex-col items-end gap-1.5 min-w-[70px]">
-                                    <div className="flex items-center gap-1 leading-none">
-                                        <span className={`text-[15px] font-bold ${isCompleted ? 'text-emerald-500' : 'text-slate-700'}`}>
-                                            {isCompleted ? '+' : ''}{task.coinsReward || task.reward}
-                                        </span>
-                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Coins</span>
-                                    </div>
+                                <div className="flex flex-col items-end gap-1.5 min-w-[85px] shrink-0">
+                                    <span className="text-[10px] font-black text-slate-400 mb-0.5 whitespace-nowrap">
+                                        {task.coinsReward || task.reward} Coins
+                                    </span>
                                     
-                                    {!isCompleted && (
-                                        <div className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full text-[8.5px] font-bold uppercase tracking-widest border border-blue-100/50">
-                                            {task.type === 'Spin' ? 'Spin' : task.type === 'Proof' ? 'Upload' : 'Open'}
-                                        </div>
+                                    {!isCompleted ? (
+                                        <button className="px-3.5 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-[10px] font-extrabold uppercase tracking-wider rounded-xl shadow-sm transition-all duration-200 active:scale-95 leading-none min-w-[76px] text-center">
+                                            {task.type === 'Spin' ? 'Spin Now >' : task.type === 'Proof' ? 'Upload' : 'Complete'}
+                                        </button>
+                                    ) : (
+                                        <span className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-100">
+                                            Claimed
+                                        </span>
                                     )}
                                 </div>
                             </div>
@@ -222,8 +217,8 @@ const Earn = () => {
                 </div>
 
                 {/* ── Footer Banner ── */}
-                <div className="mx-0 mt-4 bg-emerald-500 py-4 px-5 flex items-center justify-center gap-2 shadow-md">
-                    <span className="text-[14px] font-bold text-white tracking-tight uppercase">
+                <div className="mx-4 mt-4 bg-[#F59E0B] py-4 px-5 rounded-2xl flex items-center justify-center gap-2 shadow-sm">
+                    <span className="text-[13px] font-extrabold text-white tracking-wide uppercase flex items-center gap-1.5">
                         🪙 Complete tasks and earn coins!
                     </span>
                 </div>

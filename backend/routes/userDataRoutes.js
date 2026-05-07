@@ -6,7 +6,8 @@ const {
     getMyPromotions, 
     updateProfilePhoto,
     updateFutureFundProgress,
-    unlockFutureFund
+    unlockFutureFund,
+    getReferrals
 } = require('../controllers/userController');
 const { unlockIdea } = require('../controllers/businessIdeaController');
 const { createOrder, verifyPayment } = require('../controllers/razorpayController');
@@ -26,6 +27,7 @@ router.patch('/kyc', upload.single('document'), updateKyc);
 router.post('/unlock', unlockPlatform);
 router.post('/promotions', submitPromotion);
 router.get('/promotions', getMyPromotions);
+router.get('/referrals', getReferrals);
 router.patch('/photo', upload.single('photo'), updateProfilePhoto);
 router.post('/future-fund/progress', updateFutureFundProgress);
 router.post('/future-fund/unlock', unlockFutureFund);

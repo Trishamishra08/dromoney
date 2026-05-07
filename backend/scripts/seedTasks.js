@@ -6,56 +6,116 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const tasks = [
     {
-        title: 'Follow us on Instagram',
-        description: 'Follow our official Instagram handle to get latest updates',
-        coinsReward: 10,
-        type: 'Social',
-        category: 'Instagram',
-        link: 'https://instagram.com/dromoney',
-        icon: 'Instagram',
+        title: 'Visit Website Page',
+        description: 'Stay for 15s to earn coins.',
+        coinsReward: 1,
+        type: 'Web',
+        category: 'Other',
+        link: 'https://google.com',
+        icon: 'Monitor',
         status: 'Active'
     },
     {
-        title: 'Subscribe to YouTube',
-        description: 'Watch our latest video and subscribe to our channel',
-        coinsReward: 15,
+        title: 'Watch Video Task',
+        description: 'Watch this short video to gain coins.',
+        coinsReward: 1,
         type: 'Video',
         category: 'YouTube',
-        link: 'https://youtube.com/dromoney',
+        link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         icon: 'Youtube',
         status: 'Active',
         config: {
-            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            timer: '60'
+            url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+            timer: '30'
         }
     },
     {
-        title: 'Join Telegram Channel',
-        description: 'Get instant alerts about new events and offers',
-        coinsReward: 5,
-        type: 'Join',
-        category: 'Telegram',
-        link: 'https://t.me/dromoney',
-        icon: 'MessageCircle',
-        status: 'Active'
-    },
-    {
-        title: 'Quick Daily Quiz',
-        description: 'Answer a simple question and win coins',
-        coinsReward: 20,
+        title: 'Simple Quiz Task',
+        description: 'Answer 1 question correctly.',
+        coinsReward: 1,
         type: 'Quiz',
         category: 'Other',
         link: 'https://dromoney.app/quiz',
         icon: 'Lightbulb',
         status: 'Active',
         config: {
-            question: 'What is the primary currency of India?',
-            optA: 'Dollar',
-            optB: 'Euro',
-            optC: 'Rupee',
-            optD: 'Yen',
-            answer: 'C'
+            question: 'What is the color of the sky?',
+            optA: 'Red',
+            optB: 'Blue',
+            optC: 'Green',
+            optD: 'Yellow',
+            answer: 'B'
         }
+    },
+    {
+        title: 'Spin Wheel Task',
+        description: 'Try your luck and win coins!',
+        coinsReward: 1,
+        type: 'Spin',
+        category: 'Other',
+        link: 'https://dromoney.com/lucky-draw',
+        icon: 'Disc',
+        status: 'Active'
+    },
+    {
+        title: 'Memory Master',
+        description: 'Match emoji pairs in a grid.',
+        coinsReward: 1,
+        type: 'Memory',
+        category: 'Other',
+        link: 'https://dromoney.com/memory',
+        icon: 'Zap',
+        status: 'Active'
+    },
+    {
+        title: 'Treasure Chest',
+        description: 'Pick the right box!',
+        coinsReward: 1,
+        type: 'Treasure',
+        category: 'Other',
+        link: 'https://dromoney.com/treasure',
+        icon: 'Rocket',
+        status: 'Active'
+    },
+    {
+        title: 'Speed Tapper',
+        description: 'Tap 25 times fast!',
+        coinsReward: 1,
+        type: 'Tapper',
+        category: 'Other',
+        link: 'https://dromoney.com/tapper',
+        icon: 'Zap',
+        status: 'Active'
+    },
+    {
+        title: 'Magic Scratch Card',
+        description: 'Rub to reveal hidden coins.',
+        coinsReward: 1,
+        type: 'Scratch',
+        category: 'Other',
+        link: 'https://dromoney.com/scratch',
+        icon: 'Monitor',
+        status: 'Active'
+    },
+    {
+        title: 'Share Platform Task',
+        description: 'Share on WhatsApp / Social.',
+        coinsReward: 1,
+        type: 'Social',
+        category: 'WhatsApp',
+        link: 'https://dromoney.com',
+        icon: 'MessageCircle',
+        status: 'Active'
+    },
+    {
+        title: 'Like & Follow Task',
+        description: 'Follow our page and upload proof.',
+        coinsReward: 1,
+        type: 'Social',
+        category: 'Instagram',
+        link: 'https://instagram.com/dromoney',
+        icon: 'Camera',
+        status: 'Active'
     }
 ];
 

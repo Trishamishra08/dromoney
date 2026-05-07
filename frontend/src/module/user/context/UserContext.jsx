@@ -118,7 +118,7 @@ export const UserProvider = ({ children }) => {
             referrals: {
                 count: dbUser.referralCount || 0,
                 code: dbUser.referralCode,
-                link: `${window.location.origin}/user/auth/register?ref=${dbUser.referralCode}`
+                link: `https://earningapp.com/join/nhgfAFF-${dbUser.referralCode}`
             },
             wallet: {
                 balance: dbUser.wallet?.balance || 0,
@@ -132,6 +132,7 @@ export const UserProvider = ({ children }) => {
                 progress: dbUser.futureFund?.progress || 0,
                 criteria: dbUser.futureFund?.criteria || []
             },
+            watchedAdsCount: dbUser.watchedAds ? dbUser.watchedAds.length : 0,
             supportExpiry: dbUser.supportExpiry,
             businessHubFirstAccessedAt: dbUser.businessHubFirstAccessedAt
         });

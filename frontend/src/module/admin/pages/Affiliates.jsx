@@ -159,7 +159,7 @@ const Affiliates = () => {
                                         </div>
                                     </td>
                                     <td className="px-8 py-5"><span className="font-black text-indigo-600 text-[13px] tracking-tight">{r.referredTo}</span></td>
-                                    <td className="px-8 py-5 font-black text-emerald-600 text-[14px]">₹200</td>
+                                    <td className="px-8 py-5 font-black text-emerald-600 text-[14px]">{r.reward}</td>
                                     <td className="px-8 py-5"><StatusBadge status={r.status} /></td>
                                     <td className="px-8 py-5">
                                         <div className="flex justify-center">

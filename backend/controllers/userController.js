@@ -299,3 +299,18 @@ exports.unlockFutureFund = asyncHandler(async (req, res, next) => {
         status: user.futureFund.status
     });
 });
+
+// @desc    Get user's referrals list
+// @route   GET /api/user/data/referrals
+// @access  Private
+exports.getReferrals = asyncHandler(async (req, res, next) => {
+    const referrals = await ReferralTransaction.find({ referrer: req.user.id })
+        .populate('referredUser', 'name phone createdAt')
+        .sort('-createdAt');
+
+    res.status(200).json({
+        success: true,
+        count: referrals.length,
+        data: referrals
+    });
+});
