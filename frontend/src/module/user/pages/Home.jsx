@@ -11,6 +11,7 @@ import PaymentModal from '../components/PaymentModal';
 import api from '../../shared/services/api';
 import UniversalVideoPlayer from '../../shared/components/UniversalVideoPlayer';
 import LogoImg from '../../../assets/WhatsApp_Image_2026-04-28_at_10.52.49_PM-removebg-preview.png';
+import { messaging, getToken, onMessage } from '../../../services/firebase';
 
 // --- Custom Social Icons for Reliability ---
 const FacebookIcon = () => (
@@ -164,6 +165,59 @@ const Home = () => {
     const [introConfig, setIntroConfig] = useState(null);
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
     const [paymentConfig, setPaymentConfig] = useState({ isOpen: false, plan: '', amount: 0 });
+    const [isFcmLoading, setIsFcmLoading] = useState(false);
+
+    // FCM Registration & Foreground Handling
+    useEffect(() => {
+        const registerFCM = async () => {
+            try {
+                if (!('serviceWorker' in navigator)) return;
+
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    // Explicitly register Service Worker
+                    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                    
+                    const token = await getToken(messaging, {
+                        vapidKey: import.meta.env.VITE_VAPID_KEY,
+                        serviceWorkerRegistration: registration
+                    });
+
+                    if (token) {
+                        await api.post('/fcm-tokens/save', { token, platform: 'web' });
+                    }
+                }
+            } catch (err) {
+                // Register silently
+            }
+        };
+
+        registerFCM();
+
+        const unsubscribe = onMessage(messaging, (payload) => {
+            window.alert(`Foreground Notification: ${payload.notification.title}\n${payload.notification.body}`);
+            addNotification(
+                payload.notification.title,
+                payload.notification.body,
+                'info'
+            );
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const triggerTestNotification = async () => {
+        setIsFcmLoading(true);
+        try {
+            await api.post('/fcm-tokens/test');
+            window.alert("🚀 Notification Sent Successfully!\n\nIf you don't see it:\n1. Check if Chrome notifications are allowed.\n2. Minimize the browser and try again.");
+            addNotification("Success", "Test notification triggered!", "success");
+        } catch (err) {
+            addNotification("Error", "Could not trigger notification", "error");
+        } finally {
+            setIsFcmLoading(false);
+        }
+    };
     const [lifetimePromo, setLifetimePromo] = useState(null);
     const [boosters, setBoosters] = useState({
         support: { title: 'Support Booster', subtitle: 'Boost participation & win more!', price: 11, validity: '30 Days', benefits: [] },
@@ -299,6 +353,20 @@ const Home = () => {
                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">{service.label}</span>
                         </button>
                     ))}
+                    
+                    {/* FCM Test Button */}
+                    <button
+                        onClick={triggerTestNotification}
+                        disabled={isFcmLoading}
+                        className="flex flex-col items-center gap-2 group transition-all"
+                    >
+                        <div className={`w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center shadow-sm group-hover:-translate-y-1 transition-transform ${isFcmLoading ? 'animate-pulse' : ''}`}>
+                            <PlusSquare size={22} strokeWidth={2.2} />
+                        </div>
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">
+                            {isFcmLoading ? 'Sending...' : 'Test Notify'}
+                        </span>
+                    </button>
                 </div>
             </div>
 

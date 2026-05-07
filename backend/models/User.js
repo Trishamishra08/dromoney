@@ -108,7 +108,9 @@ const UserSchema = new mongoose.Schema({
     },
     supportExpiry: {
         type: Date
-    }
+    },
+    fcmTokens: [String], // Web tokens
+    fcmTokenMobile: [String] // Mobile tokens
 
 }, {
     timestamps: true,
