@@ -236,11 +236,11 @@ const Wallet = () => {
                         <button
                             onClick={handleWithdraw}
                             className={`w-full py-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all
-                                ${amount >= minWithdrawal && (Number(amount) + 5) <= wallet.balance
-                                    ? 'bg-[#1a233b] hover:bg-black text-white shadow-md active:scale-95'
+                                ${(!isPaid) || (amount >= minWithdrawal && (Number(amount) + 5) <= wallet.balance)
+                                    ? 'bg-[#1a233b] hover:bg-black text-white shadow-md active:scale-95 cursor-pointer'
                                     : 'bg-slate-50 text-slate-300 pointer-events-none border border-slate-100'}`}
                         >
-                            Withdraw Now
+                            {isPaid ? 'Withdraw Now' : 'Unlock to Withdraw'}
                         </button>
                     </div>
                 </div>
