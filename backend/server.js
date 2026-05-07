@@ -55,6 +55,7 @@ const userData = require('./routes/userDataRoutes');
 const public = require('./routes/publicRoutes');
 const admin = require('./routes/adminRoutes');
 const chat = require('./routes/chatRoutes');
+const fcm = require('./routes/fcmRoutes');
 const errorHandler = require('./middleware/error');
 
 // Mount routers
@@ -64,6 +65,7 @@ app.use('/api/user/data', userData);
 app.use('/api/public', public);
 app.use('/api/admin', admin);
 app.use('/api/chat', chat);
+app.use('/api/fcm-tokens', fcm);
 
 // Error handler (Must be after routers)
 app.use(errorHandler);
