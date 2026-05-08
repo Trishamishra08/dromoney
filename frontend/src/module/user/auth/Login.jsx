@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Loader2, ArrowRight, Smartphone, Lock, ShieldCheck } from 'lucide-react';
+import { Loader2, ArrowRight, Smartphone, Lock, ShieldCheck, BookOpen, AlertTriangle, ShieldAlert, CheckCircle2, AlertCircle, HelpCircle } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import logoImg from '../../../assets/WhatsApp_Image_2026-04-28_at_10.52.49_PM-removebg-preview.png';
 
@@ -62,6 +62,12 @@ const Login = () => {
     const handleVerifyOtp = async (e) => {
         e.preventDefault();
         setError('');
+
+        if (otp.length !== 6) {
+            setError('OTP must be exactly 6 digits.');
+            return;
+        }
+
         setLoading(true);
         const result = await verifyLoginOtp(phone, otp);
         setLoading(false);

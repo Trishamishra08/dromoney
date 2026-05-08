@@ -138,11 +138,13 @@ function App() {
               <Route path="profile" element={<Profile />} />
               <Route path="business-ideas" element={<BusinessIdeas />} />
               <Route path="watch" element={<WatchAndEarn />} />
-              <Route path="info/:type" element={<InfoPage />} />
               <Route path="help" element={<HelpCenter />} />
               <Route path="future-fund" element={<FutureFund />} />
               <Route path="chat-support" element={<ChatSupportPage />} />
             </Route>
+
+            {/* Public Info Route */}
+            <Route path="/user/info/:type" element={<InfoPage />} />
 
             {/* Immersive User Routes (Protected) */}
             <Route path="/user/task/:id" element={<ProtectedUserRoute><TaskRunner /></ProtectedUserRoute>} />
