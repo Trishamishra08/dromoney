@@ -34,7 +34,7 @@ import api from '../../shared/services/api';
 
 const Earn = () => {
     const { userData, refreshUserProfile } = useUser();
-    const { isPaid } = userData;
+    const { isPaid, isBoosterActive } = userData;
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [isBoosterExpanded, setIsBoosterExpanded] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -42,7 +42,6 @@ const Earn = () => {
 
     // DYNAMIC TASKS STATE
     const [tasks, setTasks] = useState([]);
-    const [completedTasks, setCompletedTasks] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -62,16 +61,25 @@ const Earn = () => {
             } finally {
                 setLoading(false);
             }
-            
-            setCompletedTasks(taskStorage.getCompletedTasks());
         };
 
         loadTasks();
     }, []);
 
+    // Get actually completed tasks dynamically from backend userData (and fallback storage)
+    const completedTasks = (() => {
+        const dbCompleted = userData.completedTasks || [];
+        const localCompleted = taskStorage.getCompletedTasks();
+        const combined = new Set([
+            ...dbCompleted.map(id => String(id)),
+            ...localCompleted.map(id => String(id))
+        ]);
+        return Array.from(combined);
+    })();
+
     const totalCount = tasks.length;
     const completedCount = completedTasks.length;
-    const remainingCount = totalCount - completedCount;
+    const remainingCount = Math.max(0, totalCount - completedCount);
 
     const handleTaskClick = (task) => {
         const taskId = task._id || task.id;
@@ -240,10 +248,11 @@ const Earn = () => {
                                 <ChevronDown size={18} />
                             </button>
                             <button
-                                onClick={() => setIsPaymentOpen(true)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-[11px] font-black tracking-tight shadow-md active:scale-95 transition-all"
+                                onClick={() => !isBoosterActive && setIsPaymentOpen(true)}
+                                disabled={isBoosterActive}
+                                className={`${isBoosterActive ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'} px-4 py-2 rounded-xl text-[11px] font-black tracking-tight active:scale-95 transition-all`}
                             >
-                                Buy Now
+                                {isBoosterActive ? 'Already Bought' : 'Buy Now'}
                             </button>
                         </div>
                     </div>

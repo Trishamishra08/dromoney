@@ -4,6 +4,15 @@ const Transaction = require('../models/Transaction');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 
+// Helper to calculate a stable seed-based duration between 30 and 60 seconds
+const getDynamicDuration = (adObj) => {
+    if (adObj.duration && adObj.duration >= 30 && adObj.duration <= 60) {
+        return adObj.duration;
+    }
+    const seed = adObj._id ? adObj._id.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 45;
+    return 30 + (seed % 31); // Yields a stable, consistent duration between 30 and 60 seconds (inclusive)
+};
+
 // @desc    Get all active ads
 // @route   GET /api/public/ads
 // @access  Public (Optional User)
@@ -11,20 +20,43 @@ exports.getAds = asyncHandler(async (req, res, next) => {
     const ads = await Ad.find({ status: 'Active' }).sort('-createdAt');
     
     let watchedIds = [];
+    let dailyAdCount = 0;
+    let nextAdAvailableAt = null;
+
     if (req.user) {
         const user = await User.findById(req.user.id);
-        watchedIds = user.watchedAds.map(id => id.toString());
+        if (user) {
+            // Check if day has changed since lastAdCountResetAt
+            const todayStr = new Date().toDateString();
+            const resetStr = new Date(user.lastAdCountResetAt || Date.now()).toDateString();
+            if (todayStr !== resetStr) {
+                user.dailyAdCount = 0;
+                user.watchedAds = []; // Clear daily watches to allow re-watching
+                user.lastAdCountResetAt = new Date();
+                await user.save();
+            }
+            watchedIds = user.watchedAds.map(id => id.toString());
+            dailyAdCount = user.dailyAdCount;
+            nextAdAvailableAt = user.nextAdAvailableAt;
+        }
     }
 
-    const data = ads.map(ad => ({
-        ...ad._doc,
-        isWatched: watchedIds.includes(ad._id.toString())
-    }));
+    const data = ads.map(ad => {
+        const dynamicDuration = getDynamicDuration(ad);
+        return {
+            ...ad._doc,
+            duration: dynamicDuration,
+            isWatched: watchedIds.includes(ad._id.toString())
+        };
+    });
 
     res.status(200).json({
         success: true,
         count: data.length,
-        data
+        data,
+        dailyAdCount,
+        nextAdAvailableAt,
+        maxDailyLimit: 10
     });
 });
 
@@ -39,17 +71,39 @@ exports.getAdById = asyncHandler(async (req, res, next) => {
     }
 
     let isWatched = false;
+    let dailyAdCount = 0;
+    let nextAdAvailableAt = null;
+
     if (req.user) {
         const user = await User.findById(req.user.id);
-        isWatched = user.watchedAds.includes(ad._id);
+        if (user) {
+            // Check if day has changed since lastAdCountResetAt
+            const todayStr = new Date().toDateString();
+            const resetStr = new Date(user.lastAdCountResetAt || Date.now()).toDateString();
+            if (todayStr !== resetStr) {
+                user.dailyAdCount = 0;
+                user.watchedAds = []; // Clear daily watches to allow re-watching
+                user.lastAdCountResetAt = new Date();
+                await user.save();
+            }
+            isWatched = user.watchedAds.includes(ad._id);
+            dailyAdCount = user.dailyAdCount;
+            nextAdAvailableAt = user.nextAdAvailableAt;
+        }
     }
+
+    const dynamicDuration = getDynamicDuration(ad);
 
     res.status(200).json({
         success: true,
         data: {
             ...ad._doc,
+            duration: dynamicDuration,
             isWatched
-        }
+        },
+        dailyAdCount,
+        nextAdAvailableAt,
+        maxDailyLimit: 10
     });
 });
 
@@ -64,18 +118,38 @@ exports.rewardUserForAd = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('User not found', 404));
     }
 
-    // 1. Check if ad exists
+    // 1. Check day change and reset counters if needed
+    const todayStr = new Date().toDateString();
+    const resetStr = new Date(user.lastAdCountResetAt || Date.now()).toDateString();
+    if (todayStr !== resetStr) {
+        user.dailyAdCount = 0;
+        user.watchedAds = [];
+        user.lastAdCountResetAt = new Date();
+    }
+
+    // 2. Check maximum 10 videos limit
+    if (user.dailyAdCount >= 10) {
+        return next(new ErrorResponse('Daily limit reached. You can only watch a maximum of 10 ads per day.', 400));
+    }
+
+    // 3. Check cooldown gap of 30s to 60s
+    if (user.nextAdAvailableAt && new Date() < user.nextAdAvailableAt) {
+        const diffSeconds = Math.ceil((new Date(user.nextAdAvailableAt) - Date.now()) / 1000);
+        return next(new ErrorResponse(`Please wait ${diffSeconds} more seconds before watching another video.`, 400));
+    }
+
+    // 4. Check if ad exists
     const ad = await Ad.findById(adId);
     if (!ad) {
         return next(new ErrorResponse('Ad not found', 404));
     }
 
-    // 2. Check if already watched
+    // 5. Check if already watched today
     if (user.watchedAds.includes(adId)) {
         return next(new ErrorResponse('Reward already claimed for this ad', 400));
     }
 
-    // 3. Calculate rewards
+    // 6. Calculate rewards
     const baseReward = ad.coinsReward || 0;
     const factor = user.isBoosterActive ? 3 : 1;
     const totalAwardedCoins = baseReward * factor;
@@ -94,9 +168,15 @@ exports.rewardUserForAd = asyncHandler(async (req, res, next) => {
     user.wallet.todayEarnings += earningsInRupee;
 
     user.watchedAds.push(adId);
+    user.dailyAdCount += 1;
+
+    // Define random gap/cooldown between 30 and 60 seconds
+    const cooldownSeconds = Math.floor(Math.random() * (60 - 30 + 1)) + 30;
+    user.nextAdAvailableAt = new Date(Date.now() + cooldownSeconds * 1000);
+
     await user.save();
 
-    // 4. Record Transactions
+    // 7. Record Transactions
     await Transaction.create({
         user: user._id,
         type: 'credit',
@@ -115,7 +195,7 @@ exports.rewardUserForAd = asyncHandler(async (req, res, next) => {
         status: 'Success'
     });
 
-    // 5. Update Ad view count
+    // 8. Update Ad view count
     ad.viewCount += 1;
     await ad.save();
 
@@ -126,7 +206,9 @@ exports.rewardUserForAd = asyncHandler(async (req, res, next) => {
             coinsAwarded: totalAwardedCoins,
             inrAwarded: earningsInRupee,
             newCoinBalance: user.coins.balance,
-            newWalletBalance: user.wallet.balance
+            newWalletBalance: user.wallet.balance,
+            dailyAdCount: user.dailyAdCount,
+            nextAdAvailableAt: user.nextAdAvailableAt
         }
     });
 });

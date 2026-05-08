@@ -116,17 +116,17 @@ const AdminLayout = () => {
 
             {/* ── Sidebar ── */}
             <aside
-                className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[#0f172a] flex flex-col shrink-0 transition-all duration-300 relative z-30 h-full border-r border-slate-800/40`}
-                style={{ overscrollBehaviorY: 'contain' }}
+                className={`${sidebarOpen ? 'w-56' : 'w-16'} bg-[#0f172a] flex flex-col shrink-0 transition-all duration-300 relative z-30 h-full border-r border-slate-800/40`}
+                style={{ overscrollBehaviorY: 'contain', fontFamily: "'Roboto', sans-serif" }}
             >
-                <div className="flex flex-col items-center px-4 py-4 border-b border-slate-800/40 shrink-0 gap-2">
-                    <div className="w-24 h-24 flex items-center justify-center shrink-0">
+                <div className="flex flex-col items-center px-3 py-3 border-b border-slate-800/40 shrink-0 gap-1.5">
+                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
                         <img src={logo} alt="Dromoney" className="w-full h-full object-contain filter drop-shadow-2xl" />
                     </div>
                     {sidebarOpen && (
-                        <div className="text-center -mt-2">
-                            <h1 className="text-lg font-black text-white leading-none tracking-tight mb-1 uppercase">Dromoney</h1>
-                            <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] leading-none">Admin Control</p>
+                        <div className="text-center">
+                            <h1 className="text-sm font-black text-white leading-none tracking-wide mb-0.5 uppercase">Dromoney</h1>
+                            <p className="text-[8px] font-black text-amber-500 uppercase tracking-[0.2em] leading-none">Admin Control</p>
                         </div>
                     )}
                 </div>
@@ -183,7 +183,7 @@ const AdminLayout = () => {
                 </header>
 
                 <main
-                    className="flex-1 overflow-y-auto bg-slate-50/30 grow h-full"
+                    className="flex-1 overflow-y-auto bg-slate-50/30 grow h-full admin-compact-container"
                     style={{ overscrollBehaviorY: 'contain' }}
                 >
                     <Outlet />

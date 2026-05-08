@@ -77,7 +77,7 @@ const TaskQuizView = () => {
         if (!completed.includes(id)) {
             taskStorage.markComplete(id);
             if (s === 10) {
-                addCoins(reward, `Task Quiz: ${task?.title}`);
+                addCoins(reward, `Task Quiz: ${task?.title}`, id);
             }
         }
     };

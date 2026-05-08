@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
+const Withdrawal = require('../models/Withdrawal');
 const Settings = require('../models/Settings');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
@@ -10,9 +11,25 @@ const asyncHandler = require('../middleware/async');
 exports.getBalance = asyncHandler(async (req, res, next) => {
     const user = await User.findById(req.user.id).select('wallet coins');
 
+    // Fetch any non-rejected withdrawal in the last 24 hours
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const recentWithdrawal = await Withdrawal.findOne({
+        user: req.user.id,
+        status: { $ne: 'Rejected' },
+        createdAt: { $gte: twentyFourHoursAgo }
+    }).sort('-createdAt');
+
+    // Fetch any pending withdrawal request
+    const pendingWithdrawal = await Withdrawal.findOne({
+        user: req.user.id,
+        status: 'Pending'
+    });
+
     res.status(200).json({
         success: true,
-        data: user
+        data: user,
+        recentWithdrawal,
+        pendingWithdrawal
     });
 });
 
@@ -20,7 +37,7 @@ exports.getBalance = asyncHandler(async (req, res, next) => {
 // @route   POST /api/user/wallet/add-coins
 // @access  Private
 exports.addCoins = asyncHandler(async (req, res, next) => {
-    const { amount, source } = req.body;
+    const { amount, source, taskId } = req.body;
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -41,6 +58,16 @@ exports.addCoins = asyncHandler(async (req, res, next) => {
     user.wallet.balance += earningsInRupee;
     user.wallet.lifetimeEarnings += earningsInRupee;
     user.wallet.todayEarnings += earningsInRupee;
+
+    // Track completed tasks dynamically in database
+    if (taskId) {
+        if (!user.completedTasks) {
+            user.completedTasks = [];
+        }
+        if (!user.completedTasks.includes(taskId)) {
+            user.completedTasks.push(taskId);
+        }
+    }
 
     await user.save();
 
@@ -78,7 +105,7 @@ exports.addCoins = asyncHandler(async (req, res, next) => {
 // @route   POST /api/user/wallet/withdraw
 // @access  Private
 exports.requestWithdrawal = asyncHandler(async (req, res, next) => {
-    const { amount } = req.body;
+    const { amount, bankDetails } = req.body;
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -94,16 +121,19 @@ exports.requestWithdrawal = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse(`Minimum withdrawal amount is ₹${minWithdrawalLimit}`, 400));
     }
 
-    // 2. Check for 24-hour limit (only one withdrawal per 24 hours)
+    // 2. Check for 24-hour limit (only one non-rejected withdrawal request every 24 hours)
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const recentWithdrawal = await Transaction.findOne({
-        user: req.user.id,
-        type: 'withdrawal',
-        date: { $gte: twentyFourHoursAgo }
+    const recentWithdrawal = await Withdrawal.findOne({
+        user: user._id,
+        status: { $ne: 'Rejected' },
+        createdAt: { $gte: twentyFourHoursAgo }
     });
 
     if (recentWithdrawal) {
-        return next(new ErrorResponse('You can only withdraw once every 24 hours', 400));
+        const diffMs = new Date(recentWithdrawal.createdAt).getTime() + (24 * 60 * 60 * 1000) - Date.now();
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        return next(new ErrorResponse(`You can only withdraw once every 24 hours. Please wait ${diffHours}h ${diffMins}m before trying again.`, 400));
     }
 
     // Check with ₹5 transaction fee
@@ -113,10 +143,13 @@ exports.requestWithdrawal = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse(`Insufficient balance. You need ₹${totalDeduction} (₹${amount} withdrawal + ₹5 transaction fee) to complete this transaction`, 400));
     }
 
-    // Deduct from balance (Amount + ₹5 transaction fee)
-    user.wallet.balance -= totalDeduction;
-    await user.save();
+    // 3. Check for any existing pending withdrawal request to prevent race conditions
+    const existingPending = await Withdrawal.findOne({ user: user._id, status: 'Pending' });
+    if (existingPending) {
+        return next(new ErrorResponse('You already have a pending withdrawal request. Please wait for admin approval before requesting another one.', 400));
+    }
 
+    // We DO NOT deduct the balance here anymore. It will be deducted upon admin approval.
     // Record Pending Withdrawal Transaction
     const transaction = await Transaction.create({
         user: user._id,
@@ -127,20 +160,32 @@ exports.requestWithdrawal = asyncHandler(async (req, res, next) => {
         status: 'Pending'
     });
 
-    // Record Transaction Fee Debit
-    await Transaction.create({
+    // Record Pending Transaction Fee
+    const feeTransaction = await Transaction.create({
         user: user._id,
-        type: 'debit',
+        type: 'withdrawal',
         currency: 'INR',
         amount: 5,
         source: 'Withdrawal Transaction Fee',
-        status: 'Success'
+        status: 'Pending'
+    });
+
+    // Create corresponding Withdrawal request for Admin Dashboard
+    await Withdrawal.create({
+        user: user._id,
+        amount: amount,
+        paymentMethod: 'Bank Transfer',
+        bankDetails: bankDetails,
+        status: 'Pending',
+        transaction: transaction._id,
+        feeTransaction: feeTransaction._id
     });
 
     res.status(200).json({
         success: true,
         message: 'Withdrawal request submitted successfully',
-        transactionId: transaction._id
+        transactionId: transaction._id,
+        feeTransactionId: feeTransaction._id
     });
 });
 

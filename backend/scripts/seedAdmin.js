@@ -10,7 +10,7 @@ const seedAdmin = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('MongoDB Connected for seeding...');
 
-        const existingAdmin = await Admin.findOne({ email: 'dromoney@gmail.com' });
+        const existingAdmin = await Admin.findOne({ email: 'dromoney12345@gmail.com' });
         
         if (existingAdmin && process.argv[2] !== '--force') {
             console.log('Admin already exists! Skipping seeding (use --force to update password).');
@@ -18,22 +18,26 @@ const seedAdmin = async () => {
         }
 
         if (existingAdmin && process.argv[2] === '--force') {
-            existingAdmin.password = 'dromoney';
+            existingAdmin.password = 'dro@6363';
             await existingAdmin.save();
             console.log('✅ Admin Password Updated Successfully!');
             process.exit();
         }
 
+        // Clean up old admin users if present
+        await Admin.deleteOne({ email: 'admin@dromoney.com' });
+        await Admin.deleteOne({ email: 'dromoney@gmail.com' });
+
         await Admin.create({
             name: 'Super Admin',
-            email: 'dromoney@gmail.com',
-            password: 'dromoney',
+            email: 'dromoney12345@gmail.com',
+            password: 'dro@6363',
             role: 'Super Admin'
         });
 
         console.log('✅ Admin User Created Successfully!');
-        console.log('Email: dromoney@gmail.com');
-        console.log('Password: dromoney');
+        console.log('Email: dromoney12345@gmail.com');
+        console.log('Password: dro@6363');
         
         process.exit();
     } catch (err) {

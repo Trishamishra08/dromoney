@@ -35,17 +35,6 @@ const DEFAULT_EVENTS = [
         status: 'Active'
     },
     {
-        id: 'gold-prediction',
-        title: 'Gold Prediction',
-        tag: 'Prediction',
-        fee: 20,
-        prize: '₹2000',
-        startTime: 'Live Now',
-        participants: 5,
-        status: 'Active',
-        coinReward: 40
-    },
-    {
         id: 'memory-master',
         title: 'Memory Master',
         tag: 'Brain',

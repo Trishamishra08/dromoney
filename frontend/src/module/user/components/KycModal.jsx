@@ -17,10 +17,28 @@ const KycModal = ({ isOpen, onClose }) => {
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            setSelectedFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
+        if (!file) return;
+
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        const ext = file.name.split('.').pop().toLowerCase();
+        const allowedExts = ['jpeg', 'jpg', 'png'];
+        if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
+            window.alert("Invalid Format!\n\nPlease select a valid image (JPEG, JPG, or PNG).");
+            addNotification("Invalid Format", "Please select a valid image (JPEG, JPG, or PNG)!", "error");
+            e.target.value = '';
+            return;
         }
+
+        // Limit to 5MB
+        if (file.size > 5 * 1024 * 1024) {
+            window.alert("File Too Large!\n\nAadhaar photo must be under 5MB.");
+            addNotification("File Too Large", "Aadhaar photo must be under 5MB!", "error");
+            e.target.value = '';
+            return;
+        }
+
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
     };
 
     const handleSubmit = async (e) => {

@@ -13,25 +13,30 @@ const WithdrawalSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ['UPI', 'Bank Transfer', 'Wallet'],
-        default: 'UPI'
-    },
-    upiId: {
-        type: String,
-        required: function() { return this.paymentMethod === 'UPI'; }
+        enum: ['Bank Transfer', 'UPI', 'Wallet'],
+        default: 'Bank Transfer'
     },
     bankDetails: {
         accountNumber: String,
         ifscCode: String,
-        holderName: String
+        holderName: String,
+        bankName: String
     },
     status: {
         type: String,
-        enum: ['Pending', 'Processing', 'Completed', 'Rejected'],
+        enum: ['Pending', 'Processing', 'Approved', 'Completed', 'Rejected'],
         default: 'Pending'
     },
     rejectionReason: String,
     transactionHash: String, // For proof of payment
+    transaction: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Transaction'
+    },
+    feeTransaction: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Transaction'
+    },
     processedAt: Date,
     createdAt: {
         type: Date,

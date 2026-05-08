@@ -57,6 +57,10 @@ const LayoutManager = () => {
             id: 4, label: 'User Guidelines', path: '/user/info/guidelines', dbKey: 'menu_guidelines',
             content: "", icon: BookOpen, color: 'text-emerald-500'
         },
+        {
+            id: 5, label: 'No Refund Policy', path: '/user/info/refund-policy', dbKey: 'menu_refund_policy',
+            content: "", icon: AlertCircle, color: 'text-rose-500'
+        },
     ]);
 
     const fetchNavbarSections = async () => {

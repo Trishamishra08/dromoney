@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import "tailwindcss";
 
 .font-playfair {
     font-family: 'Playfair Display', serif !important;
@@ -42,4 +42,143 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.2);
+}
+
+/* ── Admin Panel Compact Layout Override ── */
+.admin-compact-container {
+    padding: 0.75rem !important; /* Reduces default outer margin spacing */
+}
+
+/* Scaled down paddings for card structures */
+.admin-compact-container .p-8 {
+    padding: 1.25rem !important; /* 20px instead of 32px */
+}
+.admin-compact-container .p-6 {
+    padding: 1rem !important; /* 16px instead of 24px */
+}
+.admin-compact-container .p-5 {
+    padding: 0.875rem !important; /* 14px instead of 20px */
+}
+.admin-compact-container .p-4 {
+    padding: 0.75rem !important; /* 12px instead of 16px */
+}
+
+.admin-compact-container .py-8 {
+    padding-top: 1.25rem !important;
+    padding-bottom: 1.25rem !important;
+}
+.admin-compact-container .py-6 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+.admin-compact-container .py-5 {
+    padding-top: 0.875rem !important;
+    padding-bottom: 0.875rem !important;
+}
+
+.admin-compact-container .px-8 {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+}
+.admin-compact-container .px-6 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+.admin-compact-container .px-5 {
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+}
+
+/* Scaled down vertical space dividers (space-y-*) */
+.admin-compact-container .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1.25rem !important;
+}
+.admin-compact-container .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem !important;
+}
+.admin-compact-container .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.75rem !important;
+}
+.admin-compact-container .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.625rem !important;
+}
+
+/* Scaled down grid & flex layouts */
+.admin-compact-container .gap-8 {
+    gap: 1.25rem !important;
+}
+.admin-compact-container .gap-6 {
+    gap: 1rem !important;
+}
+.admin-compact-container .gap-5 {
+    gap: 0.75rem !important;
+}
+.admin-compact-container .gap-4 {
+    gap: 0.625rem !important;
+}
+
+/* Compact rounded corner tokens */
+.admin-compact-container .rounded-3xl {
+    border-radius: 1rem !important; /* 16px instead of 24px */
+}
+.admin-compact-container .rounded-2xl {
+    border-radius: 0.75rem !important; /* 12px instead of 16px */
+}
+.admin-compact-container .rounded-xl {
+    border-radius: 0.625rem !important; /* 10px instead of 12px */
+}
+
+/* Elegant and cohesive scaled down typography */
+.admin-compact-container h1, 
+.admin-compact-container .text-3xl {
+    font-size: 1.35rem !important; /* ~21px */
+    font-weight: 800 !important;
+}
+.admin-compact-container h2, 
+.admin-compact-container .text-2xl {
+    font-size: 1.15rem !important; /* ~18px */
+    font-weight: 800 !important;
+}
+.admin-compact-container h3, 
+.admin-compact-container .text-xl {
+    font-size: 0.98rem !important; /* ~15.5px */
+}
+.admin-compact-container h4, 
+.admin-compact-container .text-lg {
+    font-size: 0.88rem !important; /* ~14px */
+}
+
+/* Slimmer text inputs, selects and textareas */
+.admin-compact-container input,
+.admin-compact-container select,
+.admin-compact-container textarea {
+    padding-top: 0.45rem !important;
+    padding-bottom: 0.45rem !important;
+    padding-left: 0.65rem !important;
+    padding-right: 0.65rem !important;
+    font-size: 0.75rem !important;
+    border-radius: 0.5rem !important;
+}
+
+/* Slimmer clickable buttons */
+.admin-compact-container button {
+    padding-top: 0.45rem !important;
+    padding-bottom: 0.45rem !important;
+    font-size: 0.75rem !important;
+}
+
+/* Compact and readable table rows */
+.admin-compact-container td,
+.admin-compact-container th {
+    padding-top: 0.45rem !important;
+    padding-bottom: 0.45rem !important;
+    padding-left: 0.65rem !important;
+    padding-right: 0.65rem !important;
+    font-size: 0.75rem !important;
+}
+
+/* Ensure uploaded images inside lists stay compact */
+.admin-compact-container img {
+    max-height: 100px;
+    object-fit: contain;
 }

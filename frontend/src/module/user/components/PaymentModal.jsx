@@ -55,7 +55,7 @@ const PaymentModal = ({ isOpen, onClose, plan, amount, type = 'PLATFORM_UNLOCK',
 
             const options = {
                 key: keyId,
-                amount: amount * 100, // in paise
+                amount: Math.round(amount * 100), // in paise
                 currency: 'INR',
                 name: 'Dromoney',
                 description: plan,
@@ -137,9 +137,11 @@ const PaymentModal = ({ isOpen, onClose, plan, amount, type = 'PLATFORM_UNLOCK',
                         <div className="p-6 text-center border-b border-slate-100 border-dashed bg-gradient-to-b from-slate-50 to-white">
                             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total Amount</p>
                             <h2 className="text-4xl font-black text-slate-800 flex items-center justify-center">
-                                <span className="text-xl text-slate-400 font-bold mr-1 translate-y-0.5">₹</span>{amount}.00
+                                <span className="text-xl text-slate-400 font-bold mr-1 translate-y-0.5">₹</span>{parseFloat(amount).toFixed(2)}
                             </h2>
-                            <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest mt-2 bg-emerald-50 px-3 py-1 rounded-full inline-block">Lifetime Access</p>
+                            <p className="text-[9px] text-emerald-600 font-black uppercase tracking-widest mt-2 bg-emerald-50 px-3 py-1 rounded-full inline-block">
+                                {type.includes('BOOSTER') ? 'Premium Booster' : 'Lifetime Access'}
+                            </p>
                         </div>
 
                         {status === 'error' && (
@@ -155,7 +157,7 @@ const PaymentModal = ({ isOpen, onClose, plan, amount, type = 'PLATFORM_UNLOCK',
                                 className="w-full bg-sky-500 hover:bg-sky-600 active:scale-[0.98] text-white font-black py-4 rounded-xl text-[12px] uppercase tracking-widest transition-all shadow-lg shadow-sky-200 flex items-center justify-center gap-2"
                             >
                                 <ShieldCheck size={16} />
-                                Pay ₹{amount} via Razorpay
+                                Pay ₹{parseFloat(amount).toFixed(2)} via Razorpay
                             </button>
                             <p className="text-center text-[9px] text-slate-400 font-bold mt-3 uppercase tracking-widest">UPI · Card · Netbanking · Wallets</p>
                         </div>

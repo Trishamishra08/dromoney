@@ -5,10 +5,24 @@ const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 
 // @desc    Get all events
-// @route   GET /api/public/events
-// @access  Public
+// @route   GET /api/public/events or /api/admin/events
+// @access  Public/Admin
 exports.getEvents = asyncHandler(async (req, res, next) => {
-    const events = await Event.find({ status: { $ne: 'Draft' } });
+    // Admins can see all events (including drafts), public sees non-drafts
+    const query = (req.baseUrl && req.baseUrl.includes('admin')) ? {} : { status: { $ne: 'Draft' } };
+    const events = await Event.find(query);
+
+    // Calculate dynamic counts for each event
+    const eventsWithStats = await Promise.all(events.map(async (event) => {
+        const totalParticipants = await EventParticipant.countDocuments({ event: event._id });
+        const awardedCount = await EventParticipant.countDocuments({ event: event._id, prizeStatus: 'Awarded' });
+        
+        return {
+            ...event.toObject(),
+            participantsCount: totalParticipants,
+            awardedCount: awardedCount
+        };
+    }));
 
     // If user is logged in, mark which events they've joined
     let joinedEventIds = [];
@@ -19,9 +33,9 @@ exports.getEvents = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
-        count: events.length,
+        count: eventsWithStats.length,
         joinedEvents: joinedEventIds,
-        data: events
+        data: eventsWithStats
     });
 });
 
@@ -36,7 +50,12 @@ exports.joinEvent = asyncHandler(async (req, res, next) => {
 
     // Check if already joined
     const existing = await EventParticipant.findOne({ event: event._id, user: user._id });
-    if (existing) return next(new ErrorResponse('Already joined this event', 400));
+    if (existing) {
+        return res.status(200).json({
+            success: true,
+            message: `Successfully joined ${event.title}`
+        });
+    }
 
     // Check coins
     if (user.coins.balance < event.fee) {
@@ -63,7 +82,7 @@ exports.joinEvent = asyncHandler(async (req, res, next) => {
 // @route   POST /api/user/data/events/:id/submit
 // @access  Private
 exports.submitResult = asyncHandler(async (req, res, next) => {
-    const { score, result, prize } = req.body;
+    const { score, result, prize, timeTaken } = req.body;
     
     const participant = await EventParticipant.findOne({ 
         event: req.params.id, 
@@ -75,9 +94,10 @@ exports.submitResult = asyncHandler(async (req, res, next) => {
     }
 
     // Update result
-    participant.score = score;
-    participant.result = result;
-    participant.prize = prize;
+    if (score !== undefined) participant.score = score;
+    if (result !== undefined) participant.result = result;
+    if (prize !== undefined) participant.prize = prize;
+    if (timeTaken !== undefined) participant.timeTaken = timeTaken;
     await participant.save();
 
     res.status(200).json({
@@ -150,5 +170,41 @@ exports.deleteEvent = asyncHandler(async (req, res, next) => {
     res.status(200).json({
         success: true,
         data: {}
+    });
+});
+
+// @desc    Get all participants for an event
+// @route   GET /api/admin/events/:id/participants
+// @access  Private/Admin
+exports.getEventParticipants = asyncHandler(async (req, res, next) => {
+    const participants = await EventParticipant.find({ event: req.params.id })
+        .populate('user', 'name email phone')
+        .sort('-createdAt');
+
+    res.status(200).json({
+        success: true,
+        count: participants.length,
+        data: participants
+    });
+});
+
+// @desc    Update participant prize status (Award prize)
+// @route   PUT /api/admin/events/participants/:id
+// @access  Private/Admin
+exports.updateParticipantStatus = asyncHandler(async (req, res, next) => {
+    const { prizeStatus, prizeNote } = req.body;
+
+    let participant = await EventParticipant.findById(req.params.id);
+    if (!participant) {
+        return next(new ErrorResponse('Participant record not found', 404));
+    }
+
+    participant.prizeStatus = prizeStatus;
+    if (prizeNote) participant.prizeNote = prizeNote;
+    await participant.save();
+
+    res.status(200).json({
+        success: true,
+        data: participant
     });
 });

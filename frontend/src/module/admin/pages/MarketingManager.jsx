@@ -172,7 +172,15 @@ const MarketingManager = () => {
                 // 3. Process Future Features
                 const fData = data['menu_future_features']?.data;
                 if (fData) {
-                    setFutureFeatures(Array.isArray(fData) ? fData : (fData.sections || []));
+                    if (Array.isArray(fData)) {
+                        setFutureFeatures(fData);
+                        setFutureFeaturesTitle("Future and Option");
+                        setFutureFeaturesSubtitle("Upcoming earning opportunities");
+                    } else {
+                        setFutureFeatures(fData.sections || []);
+                        setFutureFeaturesTitle(fData.title || "Future and Option");
+                        setFutureFeaturesSubtitle(fData.subtitle || "Upcoming earning opportunities");
+                    }
                 }
 
                 // 4. Process Income Projects
@@ -227,6 +235,8 @@ const MarketingManager = () => {
         { title: 'Global Payouts', text: 'Expansion beyond local banking to support international earners through crypto and PayPal.' },
         { title: 'Advanced AI Tools', text: 'Get automated marketing kits generated for your affiliate links for 10x better results.' }
     ]);
+    const [futureFeaturesTitle, setFutureFeaturesTitle] = useState("Future and Option");
+    const [futureFeaturesSubtitle, setFutureFeaturesSubtitle] = useState("Upcoming earning opportunities");
 
     // -- Projects Card Data --
     const [projectsData, setProjectsData] = useState({ title: '', description: '' });
@@ -379,10 +389,19 @@ const MarketingManager = () => {
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Add features seen in the DISCOVER page</p>
                                         </div>
                                     </div>
-                                    <button onClick={() => handleUpdateMarketingKey('menu_future_features', { sections: futureFeatures }, 'Future and Option List')} className="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 hover:scale-105 transition-transform active:scale-95"><Save size={14} /> Global Sync</button>
+                                    <button onClick={() => handleUpdateMarketingKey('menu_future_features', { title: futureFeaturesTitle, subtitle: futureFeaturesSubtitle, sections: futureFeatures }, 'Future and Option')} className="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 hover:scale-105 transition-transform active:scale-95"><Save size={14} /> Global Sync</button>
                                 </div>
 
                                 <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Page Title</label>
+                                        <input value={futureFeaturesTitle} onChange={(e) => setFutureFeaturesTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none" />
+                                    </div>
+                                    <div className="space-y-2 mb-6">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Page Subtitle / Description</label>
+                                        <input value={futureFeaturesSubtitle} onChange={(e) => setFutureFeaturesSubtitle(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] font-bold text-slate-500 focus:ring-2 focus:ring-sky-500 outline-none" />
+                                    </div>
+
                                     {futureFeatures.map((feat, i) => (
                                         <div key={i} className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100 space-y-4 relative group hover:bg-white hover:shadow-xl transition-all">
                                             <div className="flex justify-between items-center mb-2">
@@ -423,8 +442,8 @@ const MarketingManager = () => {
                                             <Sparkles size={32} className="text-slate-800" />
                                         </div>
                                         <div className="flex-1 flex flex-col justify-center mb-6">
-                                            <h3 className="text-[16px] font-black text-slate-800 leading-tight mb-2 uppercase tracking-tight">Future and Option</h3>
-                                            <p className="text-[11px] font-bold text-slate-400 leading-tight uppercase tracking-[0.1em]">Upcoming earning opportunities</p>
+                                            <h3 className="text-[16px] font-black text-slate-800 leading-tight mb-2 uppercase tracking-tight">{futureFeaturesTitle}</h3>
+                                            <p className="text-[11px] font-bold text-slate-400 leading-tight uppercase tracking-[0.1em]">{futureFeaturesSubtitle}</p>
                                         </div>
                                         <button className="w-full bg-slate-900 text-white text-[12px] font-black py-4 rounded-2xl uppercase tracking-[0.2em] shadow-xl shadow-slate-200">
                                             Discover
@@ -446,8 +465,8 @@ const MarketingManager = () => {
                                         <div className="flex items-center gap-4 mb-2">
                                             <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white"><ChevronLeft size={24} /></div>
                                         </div>
-                                        <h2 className="text-2xl font-black text-white tracking-tight uppercase mt-6 leading-none">Future and Option</h2>
-                                        <p className="text-[11px] font-black text-sky-400 uppercase tracking-[0.25em] mt-2 mb-10">Upcoming Opportunities</p>
+                                        <h2 className="text-2xl font-black text-white tracking-tight uppercase mt-6 leading-none">{futureFeaturesTitle}</h2>
+                                        <p className="text-[11px] font-black text-sky-400 uppercase tracking-[0.25em] mt-2 mb-10">{futureFeaturesSubtitle}</p>
 
                                         <div className="bg-white rounded-[40px] p-8 space-y-8 shadow-2xl min-h-[400px]">
                                             {futureFeatures.map((f, i) => (

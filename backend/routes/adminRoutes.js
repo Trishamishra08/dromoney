@@ -23,8 +23,7 @@ const {
     updateBusinessIdea, 
     deleteBusinessIdea 
 } = require('../controllers/businessIdeaController');
-const { createEvent, updateEvent, deleteEvent } = require('../controllers/eventController');
-const { getEvents } = require('../controllers/eventController');
+const { createEvent, updateEvent, deleteEvent, getEvents, getEventParticipants, updateParticipantStatus } = require('../controllers/eventController');
 const { getSettings, updateSettings } = require('../controllers/adminSettingsController');
 
 const { protectAdmin } = require('../middleware/authMiddleware');
@@ -127,5 +126,8 @@ router.route('/events')
 router.route('/events/:id')
     .put(protectAdmin, updateEvent)
     .delete(protectAdmin, deleteEvent);
+
+router.get('/events/:id/participants', protectAdmin, getEventParticipants);
+router.put('/events/participants/:id', protectAdmin, updateParticipantStatus);
 
 module.exports = router;

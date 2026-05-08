@@ -26,9 +26,22 @@ const InfoPage = () => {
                 } else {
                     if (type === 'refund-policy') {
                         setPageData({
-                            title: 'Refund Policy',
+                            title: 'No Refund Policy',
                             subtitle: 'Cancellation & Refund Rules',
-                            sections: [{ title: 'Strict No Refund Policy', text: 'Please note that all purchases and payments made on Dromoney are final. We do not offer any refunds or cancellations once a transaction is completed or a service is activated.' }]
+                            sections: [
+                                { title: 'Strict No Refund Policy', text: 'Please note that all purchases and payments made on Dromoney are final. We do not offer any refunds or cancellations once a transaction is completed or a service is activated.' },
+                                { title: 'No Transfers', text: 'Funds paid cannot be transferred to other accounts or users under any circumstances.' }
+                            ]
+                        });
+                    } else if (type === 'guidelines') {
+                        setPageData({
+                            title: 'Community Guidelines',
+                            subtitle: 'Rules & Responsibilities',
+                            sections: [
+                                { title: 'Respect Everyone', text: 'Please treat all community members, support agents, and organizers with respect and kindness. Harassment, abusive language, and threats will not be tolerated.' },
+                                { title: 'Fair Play', text: 'Manipulating system metrics, abusing bugs, or attempting fraudulent referrals or task verification links will lead to immediate and permanent ban.' },
+                                { title: 'One Account per Person', text: 'Users are strictly allowed to maintain only one active account. Multiple accounts will be suspended.' }
+                            ]
                         });
                     } else {
                         setPageData({

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, User, Phone, Mail, Briefcase, Link, IndianRupee, Users, AlertTriangle, FileText, Rocket, CheckCircle2, ChevronDown, Plus, Clock, ExternalLink, Loader2 } from 'lucide-react';
-import { promotionStorage } from '../../shared/services/promotionStorage';
+import { ChevronLeft, User, Phone, Mail, Briefcase, Link, Users, Rocket, CheckCircle2, ChevronDown, Plus, Clock, ExternalLink, Loader2 } from 'lucide-react';
+import api from '../../shared/services/api';
 
 const PromoteBrand = () => {
     const navigate = useNavigate();
@@ -20,15 +20,33 @@ const PromoteBrand = () => {
 
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(true);
     const costPerUser = 1;
 
-    useEffect(() => {
-        const promos = promotionStorage.getPromotions();
-        setMyPromotions(promos);
-        if (promos.length === 0) {
-            setView('form');
+    // Fetch promotions from database API
+    const fetchPromotions = async () => {
+        setFetching(true);
+        try {
+            const res = await api.get('/user/data/promotions');
+            if (res.success && res.data) {
+                setMyPromotions(res.data);
+                // If there are no promotions, default to form view
+                if (res.data.length === 0) {
+                    setView('form');
+                } else {
+                    setView('list');
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching promotions:", err);
+        } finally {
+            setFetching(false);
         }
-    }, [isSubmitted]);
+    };
+
+    useEffect(() => {
+        fetchPromotions();
+    }, []);
 
     const categories = [
         'App Download',
@@ -44,7 +62,7 @@ const PromoteBrand = () => {
         setFormData(prev => ({
             ...prev,
             budget: val,
-            usersRequired: budget === '' ? '' : budget / costPerUser
+            usersRequired: budget === '' ? '' : String(budget / costPerUser)
         }));
     };
 
@@ -53,7 +71,7 @@ const PromoteBrand = () => {
         setFormData(prev => ({
             ...prev,
             usersRequired: val,
-            budget: users === '' ? '' : users * costPerUser
+            budget: users === '' ? '' : String(users * costPerUser)
         }));
     };
 
@@ -61,63 +79,116 @@ const PromoteBrand = () => {
         e.preventDefault();
         setLoading(true);
         
-        // Simulate API Delay
-        setTimeout(() => {
-            // Save to simulated backend
-            promotionStorage.savePromotion(formData);
+        try {
+            const res = await api.post('/user/data/promotions', {
+                name: formData.name,
+                mobile: formData.mobile,
+                whatsapp: formData.whatsapp,
+                category: formData.category,
+                link: formData.link,
+                budget: Number(formData.budget),
+                usersRequired: Number(formData.usersRequired),
+                description: formData.description
+            });
 
-            setIsSubmitted(true);
-            setView('list');
+            if (res.success) {
+                setIsSubmitted(true);
+                // Reset form
+                setFormData({ name: '', mobile: '', whatsapp: '', category: '', link: '', budget: '', usersRequired: '', description: '' });
+                // Refresh list
+                await fetchPromotions();
+                setView('list');
+                setTimeout(() => {
+                    setIsSubmitted(false);
+                }, 3000);
+            }
+        } catch (err) {
+            console.error("Error submitting promotion:", err);
+            alert(err.message || "Failed to submit promotion campaign");
+        } finally {
             setLoading(false);
-            // Reset form
-            setFormData({ name: '', mobile: '', whatsapp: '', category: '', link: '', budget: '', usersRequired: '', description: '' });
-            
-            setTimeout(() => {
-                setIsSubmitted(false);
-            }, 3000);
-        }, 1500);
+        }
     };
+
+    if (fetching) {
+        return (
+            <div className="p-8 text-center text-slate-800 min-h-screen bg-[#F1F9F3] flex flex-col items-center justify-center font-bold uppercase tracking-widest gap-4">
+                <Loader2 className="animate-spin text-sky-500 w-12 h-12" />
+                <p>Loading Campaigns...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#F1F9F3] pb-24 relative overflow-hidden">
-            {/* Ultra-Compact Header Row - Navy Blue Theme */}
-            <div className="relative h-16 bg-gradient-to-br from-[#0B1221] to-[#1E293B] rounded-b-3xl shadow-lg overflow-hidden flex items-center px-5 fixed top-0 left-0 right-0 z-50 max-w-md mx-auto">
-                {/* Decorative Elements */}
-                <div className="absolute right-[-10px] top-[-10px] opacity-[0.03] pointer-events-none">
-                    <Rocket size={100} className="text-white" />
-                </div>
-                
-                {/* Compact Row: Back + Title */}
-                <div className="flex items-center gap-3 relative z-20 w-full">
-                    <button onClick={() => view === 'form' && myPromotions.length > 0 ? setView('list') : navigate('/user/home')} className="w-8 h-8 flex items-center justify-center bg-white/5 backdrop-blur-md rounded-lg text-white active:scale-90 transition-all border border-white/10">
-                        <ChevronLeft size={18} />
-                    </button>
-                    
-                    <div className="flex flex-col">
-                        <p className="text-blue-400 text-[7px] font-black uppercase tracking-[0.2em] leading-none mb-1">
-                            Brand Portal
-                        </p>
-                        <h1 className="text-base font-black text-white tracking-tight leading-none uppercase">
-                            {view === 'form' ? 'Promotion Details' : 'My Promotions'}
-                        </h1>
+            
+            {/* LIST VIEW HEADER - NAVY THEME (Matching Image 2) */}
+            {view === 'list' && (
+                <div className="relative h-16 bg-[#0B1221] rounded-b-3xl shadow-lg flex items-center px-5 fixed top-0 left-0 right-0 z-[60] max-w-md mx-auto">
+                    {/* Decorative Vector */}
+                    <div className="absolute right-0 top-0 opacity-[0.05] pointer-events-none">
+                        <Rocket size={80} className="text-white" />
+                    </div>
+                    {/* Compact Row */}
+                    <div className="flex items-center gap-3 relative z-20 w-full text-left">
+                        <button 
+                            onClick={() => navigate('/user/home')} 
+                            className="w-8 h-8 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-xl text-white active:scale-90 transition-all border border-white/10 cursor-pointer"
+                        >
+                            <ChevronLeft size={16} />
+                        </button>
+                        <div className="flex flex-col">
+                            <p className="text-blue-400 text-[7px] font-black uppercase tracking-[0.2em] leading-none mb-1">
+                                Brand Portal
+                            </p>
+                            <h1 className="text-sm font-black text-white tracking-tight leading-none uppercase">
+                                My Promotions
+                            </h1>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
-            <div className="pt-[64px] px-4 pb-24 max-w-md mx-auto">
+            {/* FORM VIEW HEADER - LIGHT GRADIENT THEME (Matching Image 1) */}
+            {view === 'form' && (
+                <div className="relative h-16 bg-gradient-to-r from-[#1B75FF] to-[#14B8FF] flex items-center px-5 fixed top-0 left-0 right-0 z-[60] max-w-md mx-auto shadow-md">
+                    <div className="flex items-center gap-3 relative z-20 w-full text-left">
+                        <button 
+                            onClick={() => {
+                                if (myPromotions.length > 0) {
+                                    setView('list');
+                                } else {
+                                    navigate('/user/home');
+                                }
+                            }} 
+                            className="w-8 h-8 flex items-center justify-center text-white active:scale-90 transition-all cursor-pointer"
+                        >
+                            <ChevronLeft size={22} strokeWidth={2.5} />
+                        </button>
+                        <div className="flex items-center gap-1.5">
+                            <Rocket size={18} className="text-white fill-white animate-pulse" />
+                            <h1 className="text-sm font-black text-white tracking-tight leading-none uppercase">
+                                Promotion Details
+                            </h1>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="pt-6 px-4 pb-24 max-w-md mx-auto">
                 
-                {/* LIST VIEW: Show existing requests */}
+                {/* LIST VIEW: Display Campaigns */}
                 {view === 'list' && (
-                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-4 animate-in fade-in duration-500 text-left">
                         {isSubmitted && (
                              <div className="bg-emerald-500 text-white p-4 rounded-2xl flex items-center gap-3 shadow-lg shadow-emerald-200 animate-bounce">
                                 <CheckCircle2 size={24} />
-                                <span className="text-xs font-black uppercase tracking-widest">Promotion Form Submitted Successfully!</span>
+                                <span className="text-xs font-black uppercase tracking-widest leading-none">Campaign Created Successfully!</span>
                              </div>
                         )}
 
-                        <div className="mb-2">
-                            <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Your Ad Requests History</h2>
+                        <div className="mb-1">
+                            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Your Ad Requests History</h2>
                         </div>
 
                         {myPromotions.length === 0 ? (
@@ -127,37 +198,42 @@ const PromoteBrand = () => {
                             </div>
                         ) : (
                             myPromotions.map((promo) => (
-                                <div key={promo.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:border-blue-100 transition-all active:scale-[0.99] mb-4">
-                                    <div className="p-4">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center text-blue-500 border border-blue-100">
-                                                    <Briefcase size={14} />
-                                                </div>
-                                                <h3 className="font-bold text-slate-800 text-[13px] uppercase tracking-wide">{promo.category}</h3>
+                                <div key={promo._id} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden hover:border-blue-100 transition-all p-5 mb-4">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-sky-55 rounded-2xl flex items-center justify-center text-sky-500 border border-sky-100">
+                                                <Briefcase size={18} />
                                             </div>
-                                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${
-                                                promo.status === 'Pending' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                            }`}>
-                                                {promo.status}
-                                            </span>
+                                            <div>
+                                                <h3 className="font-black text-slate-800 text-[13px] uppercase tracking-wide leading-none">{promo.category}</h3>
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 leading-none">{promo.brandName}</p>
+                                            </div>
                                         </div>
+                                        <span className={`text-[8px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest border ${
+                                            promo.status === 'Pending' ? 'bg-amber-50 text-amber-500 border-amber-100' : 
+                                            promo.status === 'Rejected' ? 'bg-rose-50 text-rose-500 border-rose-100' :
+                                            'bg-emerald-50 text-emerald-500 border-emerald-100'
+                                        }`}>
+                                            {promo.status}
+                                        </span>
+                                    </div>
 
-                                        <div className="grid grid-cols-2 gap-3 mb-3">
-                                            <div className="bg-[#F8FAFC] rounded-xl p-3 border border-slate-100">
-                                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Budget</p>
-                                                <p className="text-[13px] font-black text-slate-800">₹{promo.budget}</p>
-                                            </div>
-                                            <div className="bg-[#F8FAFC] rounded-xl p-3 border border-slate-100">
-                                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Target Users</p>
-                                                <p className="text-[13px] font-black text-slate-800">{promo.usersRequired}</p>
-                                            </div>
+                                    <div className="grid grid-cols-2 gap-3 mb-4">
+                                        <div className="bg-[#F8FAFC] rounded-2xl p-4 border border-slate-50">
+                                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Budget</p>
+                                            <p className="text-[14px] font-black text-slate-800 leading-none">₹{promo.budget}</p>
                                         </div>
+                                        <div className="bg-[#F8FAFC] rounded-2xl p-4 border border-slate-50">
+                                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Target Users</p>
+                                            <p className="text-[14px] font-black text-slate-800 leading-none">{promo.usersRequired}</p>
+                                        </div>
+                                    </div>
 
-                                        <div className="flex items-center justify-between text-[9px] font-bold text-slate-400 border-t border-slate-50 pt-3">
-                                            <span className="flex items-center gap-1"><Clock size={10}/> {promo.date}</span>
-                                            <a href={promo.link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-500 hover:underline">View Campaign <ExternalLink size={10}/></a>
-                                        </div>
+                                    <div className="flex items-center justify-between text-[9px] font-bold text-slate-400 border-t border-slate-50 pt-4 mt-2">
+                                        <span className="flex items-center gap-1"><Clock size={12}/> {new Date(promo.createdAt).toLocaleDateString()}</span>
+                                        <a href={promo.brandLink} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-sky-500 font-bold hover:underline">
+                                            View Campaign <ExternalLink size={12}/>
+                                        </a>
                                     </div>
                                 </div>
                             ))
@@ -165,133 +241,179 @@ const PromoteBrand = () => {
                     </div>
                 )}
                 
-                {/* FORM VIEW: Original Promotion Form */}
+                {/* FORM VIEW: Pixel-Perfect to Image 1 */}
                 {view === 'form' && (
-                    <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 pb-12">
-                        {/* Name */}
+                    <form onSubmit={handleSubmit} className="space-y-3 animate-in fade-in duration-500 pb-12 text-left bg-white p-5 rounded-3xl shadow-sm border border-slate-100/50">
+                        {/* NAME */}
                         <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Business Name</label>
-                            <div className="relative group">
-                                <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center border-r border-slate-100 text-slate-300 group-focus-within:text-blue-500 transition-colors">
+                            <label className="text-[9px] font-black text-[#5B718F] tracking-widest uppercase ml-1">Name</label>
+                            <div className="relative flex items-center bg-white border border-[#E2E8F0] rounded-xl h-11 shadow-sm group focus-within:border-[#1B75FF] focus-within:ring-1 focus-within:ring-[#1B75FF]/20 transition-all">
+                                <div className="w-11 h-full flex items-center justify-center border-r border-[#F1F5F9] text-slate-300 group-focus-within:text-[#1B75FF] transition-colors">
                                     <User size={16} />
                                 </div>
                                 <input 
                                     required
                                     type="text"
-                                    placeholder="Enter business name"
-                                    className="w-full bg-white border border-slate-100 rounded-xl pl-14 pr-4 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm"
+                                    placeholder="Enter your name"
+                                    className="flex-1 h-full px-3 text-xs font-bold text-slate-700 bg-transparent outline-none placeholder:text-slate-300"
                                     value={formData.name}
                                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                                 />
                             </div>
                         </div>
 
-                        {/* Mobile & Contact Info */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Mobile Number</label>
-                                <div className="relative group">
-                                    <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center border-r border-slate-100 text-slate-300 group-focus-within:text-blue-500 transition-colors">
-                                        <Phone size={16} />
-                                    </div>
-                                    <input required type="tel" placeholder="Mobile" className="w-full bg-white border border-slate-100 rounded-xl pl-14 pr-4 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm" value={formData.mobile} onChange={(e) => setFormData({...formData, mobile: e.target.value})} />
-                                </div>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Contact Details</label>
-                                <div className="relative group">
-                                    <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center border-r border-slate-100 text-slate-300 group-focus-within:text-blue-500 transition-colors">
-                                        <Mail size={16} />
-                                    </div>
-                                    <input required type="text" placeholder="WhatsApp / Email" className="w-full bg-white border border-slate-100 rounded-xl pl-14 pr-4 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm" value={formData.whatsapp} onChange={(e) => setFormData({...formData, whatsapp: e.target.value})} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Task Category & Link Row */}
+                        {/* MOBILE NUMBER */}
                         <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Category & Target Link</label>
-                            <div className="flex flex-col gap-3">
-                                <div className="relative group">
-                                    <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center border-r border-slate-100 text-slate-300 group-focus-within:text-blue-500 transition-colors">
-                                        <Briefcase size={16} />
-                                    </div>
-                                    <select 
-                                        required
-                                        className="w-full bg-white border border-slate-100 rounded-xl pl-14 pr-10 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 appearance-none shadow-sm"
-                                        value={formData.category}
-                                        onChange={(e) => setFormData({...formData, category: e.target.value})}
-                                    >
-                                        <option value="" disabled>Select Task Type</option>
-                                        {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                    </select>
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300"><ChevronDown size={14} /></div>
+                            <label className="text-[9px] font-black text-[#5B718F] tracking-widest uppercase ml-1">Mobile Number</label>
+                            <div className="relative flex items-center bg-white border border-[#E2E8F0] rounded-xl h-11 shadow-sm group focus-within:border-[#1B75FF] focus-within:ring-1 focus-within:ring-[#1B75FF]/20 transition-all">
+                                <div className="w-11 h-full flex items-center justify-center border-r border-[#F1F5F9] text-slate-300 group-focus-within:text-[#1B75FF] transition-colors">
+                                    <Phone size={16} />
                                 </div>
-                                <div className="relative group">
-                                    <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center border-r border-slate-100 text-slate-300 group-focus-within:text-blue-500 transition-colors">
-                                        <Link size={16} />
-                                    </div>
-                                    <input required type="url" placeholder="Paste campaign link here" className="w-full bg-white border border-slate-100 rounded-xl pl-14 pr-4 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm" value={formData.link} onChange={(e) => setFormData({...formData, link: e.target.value})} />
+                                <input 
+                                    required
+                                    type="tel"
+                                    placeholder="Mobile"
+                                    className="flex-1 h-full px-3 text-xs font-bold text-slate-700 bg-transparent outline-none placeholder:text-slate-300"
+                                    value={formData.mobile}
+                                    onChange={(e) => setFormData({...formData, mobile: e.target.value})}
+                                />
+                            </div>
+                        </div>
+
+                        {/* WHATSAPP/EMAIL */}
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-[#5B718F] tracking-widest uppercase ml-1">Whatsapp/Email</label>
+                            <div className="relative flex items-center bg-white border border-[#E2E8F0] rounded-xl h-11 shadow-sm group focus-within:border-[#1B75FF] focus-within:ring-1 focus-within:ring-[#1B75FF]/20 transition-all">
+                                <div className="w-11 h-full flex items-center justify-center border-r border-[#F1F5F9] text-slate-300 group-focus-within:text-[#1B75FF] transition-colors">
+                                    <Mail size={16} />
+                                </div>
+                                <input 
+                                    required
+                                    type="text"
+                                    placeholder="Contact"
+                                    className="flex-1 h-full px-3 text-xs font-bold text-slate-700 bg-transparent outline-none placeholder:text-slate-300"
+                                    value={formData.whatsapp}
+                                    onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
+                                />
+                            </div>
+                        </div>
+
+                        {/* TASK CATEGORY */}
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-[#5B718F] tracking-widest uppercase ml-1">Task Category</label>
+                            <div className="relative flex items-center bg-white border border-[#E2E8F0] rounded-xl h-11 shadow-sm group focus-within:border-[#1B75FF] focus-within:ring-1 focus-within:ring-[#1B75FF]/20 transition-all">
+                                <div className="w-11 h-full flex items-center justify-center border-r border-[#F1F5F9] text-slate-300 group-focus-within:text-[#1B75FF] transition-colors">
+                                    <Briefcase size={16} />
+                                </div>
+                                <select 
+                                    required
+                                    className="flex-1 h-full px-3 text-xs font-bold text-slate-700 bg-transparent outline-none appearance-none cursor-pointer"
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({...formData, category: e.target.value})}
+                                >
+                                    <option value="" disabled>Select Task Type</option>
+                                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                </select>
+                                <div className="absolute right-3 pointer-events-none text-slate-300">
+                                    <ChevronDown size={16} />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Budget & Target Users */}
+                        {/* TASK LINK */}
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-[#5B718F] tracking-widest uppercase ml-1">Task Link</label>
+                            <div className="relative flex items-center bg-white border border-[#E2E8F0] rounded-xl h-11 shadow-sm group focus-within:border-[#1B75FF] focus-within:ring-1 focus-within:ring-[#1B75FF]/20 transition-all">
+                                <div className="w-11 h-full flex items-center justify-center border-r border-[#F1F5F9] text-slate-300 group-focus-within:text-[#1B75FF] transition-colors">
+                                    <Link size={16} />
+                                </div>
+                                <input 
+                                    required
+                                    type="url"
+                                    placeholder="Paste link here"
+                                    className="flex-1 h-full px-3 text-xs font-bold text-slate-700 bg-transparent outline-none placeholder:text-slate-300"
+                                    value={formData.link}
+                                    onChange={(e) => setFormData({...formData, link: e.target.value})}
+                                />
+                            </div>
+                        </div>
+
+                        {/* BUDGET & TARGET USERS SIDE-BY-SIDE */}
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Budget (₹)</label>
-                                <div className="relative group">
-                                    <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center border-r border-slate-100 text-slate-300 transition-colors"><IndianRupee size={14} /></div>
-                                    <input required type="number" placeholder="Budget" className="w-full bg-white border border-slate-100 rounded-xl pl-12 pr-3 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm" value={formData.budget} onChange={(e) => handleBudgetChange(e.target.value)} />
+                                <label className="text-[9px] font-black text-[#5B718F] tracking-widest uppercase ml-1">Budget (₹)</label>
+                                <div className="relative flex items-center bg-white border border-[#E2E8F0] rounded-xl h-11 shadow-sm group focus-within:border-[#1B75FF] focus-within:ring-1 focus-within:ring-[#1B75FF]/20 transition-all">
+                                    <div className="w-8 h-full flex items-center justify-center border-r border-[#F1F5F9] text-slate-300 font-bold text-xs">
+                                        ₹
+                                    </div>
+                                    <input 
+                                        required
+                                        type="number"
+                                        placeholder="Budget"
+                                        className="flex-1 h-full px-2 text-xs font-bold text-slate-700 bg-transparent outline-none placeholder:text-slate-300"
+                                        value={formData.budget}
+                                        onChange={(e) => handleBudgetChange(e.target.value)}
+                                    />
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Users</label>
-                                <div className="relative group">
-                                    <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center border-r border-slate-100 text-slate-300 transition-colors"><Users size={14} /></div>
-                                    <input required type="number" placeholder="Users" className="w-full bg-white border border-slate-100 rounded-xl pl-12 pr-3 py-3 text-[13px] font-bold text-slate-800 focus:outline-none focus:border-blue-500 transition-all shadow-sm" value={formData.usersRequired} onChange={(e) => handleUsersChange(e.target.value)} />
+                                <label className="text-[9px] font-black text-[#5B718F] tracking-widest uppercase ml-1">Target Users</label>
+                                <div className="relative flex items-center bg-white border border-[#E2E8F0] rounded-xl h-11 shadow-sm group focus-within:border-[#1B75FF] focus-within:ring-1 focus-within:ring-[#1B75FF]/20 transition-all">
+                                    <div className="w-8 h-full flex items-center justify-center border-r border-[#F1F5F9] text-slate-300">
+                                        <Users size={14} />
+                                    </div>
+                                    <input 
+                                        required
+                                        type="number"
+                                        placeholder="Users"
+                                        className="flex-1 h-full px-2 text-xs font-bold text-slate-700 bg-transparent outline-none placeholder:text-slate-300"
+                                        value={formData.usersRequired}
+                                        onChange={(e) => handleUsersChange(e.target.value)}
+                                    />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Summary Card */}
-                        <div className="bg-[#0B1221] rounded-2xl p-6 text-center shadow-lg relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl rounded-full"></div>
-                            <p className="text-blue-400 text-[9px] font-black uppercase tracking-[0.2em] mb-3">Campaign Summary</p>
-                            <div className="text-2xl font-black text-white leading-none mb-1">₹{formData.budget || 0}</div>
-                            <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">for {formData.usersRequired || 0} Verified Users</p>
+                        {/* Dynamic Estimator yellow panel */}
+                        <div className="bg-[#FFFDF0] border border-[#FEF3C7] rounded-xl p-3 text-center shadow-sm relative overflow-hidden">
+                            <p className="text-[#D97706] text-[8px] font-black uppercase tracking-[0.15em] mb-1 leading-none">
+                                Estimate: ₹1/User Cost
+                            </p>
+                            <p className="text-slate-800 text-sm font-black tracking-tight leading-none">
+                                ₹{formData.budget || 0} = {formData.usersRequired || 0} Users
+                            </p>
                         </div>
 
-                        {/* Submit Button - Compact & Premium */}
+                        {/* DESCRIPTION (OPTIONAL) */}
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-[#5B718F] tracking-widest uppercase ml-1">Description (Optional)</label>
+                            <div className="relative bg-white border border-[#E2E8F0] rounded-xl p-3 shadow-sm group focus-within:border-[#1B75FF] focus-within:ring-1 focus-within:ring-[#1B75FF]/20 transition-all">
+                                <textarea 
+                                    placeholder="Explain your promotion goal..."
+                                    className="w-full bg-transparent outline-none text-xs font-bold text-slate-700 placeholder:text-slate-300 h-20 resize-none"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                />
+                            </div>
+                        </div>
+
+                        {/* SUBMIT & CONTINUE BUTTON */}
                         <button 
                             type="submit" 
                             disabled={loading}
-                            className="w-full bg-gradient-to-r from-[#0B1221] to-[#1E293B] hover:from-[#1E293B] hover:to-[#0B1221] text-white font-black uppercase tracking-[0.15em] py-3.5 rounded-xl shadow-lg shadow-slate-200 active:scale-[0.98] transition-all text-[13px] mt-4 border border-white/5 disabled:opacity-50 flex items-center justify-center gap-2"
-                            style={{ fontFamily: "'Roboto', sans-serif" }}
+                            className="w-full bg-[#FFB600] hover:bg-[#E5A300] text-white font-black uppercase tracking-[0.2em] py-3.5 rounded-xl shadow-lg shadow-amber-100 active:scale-[0.98] transition-all text-[11px] border border-white/5 disabled:opacity-50 flex items-center justify-center gap-2 mt-4 cursor-pointer"
                         >
-                            {loading ? (
-                                <Loader2 className="animate-spin" size={18} />
-                            ) : (
-                                <>
-                                    <Rocket size={18} className="text-blue-400" />
-                                    Launch Campaign
-                                </>
-                            )}
+                            {loading ? <Loader2 className="animate-spin" size={16} /> : 'SUBMIT & CONTINUE'}
                         </button>
                     </form>
                 )}
             </div>
 
-            {/* Import Roboto Font */}
-            <style dangerouslySetInnerHTML={{ __html: `
-                @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
-            `}} />
-
-            {/* Floating Plus Button (Attractive Add Icon) */}
+            {/* Floating Plus Button to Add New Campaign (Matching Image 2) */}
             {view === 'list' && (
                 <button 
                     onClick={() => setView('form')}
-                    className="fixed bottom-10 right-6 w-14 h-14 bg-sky-500 text-white rounded-full shadow-[0_8px_25px_rgba(14,165,233,0.4)] flex items-center justify-center active:scale-90 transition-all z-[100] border-4 border-white animate-in zoom-in-50 duration-500"
+                    className="fixed bottom-10 right-6 w-14 h-14 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-full shadow-[0_8px_25px_rgba(2,132,199,0.4)] flex items-center justify-center active:scale-90 transition-all z-[100] border-4 border-white cursor-pointer"
                 >
                     <Plus size={30} strokeWidth={3} />
                 </button>

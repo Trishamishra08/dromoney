@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Play, Pause, RefreshCw, Coins, CheckCircle2, AlertTriangle, FastForward, ShieldCheck, MonitorPlay } from 'lucide-react';
+import { ChevronLeft, Play, Pause, RefreshCw, Coins, CheckCircle2, AlertTriangle, ShieldCheck, MonitorPlay, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 
 import api from '../../shared/services/api';
@@ -9,13 +9,27 @@ import UniversalVideoPlayer from '../../shared/components/UniversalVideoPlayer';
 const AdPlayer = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { addCoins, userData } = useUser();
+    const { userData, refreshUserProfile } = useUser();
     const [ad, setAd] = useState(null);
     const [timeLeft, setTimeLeft] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
     const [error, setError] = useState(null);
     const videoRef = useRef(null);
+
+    // Limits & Cooldowns state
+    const [dailyAdCount, setDailyAdCount] = useState(0);
+    const [nextAdAvailableAt, setNextAdAvailableAt] = useState(null);
+    const [cooldownRemaining, setCooldownRemaining] = useState(0);
+    const [claiming, setClaiming] = useState(false);
+
+    // Toast state
+    const [toast, setToast] = useState(null); // { message: '', type: 'success' | 'error' }
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     useEffect(() => {
         const fetchAd = async () => {
@@ -24,6 +38,8 @@ const AdPlayer = () => {
                 if (res.success) {
                     setAd(res.data);
                     setTimeLeft(res.data.duration);
+                    setDailyAdCount(res.dailyAdCount || 0);
+                    setNextAdAvailableAt(res.nextAdAvailableAt || null);
                     if (res.data.isWatched) {
                         setIsCompleted(true);
                     }
@@ -45,14 +61,40 @@ const AdPlayer = () => {
             handleComplete();
         }
         return () => clearInterval(timer);
-    }, [isPlaying, timeLeft, isCompleted]);
+    }, [isPlaying, timeLeft, isCompleted, ad]);
+
+    // Track ad cooldown
+    useEffect(() => {
+        if (!nextAdAvailableAt) {
+            setCooldownRemaining(0);
+            return;
+        }
+
+        const updateCooldown = () => {
+            const ms = new Date(nextAdAvailableAt) - Date.now();
+            if (ms <= 0) {
+                setCooldownRemaining(0);
+            } else {
+                setCooldownRemaining(Math.ceil(ms / 1000));
+            }
+        };
+
+        updateCooldown();
+        const interval = setInterval(updateCooldown, 1000);
+        return () => clearInterval(interval);
+    }, [nextAdAvailableAt]);
 
     const handlePlayPause = () => {
+        if (dailyAdCount >= 10) {
+            showToast("Daily limit reached! You can only watch 10 videos per day.", "error");
+            return;
+        }
+        if (cooldownRemaining > 0) {
+            showToast(`Please wait ${cooldownRemaining}s before watching the next video.`, "error");
+            return;
+        }
         setIsPlaying(!isPlaying);
     };
-
-    const { refreshUserProfile } = useUser();
-    const [claiming, setClaiming] = useState(false);
 
     const handleComplete = async () => {
         if (claiming || isCompleted) return;
@@ -64,10 +106,11 @@ const AdPlayer = () => {
             const res = await api.post('/user/data/ads/reward', { adId: id });
             if (res.success) {
                 setIsCompleted(true);
+                showToast("Reward claimed successfully!", "success");
                 await refreshUserProfile();
             }
         } catch (err) {
-            alert(err.response?.data?.message || "Failed to claim reward");
+            showToast(err.response?.data?.message || "Failed to claim reward", "error");
         } finally {
             setClaiming(false);
         }
@@ -77,20 +120,38 @@ const AdPlayer = () => {
     if (!ad) return null;
 
     return (
-        <div className="min-h-screen bg-slate-950 flex flex-col pt-0">
-            {/* Immersive Header */}
+        <div className="min-h-screen bg-slate-950 flex flex-col pt-0 relative">
+            {/* Custom Toast Alert */}
+            {toast && (
+                <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 w-[90%] max-w-sm ${
+                    toast.type === 'success' 
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+                        : 'bg-rose-50 border-rose-100 text-rose-800'
+                }`}>
+                    {toast.type === 'success' ? (
+                        <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0 animate-bounce" />
+                    ) : (
+                        <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                    )}
+                    <span className="text-xs font-semibold">{toast.message}</span>
+                </div>
+            )}
+
+            {/* Immersive Header (Exactly matching the Gold/Double coin pill style) */}
             <header className="px-4 py-4 flex items-center justify-between z-50 absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent">
-                <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 active:scale-90 transition-all">
-                    <ChevronLeft size={24} />
+                <button onClick={() => navigate(-1)} className="w-9 h-9 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 active:scale-90 transition-all">
+                    <ChevronLeft size={20} />
                 </button>
                 <div className="flex items-center gap-2">
-                    <div className="bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-full flex items-center gap-2">
-                        <Coins size={14} className="text-yellow-400 fill-yellow-400" />
-                        <span className="text-[11px] font-black text-white">{userData.coins.total}</span>
+                    {/* User Coins Pill */}
+                    <div className="bg-[#0F172A]/80 backdrop-blur-md border border-slate-800/80 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
+                        <Coins size={13} className="text-amber-400 fill-amber-400" />
+                        <span className="text-[12px] font-black text-white leading-none">{userData?.coins?.total || userData?.coins?.balance || 0}</span>
                     </div>
-                    <div className="bg-amber-500/20 backdrop-blur-md border border-amber-500/30 px-3 py-1.5 rounded-full flex items-center gap-2">
-                        <Coins size={14} className="text-amber-400 fill-amber-400" />
-                        <span className="text-[11px] font-black text-white uppercase tracking-widest">Reward: {ad.coinsReward} Coins</span>
+                    {/* Ad Reward Pill */}
+                    <div className="bg-amber-600/10 backdrop-blur-md border border-amber-600/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
+                        <Coins size={13} className="text-amber-500 fill-amber-500" />
+                        <span className="text-[11px] font-black text-amber-500 uppercase tracking-wider leading-none">Reward: {ad.coinsReward} Coins</span>
                     </div>
                 </div>
             </header>
@@ -111,7 +172,7 @@ const AdPlayer = () => {
                         onClick={handlePlayPause}
                         className="absolute w-20 h-20 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center text-white border border-white/20 shadow-2xl animate-pulse group active:scale-90 transition-all"
                     >
-                        <Play size={40} className="fill-white" />
+                        <Play size={40} className="fill-white ml-1" />
                     </button>
                 )}
 
@@ -123,59 +184,56 @@ const AdPlayer = () => {
                     ></div>
                 </div>
 
-                {/* Timer Countdown */}
+                {/* Timer Countdown (Pill style exactly from image 2) */}
                 {!isCompleted && (
-                    <div className="absolute top-20 right-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
+                    <div className="absolute top-20 right-4 bg-[#0F172A]/95 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-slate-800/80 shadow-lg">
                         <div className="flex flex-col items-center">
-                            <span className="text-[20px] font-black text-white leading-none">{timeLeft}</span>
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Seconds</span>
+                            <span className="text-[18px] font-black text-white leading-none">{timeLeft}</span>
+                            <span className="text-[7px] font-black text-slate-400 uppercase tracking-[0.15em] mt-0.5">Seconds</span>
                         </div>
                     </div>
                 )}
             </div>
 
-            {/* Bottom Controls / Reward Card - Premium Design */}
-            <div className="bg-white rounded-t-[2rem] p-5 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+            {/* Bottom Controls / Reward Card - Matching image 2 premium layout */}
+            <div className="bg-white rounded-t-[2.5rem] p-6 pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] space-y-4">
                 {!isCompleted ? (
                     <div className="space-y-4">
-                        {/* Title & Live Indicator */}
+                        {/* Title & Live Spinner Indicator */}
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white shadow-lg">
-                                    <MonitorPlay size={18} />
+                            <div className="flex items-center gap-3">
+                                <div className="w-11 h-11 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl flex items-center justify-center shadow-sm">
+                                    <MonitorPlay size={20} />
                                 </div>
                                 <div className="flex flex-col">
-                                    <h2 className="text-[15px] font-black text-slate-800 tracking-tight leading-none mb-1">{ad.title}</h2>
+                                    <h2 className="text-[15px] font-black text-slate-800 tracking-tight leading-none mb-1.5">{ad.title}</h2>
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Sponsored Advertisement</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                                <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Watching</span>
+                            <div className="flex items-center gap-1.5 bg-indigo-50/50 border border-indigo-100/60 text-indigo-600 px-3 py-1.5 rounded-full shadow-sm">
+                                <Loader2 size={11} className="animate-spin text-indigo-500" />
+                                <span className="text-[9px] font-black uppercase tracking-widest">Watching</span>
                             </div>
                         </div>
 
-                        {/* Earnings Card - High Impact */}
-                        <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-indigo-200">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
-                                    <Coins size={20} className="text-yellow-300 fill-yellow-300" />
-                                </div>
-                                <div>
-                                    <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest leading-none mb-1">Estimated Earnings</p>
-                                    <p className="text-lg font-black text-white leading-none">+{ad.coinsReward} <span className="text-xs font-bold opacity-80">Coins</span></p>
-                                </div>
+                        {/* Total Earnings Card - Slate background with solid Gold circle coin icon */}
+                        <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-center gap-3.5 shadow-sm">
+                            <div className="w-11 h-11 bg-[#F59E0B]/10 border border-[#F59E0B]/20 rounded-full flex items-center justify-center shrink-0">
+                                <Coins size={18} className="text-amber-500 fill-amber-500 animate-bounce" />
                             </div>
-                            <div className="bg-white/10 px-2 py-1 rounded-lg border border-white/10">
-                                <span className="text-[10px] font-black text-white uppercase tracking-tighter">After {ad.duration}s</span>
+                            <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider leading-none mb-1.5">Total Earnings</p>
+                                <p className="text-[13px] font-bold text-slate-600 leading-none">
+                                    Earn <span className="text-indigo-600 font-extrabold">+{ad.coinsReward} coins</span> after {ad.duration}s
+                                </p>
                             </div>
                         </div>
 
-                        {/* Instruction Note - Sleek */}
-                        <div className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2.5">
-                            <ShieldCheck size={14} className="text-indigo-500 shrink-0" />
-                            <p className="text-[8.5px] font-bold text-slate-500 leading-tight uppercase tracking-tight">
-                                Do not close app while watching to verify reward.
+                        {/* Shield Security Alert Note - Sky blue */}
+                        <div className="bg-sky-50 border border-sky-100 p-3.5 rounded-xl flex items-start gap-3">
+                            <ShieldCheck size={16} className="text-sky-500 shrink-0 mt-0.5" />
+                            <p className="text-sky-800 font-bold text-[9px] leading-relaxed uppercase tracking-tight">
+                                Do not close the app while watching. Reward will be added only after full timer completion for verification.
                             </p>
                         </div>
                     </div>

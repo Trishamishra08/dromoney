@@ -1,35 +1,66 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
     ChevronLeft, Trophy, Sparkles, Coins, ArrowRight, Brain, Clock, 
     RefreshCcw, Star, Zap, Heart, Ghost, Gem, Smile, Rocket, HelpCircle
 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
-import { eventStorage } from '../../shared/services/eventStorage';
+import api from '../../shared/services/api';
 
 const ICON_MAP = {
     Trophy, Zap, Heart, Star, Ghost, Gem, Smile, Rocket
 };
 
+const DEFAULT_CARDS = [
+    { id: 1, icon: 'Trophy', color: 'text-amber-500' },
+    { id: 2, icon: 'Zap', color: 'text-blue-500' },
+    { id: 3, icon: 'Heart', color: 'text-rose-500' },
+    { id: 4, icon: 'Star', color: 'text-emerald-500' },
+    { id: 5, icon: 'Ghost', color: 'text-purple-500' },
+    { id: 6, icon: 'Gem', color: 'text-indigo-500' }
+];
+
 const MemoryMasterView = () => {
+    const { id } = useParams();
     const navigate = useNavigate();
     const { userData, addCoins, addNotification } = useUser();
-    
-    // Get config from storage
-    const eventConfig = eventStorage.getEvents().find(e => e.id === 'memory-master');
-    const PEEK_TIME = (eventConfig?.peekTime || 2.5) * 1000;
-    const MAX_TIME = eventConfig?.maxTime || 60;
-    const cardIcons = eventStorage.getCards();
+
+    const [loading, setLoading] = useState(true);
+    const [peekTime, setPeekTime] = useState(2.5);
+    const [maxTime, setMaxTime] = useState(60);
+    const [cardIcons, setCardIcons] = useState(DEFAULT_CARDS);
 
     const [step, setStep] = useState(0); // 0: Intro, 1: Peek/Ready, 2: Playing, 3: Result
     const [cards, setCards] = useState([]);
     const [flipped, setFlipped] = useState([]);
     const [matched, setMatched] = useState([]);
-    const [timeLeft, setTimeLeft] = useState(MAX_TIME);
+    const [timeLeft, setTimeLeft] = useState(60);
     const [moves, setMoves] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // ── Game Logic ────────────────────────────────
+    useEffect(() => {
+        const fetchEventDetails = async () => {
+            try {
+                const res = await api.get(`/public/events/${id}`);
+                if (res.success && res.data) {
+                    const cfg = res.data.config;
+                    setPeekTime(cfg?.peekTime || 2.5);
+                    setMaxTime(cfg?.maxTime || 60);
+                    setTimeLeft(cfg?.maxTime || 60);
+                    setCardIcons(cfg?.cards || DEFAULT_CARDS);
+                }
+            } catch (err) {
+                console.error("Failed to load Memory Master details:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (id) {
+            fetchEventDetails();
+        } else {
+            setLoading(false);
+        }
+    }, [id]);
 
     const initializeGame = useCallback(() => {
         // Double the icons to create pairs
@@ -45,15 +76,15 @@ const MemoryMasterView = () => {
         setMatched([]);
         setFlipped([]);
         setMoves(0);
-        setTimeLeft(MAX_TIME);
+        setTimeLeft(maxTime);
         setStep(1); // Start Peek phase
 
         // End Peek after delay
         setTimeout(() => {
             setCards(prev => prev.map(c => ({ ...c, isFlipped: false })));
             setStep(2); // Start Play phase
-        }, PEEK_TIME);
-    }, [cardIcons, PEEK_TIME, MAX_TIME]);
+        }, peekTime * 1000);
+    }, [cardIcons, peekTime, maxTime]);
 
     useEffect(() => {
         let timer;
@@ -100,33 +131,39 @@ const MemoryMasterView = () => {
     const handleFinish = (isWin) => {
         setStep(3);
         if (isWin) {
-            const reward = Math.max(10, Math.floor((timeLeft / MAX_TIME) * 100));
+            const reward = Math.max(10, Math.floor((timeLeft / maxTime) * 100));
             addCoins(reward, 'Memory Master Victory');
             addNotification('Memory Master Won!', `You completed the challenge with ${timeLeft}s left!`, 'success');
             
-            // Save participation
-            eventStorage.addParticipant('memory-master', {
-                name: userData?.name || 'User',
-                score: timeLeft,
-                result: `${timeLeft}s remaining`,
-                prize: `${reward} Coins`
-            });
-
-            // Mark completed in user storage
             const completed = JSON.parse(localStorage.getItem('dromoney_completed_events') || '[]');
-            if (!completed.includes('memory-master')) {
-                completed.push('memory-master');
+            const eventIdForStorage = id || 'memory-master';
+            if (!completed.includes(eventIdForStorage)) {
+                completed.push(eventIdForStorage);
                 localStorage.setItem('dromoney_completed_events', JSON.stringify(completed));
+                
+                // Save participant record dynamically
+                api.post(`/user/data/events/${id}/submit`, {
+                    score: timeLeft,
+                    result: `${timeLeft}s remaining`,
+                    prize: `${reward} Coins`,
+                    timeTaken: maxTime - timeLeft
+                }).catch(err => console.error("Failed to save submission:", err));
             }
         }
     };
-
-    // ── Components ────────────────────────────────
 
     const DynamicIcon = ({ name, ...props }) => {
         const IconComponent = ICON_MAP[name] || HelpCircle;
         return <IconComponent {...props} />;
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#060810] flex items-center justify-center text-white">
+                <div className="w-10 h-10 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     if (step === 0) {
         return (
@@ -151,18 +188,18 @@ const MemoryMasterView = () => {
                     <div className="space-y-3">
                         <h2 className="text-4xl font-black leading-tight bg-gradient-to-r from-white to-indigo-300 bg-clip-text text-transparent">Train Your Brain,<br />Win Coins!</h2>
                         <p className="text-white/60 font-bold text-sm max-w-xs mx-auto leading-relaxed">
-                            Match all 6 pairs of cards as fast as you can. Every second saved gives you more coins! 🧠✨
+                            Match all {cardIcons.length} pairs of cards as fast as you can. Every second saved gives you more coins! 🧠✨
                         </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
                         <div className="bg-white/5 p-4 rounded-3xl border border-white/10 backdrop-blur">
                             <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Pairs</p>
-                            <p className="text-2xl font-black text-indigo-400">6 Pairs</p>
+                            <p className="text-2xl font-black text-indigo-400">{cardIcons.length} Pairs</p>
                         </div>
                         <div className="bg-white/5 p-4 rounded-3xl border border-white/10 backdrop-blur">
                             <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Max Time</p>
-                            <p className="text-2xl font-black text-rose-400">{MAX_TIME}s</p>
+                            <p className="text-2xl font-black text-rose-400">{maxTime}s</p>
                         </div>
                     </div>
                 </div>
@@ -170,7 +207,7 @@ const MemoryMasterView = () => {
                 <div className="mt-auto space-y-4">
                      <div className="flex items-center gap-2 bg-indigo-500/10 p-4 rounded-2xl border border-indigo-500/20 text-indigo-300 text-[10px] font-bold">
                         <Sparkles size={16} />
-                        TIP: You will get 2.5 seconds to see all cards at the start. Watch closely!
+                        TIP: You will get {peekTime} seconds to see all cards at the start. Watch closely!
                     </div>
                     <button
                         onClick={initializeGame}
@@ -185,7 +222,7 @@ const MemoryMasterView = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#060810] flex flex-col text-white pb-8 overflow-hidden select-none">
+        <div className="min-h-screen bg-[#060810] flex flex-col text-white pb-8 overflow-hidden select-none animate-in fade-in">
             {/* HUD */}
             <div className="p-6 flex items-center justify-between z-10">
                 <div className="flex flex-col">
@@ -203,7 +240,7 @@ const MemoryMasterView = () => {
                     </div>
                     <div className="bg-white/5 rounded-2xl p-3 border border-white/10 text-center min-w-[70px]">
                         <p className="text-[9px] font-black text-white/30 uppercase mb-0.5">Pairs</p>
-                        <p className="text-xl font-black text-indigo-400">{matched.length}/6</p>
+                        <p className="text-xl font-black text-indigo-400">{matched.length}/{cardIcons.length}</p>
                     </div>
                 </div>
             </div>
@@ -250,7 +287,7 @@ const MemoryMasterView = () => {
                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                     <div 
                         className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300"
-                        style={{ width: `${(matched.length / 6) * 100}%` }}
+                        style={{ width: `${(matched.length / cardIcons.length) * 100}%` }}
                     />
                 </div>
                 <div className="flex justify-between items-center px-1">
@@ -269,7 +306,7 @@ const MemoryMasterView = () => {
                     <h2 className="text-4xl font-black mb-2">{timeLeft > 0 ? 'Brainy Victory! 🧠' : 'Time\'s Up!'}</h2>
                     <p className="text-white/50 font-bold mb-10">
                         {timeLeft > 0 
-                            ? `Awesome! You cleared the board in ${MAX_TIME - timeLeft} seconds.` 
+                            ? `Awesome! You cleared the board in ${maxTime - timeLeft} seconds.` 
                             : 'So close! Try to be focus and faster next time.'
                         }
                     </p>
@@ -283,7 +320,7 @@ const MemoryMasterView = () => {
                             <p className="text-[9px] font-black text-white/40 uppercase mb-1">Prize</p>
                             <div className="flex items-center justify-center gap-1.5">
                                 <Coins size={14} className="text-amber-400" />
-                                <p className="text-2xl font-black text-white">+{Math.max(10, Math.floor((timeLeft / MAX_TIME) * 100))}</p>
+                                <p className="text-2xl font-black text-white">+{Math.max(10, Math.floor((timeLeft / maxTime) * 100))}</p>
                             </div>
                         </div>
                     </div>

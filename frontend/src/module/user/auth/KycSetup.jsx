@@ -51,7 +51,10 @@ const KycSetup = () => {
 
         // Front-end early validation of allowed image types to prevent stuck state
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-        if (!allowedTypes.includes(file.type)) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const allowedExts = ['jpeg', 'jpg', 'png'];
+        if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
+            window.alert("Invalid Format!\n\nPlease select a valid image (JPEG, JPG, or PNG).");
             addNotification("Invalid Format", "Please select a valid image (JPEG, JPG, or PNG)!", "error");
             e.target.value = '';
             return;
@@ -59,6 +62,7 @@ const KycSetup = () => {
 
         // Limit to 5MB
         if (file.size > 5 * 1024 * 1024) {
+            window.alert("File Too Large!\n\nAadhaar photo must be under 5MB.");
             addNotification("File Too Large", "Aadhaar photo must be under 5MB!", "error");
             e.target.value = '';
             return;

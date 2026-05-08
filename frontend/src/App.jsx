@@ -25,7 +25,6 @@ import AdPlayer from './module/user/pages/AdPlayer';
 import QuizView from './module/user/pages/QuizView';
 import TaskQuizView from './module/user/pages/TaskQuizView';
 import LuckyDrawView from './module/user/pages/LuckyDrawView';
-import GoldPredictionView from './module/user/pages/GoldPredictionView';
 import MemoryMasterView from './module/user/pages/MemoryMasterView';
 import ScratchCardView from './module/user/pages/ScratchCardView';
 import SpeedTapperView from './module/user/pages/SpeedTapperView';
@@ -152,12 +151,10 @@ function App() {
             <Route path="/user/quiz/:id" element={<ProtectedUserRoute><QuizView /></ProtectedUserRoute>} />
             <Route path="/user/task-quiz/:id" element={<ProtectedUserRoute><TaskQuizView /></ProtectedUserRoute>} />
             <Route path="/user/lucky-draw/:id" element={<ProtectedUserRoute><LuckyDrawView /></ProtectedUserRoute>} />
-            <Route path="/user/gold-prediction/:id" element={<ProtectedUserRoute><GoldPredictionView /></ProtectedUserRoute>} />
             <Route path="/user/memory-master/:id" element={<ProtectedUserRoute><MemoryMasterView /></ProtectedUserRoute>} />
             <Route path="/user/scratch-card/:id" element={<ProtectedUserRoute><ScratchCardView /></ProtectedUserRoute>} />
             <Route path="/user/speed-tapper/:id" element={<ProtectedUserRoute><SpeedTapperView /></ProtectedUserRoute>} />
             <Route path="/user/treasure-chest/:id" element={<ProtectedUserRoute><TreasureChestView /></ProtectedUserRoute>} />
-            <Route path="/user/contest/:id" element={<ProtectedUserRoute><ContestView /></ProtectedUserRoute>} />
             <Route path="/user/contest/:id" element={<ProtectedUserRoute><ContestView /></ProtectedUserRoute>} />
 
             {/* Admin Module Routes (Protected) */}

@@ -10,22 +10,21 @@ const replaceAdmin = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('MongoDB Connected...');
 
-        // Delete any admin with old email
+        // Delete any admin with old emails
         await Admin.deleteOne({ email: 'admin@dromoney.com' });
-        
-        // Delete any admin with new email to ensure clean seed
         await Admin.deleteOne({ email: 'dromoney@gmail.com' });
+        await Admin.deleteOne({ email: 'dromoney12345@gmail.com' });
 
         await Admin.create({
             name: 'Super Admin',
-            email: 'dromoney@gmail.com',
-            password: 'dromoney',
+            email: 'dromoney12345@gmail.com',
+            password: 'dro@6363',
             role: 'Super Admin'
         });
 
         console.log('✅ Admin Replaced Successfully!');
-        console.log('New Email: dromoney@gmail.com');
-        console.log('New Password: dromoney');
+        console.log('New Email: dromoney12345@gmail.com');
+        console.log('New Password: dro@6363');
         
         process.exit();
     } catch (err) {

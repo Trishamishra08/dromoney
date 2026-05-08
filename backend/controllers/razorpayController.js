@@ -37,13 +37,25 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
         finalAmount = 150;
         planName = '3 Months Support Extension';
         pType = 'SUPPORT_CHAT_RENEWAL';
+    } else if (type === 'SUPPORT_BOOSTER' || type === 'TASK_BOOSTER') {
+        if (user.isBoosterActive) {
+            return next(new ErrorResponse('You already have an active booster.', 400));
+        }
+        const boosterType = type === 'SUPPORT_BOOSTER' ? 'support' : 'task';
+        const Booster = require('../models/Booster');
+        const booster = await Booster.findOne({ type: boosterType });
+        const originalPrice = booster ? booster.price : (boosterType === 'support' ? 22 : 49);
+        
+        finalAmount = originalPrice * 1.04; // adding 4% markup
+        planName = booster ? booster.title : (boosterType === 'support' ? 'Support Booster' : 'Task Booster');
+        pType = type;
     } else {
         if (user.isPaid) return next(new ErrorResponse('Platform already unlocked.', 400));
     }
 
     // Create order on Razorpay servers
     const order = await razorpay.orders.create({
-        amount: finalAmount * 100, // to paise
+        amount: Math.round(finalAmount * 100), // convert precisely to paise integer
         currency: 'INR',
         receipt: `rcpt_${req.user.id.toString().slice(-6)}_${Date.now()}`,
         notes: {
@@ -119,16 +131,13 @@ exports.verifyPayment = asyncHandler(async (req, res, next) => {
                 user.unlockedIdeas.push(payment.businessIdea);
                 await user.save();
             }
-        } else if (payment.paymentType === 'SUPPORT_CHAT_RENEWAL') {
-            console.log(`[PAYMENT] Renewing Support for user ${user._id}`);
-            const now = new Date();
-            const currentExpiry = user.supportExpiry || now;
-            const baseDate = currentExpiry > now ? currentExpiry : now;
+        } else if (payment.paymentType === 'SUPPORT_BOOSTER' || payment.paymentType === 'TASK_BOOSTER') {
+            console.log(`[PAYMENT] Activating Booster ${payment.paymentType} for user ${user._id}`);
+            user.isBoosterActive = true;
             
-            const newExpiry = new Date(baseDate);
-            newExpiry.setMonth(newExpiry.getMonth() + 3);
-            
-            user.supportExpiry = newExpiry;
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 30); // 30 Days expiry
+            user.boosterExpiry = expiryDate;
             await user.save();
         } else {
             console.log(`[PAYMENT] Unlocking Platform for user ${user._id}`);

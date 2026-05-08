@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Bell, Users, Loader2, Trash2, Clock, History as HistoryIcon } from 'lucide-react';
+import { Send, Bell, Users, Loader2, Trash2, Clock, History as HistoryIcon, CheckCircle, XCircle } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import api from '../../shared/services/api';
 
@@ -10,6 +10,14 @@ const Notifications = () => {
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState([]);
     const [userStats, setUserStats] = useState({ totalActive: 0 });
+
+    // Toast state
+    const [toast, setToast] = useState(null); // { message: '', type: 'success' | 'error' }
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     useEffect(() => {
         fetchHistory();
@@ -49,10 +57,11 @@ const Notifications = () => {
                 setTimeout(() => setSent(false), 3000);
                 setTitle('');
                 setMessage('');
+                showToast("Broadcast message sent successfully!", "success");
                 fetchHistory();
             }
         } catch (err) {
-            alert("Failed to send broadcast");
+            showToast("Failed to send broadcast", "error");
         } finally {
             setLoading(false);
         }
@@ -64,9 +73,10 @@ const Notifications = () => {
             const res = await api.delete(`/admin/notifications/${id}`);
             if (res.success) {
                 setHistory(prev => prev.filter(n => n._id !== id));
+                showToast("Notification deleted successfully!", "success");
             }
         } catch (err) {
-            alert("Delete failed");
+            showToast("Delete failed", "error");
         }
     };
 
@@ -76,14 +86,29 @@ const Notifications = () => {
             const res = await api.delete('/admin/notifications/bulk/clear');
             if (res.success) {
                 setHistory([]);
+                showToast("Broadcast history cleared successfully!", "success");
             }
         } catch (err) {
-            alert("Clear failed");
+            showToast("Clear failed", "error");
         }
     };
 
     return (
-        <div className="p-6 animate-in fade-in duration-500">
+        <div className="p-6 animate-in fade-in duration-500 relative">
+            {toast && (
+                <div className={`fixed top-5 right-5 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 ${
+                    toast.type === 'success' 
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+                        : 'bg-rose-50 border-rose-100 text-rose-800'
+                }`}>
+                    {toast.type === 'success' ? (
+                        <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0 animate-bounce" />
+                    ) : (
+                        <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                    )}
+                    <span className="text-xs font-semibold">{toast.message}</span>
+                </div>
+            )}
             <PageHeader title="Notifications" subtitle="Broadcast messages to all platform users" />
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

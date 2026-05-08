@@ -144,13 +144,17 @@ exports.unlockPlatform = asyncHandler(async (req, res, next) => {
 // @route   POST /api/user/promotions
 // @access  Private
 exports.submitPromotion = asyncHandler(async (req, res, next) => {
-    const { brandName, brandLink, budget, description } = req.body;
+    const { name, brandName, mobile, whatsapp, category, link, brandLink, budget, usersRequired, description } = req.body;
 
     const promotion = await Promotion.create({
         user: req.user.id,
-        brandName,
-        brandLink,
+        brandName: brandName || name,
+        brandLink: brandLink || link,
+        mobile,
+        whatsapp,
+        category: category || 'Custom Task',
         budget,
+        usersRequired: usersRequired || 0,
         description
     });
 

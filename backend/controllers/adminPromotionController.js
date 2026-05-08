@@ -1,5 +1,6 @@
 const Promotion = require('../models/Promotion');
 const User = require('../models/User');
+const Task = require('../models/Task');
 
 // @desc    Get all promotion requests
 // @route   GET /api/admin/promotions
@@ -31,12 +32,54 @@ exports.updatePromotionStatus = async (req, res) => {
             return res.status(404).json({ success: false, message: "Promotion request not found" });
         }
 
+        const oldStatus = promotion.status;
         promotion.status = status;
         if (adminResponse) promotion.adminResponse = adminResponse;
         await promotion.save();
 
-        // In a real app, we'd add a notification to the user's dashboard here.
-        // For now, we update the status, and the user's dashboard will fetch the latest status.
+        // If newly approved, automatically spawn a general user earning Task in the DB
+        if (status === 'Approved' && oldStatus !== 'Approved') {
+            let taskType = 'Social';
+            let taskCategory = 'Other';
+            let taskIcon = 'Zap';
+            let taskConfig = {};
+
+            const cat = promotion.category || 'Custom Task';
+            if (cat === 'Instagram Follow') {
+                taskType = 'Social';
+                taskCategory = 'Instagram';
+                taskIcon = 'Camera';
+            } else if (cat === 'YouTube Subscribe') {
+                taskType = 'Social';
+                taskCategory = 'YouTube';
+                taskIcon = 'Youtube';
+            } else if (cat === 'Video Watch') {
+                taskType = 'Video';
+                taskCategory = 'YouTube';
+                taskIcon = 'Youtube';
+                taskConfig = { timer: '30' };
+            } else if (cat === 'Website Visit') {
+                taskType = 'Web';
+                taskCategory = 'Other';
+                taskIcon = 'Monitor';
+            } else if (cat === 'App Download') {
+                taskType = 'Web';
+                taskCategory = 'Other';
+                taskIcon = 'Download';
+            }
+
+            await Task.create({
+                title: promotion.brandName || 'Brand Promotion Campaign',
+                description: promotion.description || `Complete this ${cat} task to earn coins.`,
+                coinsReward: 1,
+                type: taskType,
+                category: taskCategory,
+                link: promotion.brandLink,
+                icon: taskIcon,
+                config: taskConfig,
+                status: 'Active'
+            });
+        }
 
         res.json({
             success: true,

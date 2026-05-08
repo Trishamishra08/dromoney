@@ -6,6 +6,19 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const tasks = [
     {
+        title: 'trisha mishra',
+        description: 'Complete this Video Watch task to earn coins.',
+        coinsReward: 1,
+        type: 'Video',
+        category: 'YouTube',
+        link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        icon: 'Youtube',
+        status: 'Active',
+        config: {
+            timer: '30'
+        }
+    },
+    {
         title: 'Visit Website Page',
         description: 'Stay for 15s to earn coins.',
         coinsReward: 1,
@@ -115,6 +128,30 @@ const tasks = [
         category: 'Instagram',
         link: 'https://instagram.com/dromoney',
         icon: 'Camera',
+        status: 'Active'
+    },
+    {
+        title: 'Watch and Earn Video',
+        description: 'Watch the full short video to earn extra coins instantly!',
+        coinsReward: 1,
+        type: 'Video',
+        category: 'YouTube',
+        link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        icon: 'Youtube',
+        status: 'Active',
+        config: {
+            url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+            timer: '30'
+        }
+    },
+    {
+        title: 'WhatsApp Channel & Comment',
+        description: 'Follow our official WhatsApp Channel & Comment on our latest video to earn coins.',
+        coinsReward: 1,
+        type: 'Social',
+        category: 'WhatsApp',
+        link: 'https://whatsapp.com/channel/0029Va9P1725bV8j2g1u4p3u',
+        icon: 'WhatsApp',
         status: 'Active'
     }
 ];

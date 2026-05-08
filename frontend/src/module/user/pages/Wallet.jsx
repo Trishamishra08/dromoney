@@ -4,7 +4,7 @@ import { useUser } from '../context/UserContext';
 import { 
     CreditCard, Wallet as WalletIcon, IndianRupee, ArrowUpRight, 
     ArrowDownLeft, History, Filter, AlertCircle, Sparkles, Coins, 
-    TrendingUp, ChevronRight, CheckCircle2, Share2, Info, ArrowRightLeft
+    TrendingUp, ChevronRight, CheckCircle2, Share2, Info, ArrowRightLeft, X, Building, Clock, Loader2, ShieldCheck
 } from 'lucide-react';
 import UnlockModal from '../components/UnlockModal';
 import api from '../../shared/services/api';
@@ -19,8 +19,62 @@ const Wallet = () => {
     const [filter, setFilter] = useState('All'); // 'All', 'Earning', 'Payout'
     const [minWithdrawal, setMinWithdrawal] = useState(100);
     const [loadingSettings, setLoadingSettings] = useState(true);
+    const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+    const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [toast, setToast] = useState(null); // { message: '', type: 'error'|'success'|'warning' }
+    const [bankDetails, setBankDetails] = useState({
+        accountNumber: '',
+        ifscCode: '',
+        holderName: '',
+        bankName: ''
+    });
 
-    // Fetch dynamic minWithdrawal from settings
+    const [pendingWithdrawal, setPendingWithdrawal] = useState(null);
+    const [recentWithdrawal, setRecentWithdrawal] = useState(null);
+    const [cooldownRemaining, setCooldownRemaining] = useState(0);
+
+    const showToast = (message, type = 'error') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
+
+    const fetchWalletStatus = async () => {
+        try {
+            const res = await api.get('/user/wallet/balance');
+            if (res.success) {
+                setPendingWithdrawal(res.pendingWithdrawal || null);
+                setRecentWithdrawal(res.recentWithdrawal || null);
+            }
+        } catch (err) {
+            console.error("Failed to load wallet status:", err);
+        }
+    };
+
+    // Cooldown countdown timer
+    useEffect(() => {
+        if (!recentWithdrawal) {
+            setCooldownRemaining(0);
+            return;
+        }
+
+        const updateCooldown = () => {
+            const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+            const unlockTime = new Date(recentWithdrawal.createdAt).getTime() + twentyFourHoursMs;
+            const ms = unlockTime - Date.now();
+            if (ms <= 0) {
+                setCooldownRemaining(0);
+            } else {
+                setCooldownRemaining(ms);
+            }
+        };
+
+        updateCooldown();
+        const interval = setInterval(updateCooldown, 1000);
+        return () => clearInterval(interval);
+    }, [recentWithdrawal]);
+
+    // Fetch dynamic minWithdrawal from settings & wallet status
     useEffect(() => {
         const fetchSettings = async () => {
             try {
@@ -35,6 +89,28 @@ const Wallet = () => {
             }
         };
         fetchSettings();
+        fetchWalletStatus();
+    }, []);
+
+    // Listen to real-time status updates from UserContext socket events
+    useEffect(() => {
+        const handleStatusUpdate = (e) => {
+            const data = e.detail;
+            fetchWalletStatus();
+            refreshUserProfile();
+            
+            // Show a custom popup modal or beautiful top toast!
+            if (data.status === 'Approved') {
+                showToast("Your withdrawal request has been approved by admin! Wallet updated.", "success");
+            } else if (data.status === 'Rejected') {
+                showToast("Your withdrawal request was rejected by admin.", "error");
+            }
+        };
+
+        window.addEventListener('withdrawal_status_updated', handleStatusUpdate);
+        return () => {
+            window.removeEventListener('withdrawal_status_updated', handleStatusUpdate);
+        };
     }, []);
 
     const handleWithdraw = async () => {
@@ -43,24 +119,22 @@ const Wallet = () => {
             return;
         }
 
-        const val = parseFloat(amount);
-        if (isNaN(val) || val < minWithdrawal) {
-            addNotification("Invalid Amount", `Minimum withdrawal is ₹${minWithdrawal}.`, "warning");
+        // Enforce cooldown check
+        if (cooldownRemaining > 0) {
+            showToast("You can only withdraw once every 24 hours.", "warning");
             return;
         }
 
-        // Check for 24-hour limit on client side
-        const hasRecentWithdrawal = wallet.transactions && wallet.transactions.some(tx => {
-            if (tx.type !== 'withdrawal') return false;
-            const txDate = new Date(tx.date);
-            const now = new Date();
-            const diffTime = Math.abs(now - txDate);
-            const diffHours = diffTime / (1000 * 60 * 60);
-            return diffHours < 24;
-        });
+        // Enforce pending check
+        if (pendingWithdrawal) {
+            showToast("You already have a pending withdrawal request.", "warning");
+            return;
+        }
 
-        if (hasRecentWithdrawal) {
-            addNotification("Limit Exceeded", "You can only withdraw once every 24 hours.", "warning");
+        const val = parseFloat(amount);
+        if (isNaN(val) || val < minWithdrawal) {
+            addNotification("Invalid Amount", `Minimum withdrawal is ₹${minWithdrawal}.`, "warning");
+            showToast(`Minimum withdrawal is ₹${minWithdrawal}.`, "warning");
             return;
         }
 
@@ -73,16 +147,61 @@ const Wallet = () => {
                 `You need ₹${totalDeduction} (₹${val} amount + ₹5 fee) to complete this transaction.`, 
                 "warning"
             );
+            showToast(`Insufficient Balance: You need ₹${totalDeduction} to complete this transaction.`, "warning");
             return;
         }
 
-        const res = await requestWithdrawal(val);
-        if (res.success) {
-            setAmount('');
-            addNotification("Success", "Withdrawal requested successfully.", "success");
-            await refreshUserProfile(); // Refresh user profile to update wallet balance
-        } else {
-            addNotification("Withdrawal Denied", res.message, "error");
+        // Open Bank Details Modal
+        setIsBankModalOpen(true);
+    };
+
+    const submitWithdrawal = async () => {
+        if (!bankDetails.accountNumber || !bankDetails.ifscCode || !bankDetails.holderName || !bankDetails.bankName) {
+            addNotification("Missing Details", "Please fill all bank details.", "warning");
+            showToast("Please fill all bank details.", "warning");
+            return;
+        }
+
+        if (bankDetails.accountNumber.length !== 16) {
+            addNotification("Invalid Account", "Account number must be exactly 16 digits.", "warning");
+            showToast("Account number must be exactly 16 digits.", "warning");
+            return;
+        }
+
+        const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+        if (!ifscRegex.test(bankDetails.ifscCode)) {
+            addNotification("Invalid IFSC", "Please enter a valid 11-character IFSC code (e.g., SBIN0001234).", "warning");
+            showToast("Please enter a valid 11-character IFSC code.", "warning");
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const val = parseFloat(amount);
+            const res = await requestWithdrawal(val, bankDetails);
+            if (res.success) {
+                // Close bank modal & reset form FIRST
+                setIsBankModalOpen(false);
+                setAmount('');
+                setBankDetails({ accountNumber: '', ifscCode: '', holderName: '', bankName: '' });
+                setIsSubmitting(false);
+                // Show success popup immediately
+                setIsSuccessModalOpen(true);
+                addNotification("Request Sent", "Withdrawal request submitted! Waiting for admin approval.", "success");
+                showToast("Withdrawal request submitted! Waiting for admin approval.", "success");
+                // Refresh profile silently in background (no await so it doesn't block UI)
+                refreshUserProfile();
+                // Fetch latest wallet/withdrawal status to immediately show the green pending banner
+                fetchWalletStatus();
+            } else {
+                addNotification("Withdrawal Denied", res.message || "Request failed. Try again.", "error");
+                showToast(res.message || "Request failed. Try again.", "error");
+                setIsSubmitting(false);
+            }
+        } catch (err) {
+            addNotification("Error", "Something went wrong. Please try again.", "error");
+            showToast("Something went wrong. Please try again.", "error");
+            setIsSubmitting(false);
         }
     };
 
@@ -101,6 +220,24 @@ const Wallet = () => {
     return (
         <div className="flex flex-col gap-2.5 p-3 animate-in fade-in duration-700 min-h-screen bg-[#f8fafc] font-sans">
             <UnlockModal isOpen={isUnlockOpen} onClose={() => setIsUnlockOpen(false)} />
+
+            {/* Green Card: Waiting for Admin Confirmation */}
+            {pendingWithdrawal && (
+                <div className="bg-emerald-50 border border-emerald-100/80 rounded-xl p-3 flex items-center justify-between shadow-sm animate-pulse">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-sm shrink-0">
+                            <Clock size={16} className="animate-spin" />
+                        </div>
+                        <div>
+                            <h4 className="text-[10px] font-black text-emerald-900 uppercase tracking-tight leading-none mb-1">waiting for the admin confirmation..</h4>
+                            <p className="text-[9px] font-bold text-emerald-600/70">Your withdrawal request of ₹{pendingWithdrawal.amount} is pending review.</p>
+                        </div>
+                    </div>
+                    <span className="bg-emerald-100 text-emerald-800 text-[8px] font-extrabold uppercase tracking-wider px-2 py-1 rounded-md shrink-0">
+                        Pending
+                    </span>
+                </div>
+            )}
 
             {/* --- Compact Switcher --- */}
             <div className="flex bg-slate-200/50 p-1 rounded-lg border border-slate-200/50">
@@ -224,23 +361,62 @@ const Wallet = () => {
                             placeholder={`Amount (Min. ₹${minWithdrawal})`}
                             className="w-full bg-slate-50 border border-slate-100 rounded-lg py-2.5 px-3.5 text-[13px] font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all"
                         />
+
+
                         
-                        {/* 24-Hour Policy Alert Line (Highly Visible) */}
-                        <div className="bg-amber-50/50 border border-amber-100/70 p-2.5 rounded-lg flex items-start gap-2.5">
-                            <Info size={13} className="text-amber-500 shrink-0 mt-0.5" />
-                            <p className="text-[9px] font-bold text-amber-800 leading-normal">
-                                नोट: आप 24 घंटे में केवल एक बार ही निकासी (withdraw) कर सकते हैं।
-                            </p>
+                        {/* 24-Hour Policy Alert Line (Highly Dynamic & Localized) */}
+                        <div className={`p-2.5 rounded-lg flex items-start gap-2.5 transition-all duration-300 ${
+                            pendingWithdrawal ? 'bg-amber-50 border border-amber-100' :
+                            cooldownRemaining > 0 ? 'bg-rose-50 border border-rose-100' :
+                            'bg-amber-50/50 border border-amber-100/70'
+                        }`}>
+                            {pendingWithdrawal ? (
+                                <Clock size={13} className="text-amber-500 shrink-0 mt-0.5 animate-spin" />
+                            ) : cooldownRemaining > 0 ? (
+                                <AlertCircle size={13} className="text-rose-500 shrink-0 mt-0.5" />
+                            ) : (
+                                <Info size={13} className="text-amber-500 shrink-0 mt-0.5" />
+                            )}
+                            <div className="flex-1">
+                                <p className={`text-[9px] font-bold leading-normal ${
+                                    pendingWithdrawal ? 'text-amber-800' :
+                                    cooldownRemaining > 0 ? 'text-rose-800' :
+                                    'text-amber-800'
+                                }`}>
+                                    {pendingWithdrawal ? (
+                                        <>
+                                            आपकी एक निकासी (withdraw) अभी Pending है। कृपया Admin के approval का इंतज़ार करें।
+                                        </>
+                                    ) : cooldownRemaining > 0 ? (
+                                        <>
+                                            निकासी सीमा: आप 24 घंटे में केवल एक बार ही निकासी (withdraw) कर सकते हैं। अगला withdrawal {Math.floor(cooldownRemaining / (1000 * 60 * 60))}h {Math.floor((cooldownRemaining % (1000 * 60 * 60)) / (1000 * 60))}m {Math.floor((cooldownRemaining % (1000 * 60)) / 1000)}s बाद कर सकते हैं।
+                                        </>
+                                    ) : (
+                                        "नोट: आप 24 घंटे में केवल एक बार ही निकासी (withdraw) कर सकते हैं।"
+                                    )}
+                                </p>
+                            </div>
                         </div>
 
                         <button
                             onClick={handleWithdraw}
+                            disabled={!!pendingWithdrawal || cooldownRemaining > 0}
                             className={`w-full py-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all
-                                ${(!isPaid) || (amount >= minWithdrawal && (Number(amount) + 5) <= wallet.balance)
+                                ${pendingWithdrawal 
+                                    ? 'bg-amber-50 text-amber-400 border border-amber-100 cursor-not-allowed'
+                                    : cooldownRemaining > 0
+                                    ? 'bg-rose-50 text-rose-400 border border-rose-100 cursor-not-allowed'
+                                    : (!isPaid) || (amount >= minWithdrawal && (Number(amount) + 5) <= wallet.balance)
                                     ? 'bg-[#1a233b] hover:bg-black text-white shadow-md active:scale-95 cursor-pointer'
                                     : 'bg-slate-50 text-slate-300 pointer-events-none border border-slate-100'}`}
                         >
-                            {isPaid ? 'Withdraw Now' : 'Unlock to Withdraw'}
+                            {pendingWithdrawal 
+                                ? 'Withdrawal Pending Approval' 
+                                : cooldownRemaining > 0 
+                                ? 'Withdrawal Locked (24h Cooldown)' 
+                                : isPaid 
+                                ? 'Withdraw Now' 
+                                : 'Unlock to Withdraw'}
                         </button>
                     </div>
                 </div>
@@ -344,6 +520,186 @@ const Wallet = () => {
                     )}
                 </div>
             </div>
+
+            {/* Bank Details Modal */}
+            {isBankModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                    <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-5 flex items-center justify-between border-b border-slate-100 bg-slate-50/50">
+                            <div>
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                                    <Building size={16} className="text-blue-500" /> Bank Details
+                                </h3>
+                                <p className="text-[10px] text-slate-500 font-medium mt-0.5">Please provide accurate information</p>
+                            </div>
+                            <button 
+                                onClick={() => setIsBankModalOpen(false)}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 active:scale-95 transition-all"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                        
+                        <div className="p-5 flex flex-col gap-3.5 bg-white">
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Account Holder Name</label>
+                                <input
+                                    type="text"
+                                    value={bankDetails.holderName}
+                                    onChange={(e) => setBankDetails({...bankDetails, holderName: e.target.value})}
+                                    placeholder="Enter full name"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-lg py-3 px-3.5 text-xs font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Bank Name</label>
+                                <input
+                                    type="text"
+                                    value={bankDetails.bankName}
+                                    onChange={(e) => setBankDetails({...bankDetails, bankName: e.target.value})}
+                                    placeholder="e.g. State Bank of India"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-lg py-3 px-3.5 text-xs font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Account Number</label>
+                                <input
+                                    type="text"
+                                    value={bankDetails.accountNumber}
+                                    onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value.replace(/\D/g, '').slice(0, 16)})}
+                                    placeholder="Enter 16-digit account number"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-lg py-3 px-3.5 text-xs font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">IFSC Code</label>
+                                <input
+                                    type="text"
+                                    value={bankDetails.ifscCode}
+                                    onChange={(e) => setBankDetails({...bankDetails, ifscCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11)})}
+                                    placeholder="e.g. SBIN0001234"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-lg py-3 px-3.5 text-xs font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all uppercase"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="p-5 pt-2 bg-slate-50/50 border-t border-slate-100">
+                            <button
+                                onClick={submitWithdrawal}
+                                disabled={isSubmitting}
+                                className={`w-full py-3.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all flex justify-center items-center gap-2 ${
+                                    isSubmitting
+                                        ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                                        : 'bg-[#1a233b] hover:bg-black text-white shadow-md active:scale-95 cursor-pointer'
+                                }`}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 size={15} className="animate-spin" />
+                                        Submitting Request...
+                                    </>
+                                ) : (
+                                    <>
+                                        <ShieldCheck size={15} />
+                                        Confirm Withdrawal
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Success / Waiting for Approval Modal */}
+            {isSuccessModalOpen && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+                    <div className="bg-white w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 text-center">
+                        
+                        {/* Top gradient bar */}
+                        <div className="h-1.5 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400" />
+
+                        <div className="pt-7 pb-5 px-6">
+                            {/* Animated pulsing clock icon */}
+                            <div className="relative mx-auto w-20 h-20 mb-5">
+                                <div className="absolute inset-0 bg-amber-100 rounded-full animate-ping opacity-30" />
+                                <div className="relative w-20 h-20 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-full flex items-center justify-center shadow-lg">
+                                    <Clock size={34} className="text-amber-500" />
+                                </div>
+                            </div>
+
+                            <h3 className="text-[16px] font-black text-slate-800 tracking-tight mb-1">Request Submitted! 🎉</h3>
+                            <p className="text-[13px] font-bold text-amber-600 mb-3 tracking-wide">Waiting for Admin Approval</p>
+
+                            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5 text-left mb-3">
+                                <p className="text-[10.5px] font-semibold text-slate-600 leading-relaxed">
+                                    आपका withdrawal request सफलतापूर्वक submit हो गया है।
+                                    Admin के approve करने के बाद amount आपके bank account में transfer किया जाएगा।
+                                </p>
+                            </div>
+
+                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-left">
+                                <p className="text-[9.5px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">What happens next?</p>
+                                <div className="flex items-start gap-2 mb-1.5">
+                                    <div className="w-4 h-4 bg-amber-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                                        <span className="text-[8px] font-black text-amber-600">1</span>
+                                    </div>
+                                    <p className="text-[9.5px] font-medium text-slate-500">Admin reviews your request</p>
+                                </div>
+                                <div className="flex items-start gap-2 mb-1.5">
+                                    <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                                        <span className="text-[8px] font-black text-blue-600">2</span>
+                                    </div>
+                                    <p className="text-[9.5px] font-medium text-slate-500">Amount deducted after approval</p>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <div className="w-4 h-4 bg-emerald-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                                        <span className="text-[8px] font-black text-emerald-600">3</span>
+                                    </div>
+                                    <p className="text-[9.5px] font-medium text-slate-500">Transfer to your bank account</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-emerald-50 border-t border-emerald-100 px-4 py-2.5 flex items-center justify-center gap-1.5">
+                            <CheckCircle2 size={12} className="text-emerald-500" />
+                            <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">You will be notified upon approval</span>
+                        </div>
+
+                        <div className="p-4">
+                            <button
+                                onClick={() => setIsSuccessModalOpen(false)}
+                                className="w-full py-3.5 rounded-xl text-[11px] font-black uppercase tracking-widest bg-gradient-to-r from-[#1a233b] to-[#2a3a5c] hover:from-black hover:to-slate-800 text-white shadow-lg active:scale-95 transition-all cursor-pointer"
+                            >
+                                Got It, Thanks!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Beautiful Floating Toast at the Top */}
+            {toast && (
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[300] w-11/12 max-w-xs bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-100 p-3.5 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                        toast.type === 'success' ? 'bg-emerald-50 text-emerald-500' :
+                        toast.type === 'warning' ? 'bg-amber-50 text-amber-500' : 'bg-rose-50 text-rose-500'
+                    }`}>
+                        {toast.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                    </div>
+                    <div className="flex-1 text-left">
+                        <p className="text-[11px] font-black text-slate-800 uppercase tracking-wider">
+                            {toast.type === 'success' ? 'Success' : toast.type === 'warning' ? 'Warning' : 'Error'}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-bold mt-0.5 leading-snug">{toast.message}</p>
+                    </div>
+                    <button onClick={() => setToast(null)} className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-50">
+                        <X size={14} />
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

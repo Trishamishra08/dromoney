@@ -14,7 +14,8 @@ import FeedbackModal from '../components/FeedbackModal';
 
 const Profile = () => {
     const navigate = useNavigate();
-    const fileInputRef = React.useRef(null);
+    const galleryInputRef = React.useRef(null);
+    const cameraInputRef = React.useRef(null);
     const { userData, addNotification, updateProfileImage, logout } = useUser();
     const { name, id, referrals, isPaid, profileImage, kycStatus } = userData;
     const [isUploading, setIsUploading] = useState(false);
@@ -65,8 +66,12 @@ const Profile = () => {
         }
     };
 
-    const triggerUpload = () => {
-        fileInputRef.current.click();
+    const triggerGalleryUpload = () => {
+        if (galleryInputRef.current) galleryInputRef.current.click();
+    };
+
+    const triggerCameraUpload = () => {
+        if (cameraInputRef.current) cameraInputRef.current.click();
     };
 
     return (
@@ -107,10 +112,19 @@ const Profile = () => {
                 {/* ── Profile Avatar Section ── */}
                 <div className="flex flex-col items-center py-2">
                     <div className="relative mb-4">
-                        {/* Hidden File Input */}
+                        {/* Hidden File Input for Gallery Selection */}
                         <input 
                             type="file" 
-                            ref={fileInputRef}
+                            ref={galleryInputRef}
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={handleImageChange} 
+                        />
+
+                        {/* Hidden File Input for Camera Capture */}
+                        <input 
+                            type="file" 
+                            ref={cameraInputRef}
                             accept="image/*" 
                             capture="user"
                             className="hidden" 
@@ -125,7 +139,7 @@ const Profile = () => {
                                 </div>
                             )}
                             <div 
-                                onClick={triggerUpload}
+                                onClick={triggerGalleryUpload}
                                 className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
                             >
                                 <Camera size={20} className="text-white" />
@@ -133,7 +147,7 @@ const Profile = () => {
                         </div>
                         
                         <button 
-                            onClick={triggerUpload}
+                            onClick={triggerGalleryUpload}
                             className="absolute -bottom-0.5 -right-0.5 w-8 h-8 bg-white rounded-full shadow-lg border border-slate-100 flex items-center justify-center cursor-pointer active:scale-90 transition-all z-20"
                         >
                             <Camera size={14} className="text-slate-600" />
@@ -142,14 +156,14 @@ const Profile = () => {
 
                     <div className="flex items-center gap-2 mb-1.5">
                         <button 
-                            onClick={triggerUpload}
-                            className="bg-white px-3.5 py-1.5 rounded-lg text-[9px] font-black text-slate-800 uppercase tracking-widest border border-slate-100 shadow-sm flex items-center gap-1.5 active:scale-95 transition-all"
+                            onClick={triggerGalleryUpload}
+                            className="bg-white px-3.5 py-1.5 rounded-lg text-[9px] font-black text-slate-800 uppercase tracking-widest border border-slate-100 shadow-sm flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer"
                         >
                             <ImageIcon size={12} className="text-blue-500" /> Gallery
                         </button>
                         <button 
-                            onClick={triggerUpload}
-                            className="bg-[#0B1221] px-3.5 py-1.5 rounded-lg text-[9px] font-black text-white uppercase tracking-widest flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
+                            onClick={triggerCameraUpload}
+                            className="bg-[#0B1221] px-3.5 py-1.5 rounded-lg text-[9px] font-black text-white uppercase tracking-widest flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
                         >
                             <Camera size={12} className="text-blue-400" /> Camera
                         </button>
@@ -188,7 +202,7 @@ const Profile = () => {
                     <div className="grid grid-cols-2 gap-3">
                         <button 
                             onClick={() => handleAction('KYC Status')}
-                            className="bg-white border border-slate-100 rounded-2xl p-4 text-left shadow-sm active:bg-slate-50 transition-all group relative overflow-hidden"
+                            className="bg-white border border-slate-100 rounded-2xl p-4 text-left shadow-sm active:bg-slate-50 transition-all group relative overflow-hidden cursor-pointer"
                         >
                             <div className="absolute right-0 top-0 w-12 h-12 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                             <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform border border-emerald-100">
@@ -200,7 +214,7 @@ const Profile = () => {
 
                         <button 
                             onClick={() => handleAction('My Referrals')}
-                            className="bg-white border border-slate-100 rounded-2xl p-4 text-left shadow-sm active:bg-slate-50 transition-all group relative overflow-hidden"
+                            className="bg-white border border-slate-100 rounded-2xl p-4 text-left shadow-sm active:bg-slate-50 transition-all group relative overflow-hidden cursor-pointer"
                         >
                             <div className="absolute right-0 top-0 w-12 h-12 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                             <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform border border-blue-100">
@@ -216,7 +230,7 @@ const Profile = () => {
                 <div className="space-y-2.5">
                     <button 
                         onClick={() => handleAction('Help & Support')}
-                        className="w-full bg-white border border-slate-100 rounded-xl p-3.5 flex items-center justify-between shadow-sm active:bg-slate-50 transition-all"
+                        className="w-full bg-white border border-slate-100 rounded-xl p-3.5 flex items-center justify-between shadow-sm active:bg-slate-50 transition-all cursor-pointer"
                     >
                         <div className="flex items-center gap-3">
                             <div className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100">
@@ -232,7 +246,7 @@ const Profile = () => {
 
                     <button 
                         onClick={() => handleAction('App Feedback')}
-                        className="w-full bg-white border border-slate-100 rounded-xl p-3.5 flex items-center justify-between shadow-sm active:bg-slate-50 transition-all"
+                        className="w-full bg-white border border-slate-100 rounded-xl p-3.5 flex items-center justify-between shadow-sm active:bg-slate-50 transition-all cursor-pointer"
                     >
                         <div className="flex items-center gap-3">
                             <div className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100">
@@ -251,7 +265,7 @@ const Profile = () => {
                 <div className="pt-2">
                     <button 
                         onClick={logout}
-                        className="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                        className="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer"
                     >
                         <LogOut size={18} className="text-rose-500" /> Logout Account
                     </button>

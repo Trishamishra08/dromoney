@@ -55,8 +55,8 @@ const SpeedTapperView = () => {
 
     const handleWin = () => {
         setStatus('won');
-        addCoins(task.reward, 'Speed Tapper Mastery');
-        taskStorage.markComplete(task.id);
+        addCoins(task.reward, 'Speed Tapper Mastery', task._id || task.id);
+        taskStorage.markComplete(task._id || task.id);
     };
 
     if (!task) return null;

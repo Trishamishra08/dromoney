@@ -55,7 +55,7 @@ const INCOME_OPTIONS = [
     },
     {
         id: 5,
-        title: 'Start Your Business',
+        title: 'Start Your Journey',
         subtitle: 'Explore free & premium ideas',
         icon: Briefcase,
         bg: 'bg-emerald-50',
@@ -91,9 +91,14 @@ const Income = () => {
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [projectsData, setProjectsData] = useState({ title: 'Dromoney Projects', description: 'Loading latest projects...' });
+    const [futureFeaturesConfig, setFutureFeaturesConfig] = useState({
+        title: 'Future and Option',
+        subtitle: 'Upcoming earning opportunities'
+    });
 
     useEffect(() => {
         fetchProjects();
+        fetchFutureFeatures();
         setKycStatus(userKycStatus);
     }, [userKycStatus]);
 
@@ -110,6 +115,21 @@ const Income = () => {
             }
         } catch (err) {
             console.error("Content fetch failed:", err);
+        }
+    };
+
+    const fetchFutureFeatures = async () => {
+        try {
+            const res = await api.get('/public/content/menu_future_features');
+            if (res.success && res.data) {
+                const d = res.data.data;
+                setFutureFeaturesConfig({
+                    title: d?.title || res.data.title || 'Future and Option',
+                    subtitle: d?.subtitle || res.data.description || 'Upcoming earning opportunities'
+                });
+            }
+        } catch (err) {
+            console.error("FF config fetch failed:", err);
         }
     };
 
@@ -151,7 +171,11 @@ const Income = () => {
     };
 
     const handleCardClick = (route) => {
-        if (route) navigate(route);
+        if (route === '/user/marketing') {
+            navigate(route, { state: { showReferral: true } });
+        } else if (route) {
+            navigate(route);
+        }
     };
 
     const status = (userKycStatus || 'Not Started').toLowerCase();
@@ -332,9 +356,11 @@ const Income = () => {
 
                             {/* Content - High Density */}
                             <div className="relative z-10 flex-1">
-                                <h3 className="text-[12px] font-black text-slate-800 tracking-tight leading-none mb-1">{opt.title}</h3>
+                                <h3 className="text-[12px] font-black text-slate-800 tracking-tight leading-none mb-1">
+                                    {opt.id === 6 ? futureFeaturesConfig.title : opt.title}
+                                </h3>
                                 <p className="text-[8.5px] font-bold text-slate-500 leading-tight tracking-tight line-clamp-2">
-                                    {opt.subtitle}
+                                    {opt.id === 6 ? futureFeaturesConfig.subtitle : opt.subtitle}
                                 </p>
                             </div>
 

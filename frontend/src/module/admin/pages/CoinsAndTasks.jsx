@@ -96,7 +96,7 @@ const CoinsAndTasks = () => {
                 setIsAddModalOpen(false);
             }
         } catch (err) {
-            alert(err);
+            alert(err.message || "Something went wrong");
         }
     };
 

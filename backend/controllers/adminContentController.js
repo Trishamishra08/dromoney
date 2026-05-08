@@ -1,6 +1,7 @@
 const Task = require('../models/Task');
 const Ad = require('../models/Ad');
 const BusinessIdea = require('../models/BusinessIdea');
+const Promotion = require('../models/Promotion');
 const ErrorResponse = require('../utils/errorResponse');
 
 // --- TASKS ---
@@ -75,6 +76,7 @@ exports.deleteContent = async (req, res, next) => {
         if (type === 'task') model = Task;
         else if (type === 'ad') model = Ad;
         else if (type === 'business') model = BusinessIdea;
+        else if (type === 'promotion') model = Promotion;
 
         if (!model) return next(new ErrorResponse('Invalid content type', 400));
         

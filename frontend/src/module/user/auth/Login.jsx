@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Loader2, ArrowRight, Smartphone, Lock, ShieldCheck } from 'lucide-react';
 import { useUser } from '../context/UserContext';
@@ -6,7 +6,7 @@ import logoImg from '../../../assets/WhatsApp_Image_2026-04-28_at_10.52.49_PM-re
 
 const Login = () => {
     const navigate = useNavigate();
-    const { sendLoginOtp, verifyLoginOtp } = useUser();
+    const { sendLoginOtp, verifyLoginOtp, isAuthenticated, loading: contextLoading } = useUser();
     
     const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState('');
@@ -14,16 +14,48 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    // Checkboxes for mandatory policies
+    const [agreePrivacy, setAgreePrivacy] = useState(false);
+    const [agreeTerms, setAgreeTerms] = useState(false);
+    const [agreeGuidelines, setAgreeGuidelines] = useState(false);
+    const [agreeRefund, setAgreeRefund] = useState(false);
+
+    // Redirect to home if user is already logged in
+    useEffect(() => {
+        if (isAuthenticated && !contextLoading) {
+            navigate('/user/home', { replace: true });
+        }
+    }, [isAuthenticated, contextLoading, navigate]);
+
     const handleSendOtp = async (e) => {
         e.preventDefault();
         setError('');
+
+        // 1. Validate phone number format (Indian 10-digit)
+        if (!/^[6-9]\d{9}$/.test(phone) && phone !== '9999999999') {
+            setError('Number is wrong');
+            return;
+        }
+
+        // 2. Validate checkboxes are accepted
+        if (!agreePrivacy || !agreeTerms || !agreeGuidelines || !agreeRefund) {
+            setError('Please agree to all the mandatory legal policies before logging in.');
+            return;
+        }
+
         setLoading(true);
         const result = await sendLoginOtp(phone);
         setLoading(false);
         if (result.success) {
             setStep(2);
         } else {
-            setError(result.error);
+            // Check if error represents non-existent account or other errors
+            const errMsg = (typeof result.error === 'object' ? result.error.message : result.error) || '';
+            if (errMsg.toLowerCase().includes('no account') || errMsg.toLowerCase().includes('not found') || errMsg.toLowerCase().includes('number')) {
+                setError('Number is wrong');
+            } else {
+                setError(errMsg);
+            }
         }
     };
 
@@ -41,7 +73,7 @@ const Login = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-white animate-in fade-in duration-700 overflow-hidden">
+        <div className="flex flex-col h-screen bg-white animate-in fade-in duration-700 overflow-y-auto scrollbar-hide">
             <style>
                 {`
                     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
@@ -70,7 +102,7 @@ const Login = () => {
             </div>
 
             {/* ── Login Form Section ── */}
-            <div className="flex-1 px-8 pt-8 pb-4 flex flex-col justify-start">
+            <div className="flex-1 px-8 pt-6 pb-4 flex flex-col justify-start">
                 <div className="w-full max-w-sm mx-auto">
                     {error && (
                         <div className="mb-4 p-3 bg-rose-50 border border-rose-100 rounded-2xl text-center">
@@ -98,13 +130,69 @@ const Login = () => {
                                 </div>
                             </div>
 
+                            {/* ── Consent & Policy Checkboxes ── */}
+                            <div className="space-y-2 py-1">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 block">Consent & Agreements</span>
+                                
+                                <div className="space-y-2 bg-slate-50/50 p-4 rounded-2xl border border-slate-100/80">
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <input
+                                            type="checkbox"
+                                            checked={agreePrivacy}
+                                            onChange={(e) => setAgreePrivacy(e.target.checked)}
+                                            className="w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500/20 accent-[#0f1d3a] cursor-pointer"
+                                        />
+                                        <span className="text-[11.5px] font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
+                                            I agree to the <Link to="/user/info/privacy" className="text-[#0f1d3a] font-bold hover:underline" target="_blank">Privacy Policy</Link>
+                                        </span>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <input
+                                            type="checkbox"
+                                            checked={agreeTerms}
+                                            onChange={(e) => setAgreeTerms(e.target.checked)}
+                                            className="w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500/20 accent-[#0f1d3a] cursor-pointer"
+                                        />
+                                        <span className="text-[11.5px] font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
+                                            I agree to the <Link to="/user/info/terms" className="text-[#0f1d3a] font-bold hover:underline" target="_blank">Terms & Conditions</Link>
+                                        </span>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <input
+                                            type="checkbox"
+                                            checked={agreeGuidelines}
+                                            onChange={(e) => setAgreeGuidelines(e.target.checked)}
+                                            className="w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500/20 accent-[#0f1d3a] cursor-pointer"
+                                        />
+                                        <span className="text-[11.5px] font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
+                                            I agree to the <Link to="/user/info/guidelines" className="text-[#0f1d3a] font-bold hover:underline" target="_blank">Community Guidelines</Link>
+                                        </span>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <input
+                                            type="checkbox"
+                                            checked={agreeRefund}
+                                            onChange={(e) => setAgreeRefund(e.target.checked)}
+                                            className="w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500/20 accent-[#0f1d3a] cursor-pointer"
+                                        />
+                                        <span className="text-[11.5px] font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
+                                            I agree to the <Link to="/user/info/refund-policy" className="text-[#0f1d3a] font-bold hover:underline" target="_blank">No Refund Policy</Link>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
                             <button
                                 type="submit"
-                                disabled={phone.length < 10 || loading}
-                                className="w-full bg-[#0f1d3a] hover:bg-[#1a2c52] text-white py-4 rounded-full font-bold text-[14px] transition-all shadow-xl shadow-slate-200 active:scale-[0.98] flex items-center justify-center gap-2"
+                                disabled={phone.length < 10 || !agreePrivacy || !agreeTerms || !agreeGuidelines || !agreeRefund || loading}
+                                className="w-full bg-[#0f1d3a] hover:bg-[#1a2c52] disabled:opacity-50 disabled:pointer-events-none text-white py-4 rounded-full font-bold text-[14px] transition-all shadow-xl shadow-slate-200 active:scale-[0.98] flex items-center justify-center gap-2 mt-2"
                             >
                                 {loading ? <Loader2 size={18} className="animate-spin" /> : 'Sign In'}
                             </button>
+
                             <div className="text-center mt-3">
                                 <p className="text-[11px] font-normal text-slate-400 uppercase tracking-widest">
                                     Don't Have An Account? <Link to="/user/auth/register" className="text-[#0f1d3a] font-bold underline decoration-sky-500/20 underline-offset-4 ml-1">Sign Up</Link>
@@ -141,30 +229,7 @@ const Login = () => {
                             </button>
                         </form>
                     )}
-
-                    <div className="mt-3 text-center">
-                        <button className="text-[11px] font-medium text-slate-400 hover:text-[#0f1d3a] transition-colors uppercase tracking-widest">Forget Password?</button>
-                    </div>
-
-                    <div className="flex items-center gap-4 my-6 px-4">
-                        <div className="flex-1 h-px bg-slate-100"></div>
-                        <span className="text-[10px] font-medium text-slate-300 uppercase tracking-widest">Or login with</span>
-                        <div className="flex-1 h-px bg-slate-100"></div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 px-2">
-                        <button className="flex items-center justify-center gap-3 py-3 rounded-full border border-slate-100 shadow-sm bg-white hover:bg-slate-50 active:scale-95 transition-all">
-                            <img src="https://www.google.com/favicon.ico" className="w-4 h-4 grayscale opacity-40" alt="Google" />
-                            <span className="text-[11px] font-semibold text-[#0f1d3a]">Google</span>
-                        </button>
-                        <button className="flex items-center justify-center gap-3 py-3 rounded-full border border-slate-100 shadow-sm bg-white hover:bg-slate-50 active:scale-95 transition-all">
-                            <img src="https://www.facebook.com/favicon.ico" className="w-4 h-4 grayscale opacity-40" alt="Facebook" />
-                            <span className="text-[11px] font-semibold text-[#0f1d3a]">Facebook</span>
-                        </button>
-                    </div>
                 </div>
-
-
             </div>
         </div>
     );

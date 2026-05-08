@@ -11,6 +11,14 @@ const Wallets = () => {
     const [loading, setLoading] = useState(false);
     const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
     
+    // Toast state
+    const [toast, setToast] = useState(null); // { message: '', type: 'success' | 'error' }
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
+
     // Modal State
     const [selectedUser, setSelectedUser] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -29,8 +37,9 @@ const Wallets = () => {
                     user: w.user?.name || 'Unknown',
                     walletBalance: w.user?.wallet?.balance || 0, // Extracting the balance
                     amount: `₹${w.amount}`,
-                    method: w.method,
+                    method: w.paymentMethod || w.method || 'UPI',
                     upiId: w.upiId,
+                    bankDetails: w.bankDetails,
                     date: new Date(w.createdAt).toLocaleDateString(),
                     status: w.status
                 }));
@@ -56,9 +65,12 @@ const Wallets = () => {
     const handleAction = async (id, status) => {
         try {
             const response = await api.put(`/admin/withdrawals/${id}`, { status });
-            if (response.success) fetchWithdrawals();
+            if (response.success) {
+                showToast(`Withdrawal status updated to ${status} successfully!`, 'success');
+                fetchWithdrawals();
+            }
         } catch (err) {
-            alert(err);
+            showToast(err.message || "Something went wrong", 'error');
         }
     };
 
@@ -71,7 +83,22 @@ const Wallets = () => {
     };
 
     return (
-        <div className="p-6 animate-in fade-in duration-500">
+        <div className="p-6 animate-in fade-in duration-500 relative">
+            {toast && (
+                <div className={`fixed top-5 right-5 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 ${
+                    toast.type === 'success' 
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+                        : 'bg-rose-50 border-rose-100 text-rose-800'
+                }`}>
+                    {toast.type === 'success' ? (
+                        <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0 animate-bounce" />
+                    ) : (
+                        <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                    )}
+                    <span className="text-xs font-semibold">{toast.message}</span>
+                </div>
+            )}
+
             <PageHeader title="Wallet & Withdrawals" subtitle="Review and process withdrawal requests" />
 
             <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
@@ -99,7 +126,14 @@ const Wallets = () => {
                                     <td className="px-5 py-4 font-black text-slate-900">{w.amount}</td>
                                     <td className="px-5 py-4">
                                         <p className="text-[12px] font-bold text-slate-600">{w.method}</p>
-                                        <p className="text-[10px] font-medium text-slate-400">{w.upiId}</p>
+                                        {w.bankDetails ? (
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">
+                                                <p>A/C: <span className="font-bold text-slate-700">{w.bankDetails.accountNumber}</span></p>
+                                                <p>IFSC: {w.bankDetails.ifscCode}</p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-[10px] font-medium text-slate-400">{w.upiId || 'N/A'}</p>
+                                        )}
                                     </td>
                                     <td className="px-5 py-4 text-[12px] font-bold text-slate-400">{w.date}</td>
                                     <td className="px-5 py-4"><StatusBadge status={w.status} /></td>

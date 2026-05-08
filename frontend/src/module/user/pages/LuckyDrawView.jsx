@@ -1,14 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Trophy, Sparkles, Coins, Star, Gift, ArrowRight } from 'lucide-react';
 import { useUser } from '../context/UserContext';
-import { eventStorage } from '../../shared/services/eventStorage';
+import api from '../../shared/services/api';
 
+const DEFAULT_PRIZES = [
+    { label: '₹50', coins: 0, cash: 50, bg: 'bg-indigo-500/10 text-indigo-400', color: 'text-indigo-400' },
+    { label: '₹200', coins: 0, cash: 200, bg: 'bg-emerald-500/10 text-emerald-400', color: 'text-emerald-400' },
+    { label: '₹100', coins: 0, cash: 100, bg: 'bg-sky-500/10 text-sky-400', color: 'text-sky-400' },
+    { label: '50 Coins', coins: 50, cash: 0, bg: 'bg-amber-500/10 text-amber-400', color: 'text-amber-400' },
+    { label: '₹500', coins: 0, cash: 500, bg: 'bg-rose-500/10 text-rose-400', color: 'text-rose-400' },
+    { label: '20 Coins', coins: 20, cash: 0, bg: 'bg-amber-500/10 text-amber-400', color: 'text-amber-400' },
+    { label: '₹150', coins: 0, cash: 150, bg: 'bg-violet-500/10 text-violet-400', color: 'text-violet-400' },
+    { label: '75 Coins', coins: 75, cash: 0, bg: 'bg-amber-500/10 text-amber-400', color: 'text-amber-400' }
+];
 
 const LuckyDrawView = () => {
+    const { id } = useParams();
     const navigate = useNavigate();
     const { userData, addCoins, addNotification } = useUser();
-    const PRIZES = eventStorage.getPrizes();
+    
+    const [prizes, setPrizes] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [step, setStep] = useState(0);
     const [prizeIndex, setPrizeIndex] = useState(null);
     const [rotationDeg, setRotationDeg] = useState(0);
@@ -17,15 +30,41 @@ const LuckyDrawView = () => {
     const [flippedTicket, setFlippedTicket] = useState(null);
     const [revealed, setRevealed] = useState(false);
 
+    useEffect(() => {
+        const fetchEventDetails = async () => {
+            try {
+                const res = await api.get(`/public/events/${id}`);
+                if (res.success && res.data) {
+                    setPrizes(res.data.config?.prizes || []);
+                }
+            } catch (err) {
+                console.error("Failed to load lucky draw details:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (id) {
+            fetchEventDetails();
+        } else {
+            setLoading(false);
+        }
+    }, [id]);
+
+    const activePrizes = prizes.length > 0 ? prizes.map((p, idx) => ({
+        ...p,
+        bg: p.bg || DEFAULT_PRIZES[idx % DEFAULT_PRIZES.length].bg,
+        color: p.color || DEFAULT_PRIZES[idx % DEFAULT_PRIZES.length].color
+    })) : DEFAULT_PRIZES;
+
     const handleStartDraw = () => {
         setStep(1);
-        const winner = Math.floor(Math.random() * PRIZES.length);
+        const winner = Math.floor(Math.random() * activePrizes.length);
         setPrizeIndex(winner);
         
         // Spin the wheel
         setIsSpinning(true);
         const extraSpins = 5 * 360;
-        const finalDeg = extraSpins + (360 - (winner * (360 / PRIZES.length)));
+        const finalDeg = extraSpins + (360 - (winner * (360 / activePrizes.length)));
         setRotationDeg(finalDeg);
         
         setTimeout(() => {
@@ -34,22 +73,24 @@ const LuckyDrawView = () => {
 
         setTimeout(() => {
             setStep(2);
-            const prize = PRIZES[winner];
+            const prize = activePrizes[winner];
             if (prize.coins > 0) {
                 addCoins(prize.coins, `Lucky Draw Prize`);
             }
             addNotification('Lucky Draw Result!', `You won ${prize.label} in the Lucky Draw!`, 'success');
+            
             const completed = JSON.parse(localStorage.getItem('dromoney_completed_events') || '[]');
-            if (!completed.includes('lucky-draw')) {
-                completed.push('lucky-draw');
+            const eventIdForStorage = id || 'lucky-draw';
+            if (!completed.includes(eventIdForStorage)) {
+                completed.push(eventIdForStorage);
                 localStorage.setItem('dromoney_completed_events', JSON.stringify(completed));
-                // Save participant record
-                eventStorage.addParticipant('lucky-draw', {
-                    name: userData?.name || 'User',
+                
+                // Save participant record to DB dynamically
+                api.post(`/user/data/events/${id}/submit`, {
                     score: null,
                     result: `Won: ${prize.label}`,
                     prize: prize.label
-                });
+                }).catch(err => console.error("Failed to save submission:", err));
             }
         }, 4500);
     };
@@ -60,13 +101,21 @@ const LuckyDrawView = () => {
         setTimeout(() => setRevealed(true), 800);
     };
 
-    const prize = prizeIndex !== null ? PRIZES[prizeIndex] : null;
+    const prize = prizeIndex !== null ? activePrizes[prizeIndex] : null;
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#060810] flex items-center justify-center text-white">
+                <div className="w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     if (step === 0) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-900 flex flex-col p-6 text-white">
+            <div className="min-h-screen bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-900 flex flex-col p-6 text-white animate-in fade-in duration-500">
                 <header className="flex items-center gap-4 mb-6 pt-2">
-                    <button onClick={() => navigate('/user/events')} className="p-2 bg-white/10 rounded-full backdrop-blur">
+                    <button onClick={() => navigate('/user/events')} className="p-2 bg-white/10 rounded-full backdrop-blur active:scale-90 transition-transform">
                         <ChevronLeft size={24} className="text-white" />
                     </button>
                     <h1 className="text-xl font-black tracking-tight uppercase">🎟️ Lucky Draw</h1>
@@ -177,19 +226,19 @@ const LuckyDrawView = () => {
                     <h2 className="text-4xl font-black leading-tight">You Won!</h2>
                 </div>
 
-                <div className={`w-full max-w-xs p-8 rounded-[3rem] border-2 text-center ${prize?.bg} ${prize?.color} border-current/20 animate-in zoom-in duration-500`}>
+                <div className={`w-full max-w-xs p-8 rounded-[3rem] border-2 text-center bg-white/10 border-white/20 animate-in zoom-in duration-500`}>
                     <p className="text-[10px] font-black uppercase tracking-widest mb-3 opacity-70">Your Prize</p>
                     <p className="text-6xl font-black mb-4">{prize?.label}</p>
                     {prize?.coins > 0 && (
-                        <div className="flex items-center justify-center gap-2 bg-white/80 rounded-2xl p-3">
+                        <div className="flex items-center justify-center gap-2 bg-white/85 rounded-2xl p-3 shadow-md">
                             <Coins size={20} className="text-amber-500 fill-amber-500" />
                             <span className="text-[13px] font-black text-slate-700">+{prize.coins} Coins added to wallet</span>
                         </div>
                     )}
                     {prize?.cash > 0 && (
-                        <div className="flex items-center justify-center gap-2 bg-white/80 rounded-2xl p-3">
+                        <div className="flex items-center justify-center gap-2 bg-white/85 rounded-2xl p-3 shadow-md">
                             <Trophy size={20} className="text-emerald-500" />
-                            <span className="text-[13px] font-black text-slate-700">{prize.cash}₹ prize confirmed!</span>
+                            <span className="text-[13px] font-black text-slate-700">₹{prize.cash} prize confirmed!</span>
                         </div>
                     )}
                 </div>

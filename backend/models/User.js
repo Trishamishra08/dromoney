@@ -103,6 +103,18 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'Ad'
     }],
+    nextAdAvailableAt: {
+        type: Date,
+        default: null
+    },
+    dailyAdCount: {
+        type: Number,
+        default: 0
+    },
+    lastAdCountResetAt: {
+        type: Date,
+        default: Date.now
+    },
     businessHubFirstAccessedAt: {
         type: Date
     },
@@ -110,7 +122,11 @@ const UserSchema = new mongoose.Schema({
         type: Date
     },
     fcmTokens: [String], // Web tokens
-    fcmTokenMobile: [String] // Mobile tokens
+    fcmTokenMobile: [String], // Mobile tokens
+    completedTasks: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'Task'
+    }]
 
 }, {
     timestamps: true,

@@ -14,14 +14,28 @@ const PromotionSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add a brand link'],
     },
+    mobile: {
+        type: String,
+    },
+    whatsapp: {
+        type: String,
+    },
+    category: {
+        type: String,
+        default: 'Custom Task'
+    },
     budget: {
         type: Number,
         required: [true, 'Please add a budget'],
     },
+    usersRequired: {
+        type: Number,
+        default: 0
+    },
     description: String,
     status: {
         type: String,
-        enum: ['Pending', 'Active', 'Rejected', 'Completed'],
+        enum: ['Pending', 'Active', 'Approved', 'Rejected', 'Contacted', 'Completed'],
         default: 'Pending',
     },
     createdAt: {

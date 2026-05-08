@@ -5,14 +5,15 @@ import {
     Users, Copy, Send, ChevronLeft,
     History, CheckCircle2, Share2, ArrowUpRight, Wallet, TrendingUp, Trophy, Shield
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Marketing = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { userData } = useUser();
     const [copied, setCopied] = useState(false);
     const [rewardAmount, setRewardAmount] = useState(200);
-    const [showReferralLink, setShowReferralLink] = useState(false);
+    const [showReferralLink, setShowReferralLink] = useState(location.state?.showReferral || false);
 
     const referralLink = userData?.referrals?.link || `https://earningapp.com/join/nhgfAFF-${userData?.referrals?.code || ''}`;
 
@@ -54,9 +55,9 @@ const Marketing = () => {
 
     if (showReferralLink) {
         return (
-            <div className="flex flex-col min-h-screen bg-[#f0f4f9] font-sans pb-20">
+            <div className="flex flex-col min-h-fit bg-[#f0f4f9] font-sans pb-20">
                 {/* ── Compact Header ── */}
-                <div className="bg-white px-5 py-4 flex items-center justify-between border-b border-slate-100 sticky top-0 z-40">
+                <div className="bg-white px-5 py-2.5 flex items-center justify-between border-b border-slate-100 sticky top-0 z-40">
                     <div className="flex items-center gap-3">
                         <button onClick={() => setShowReferralLink(false)} className="text-slate-500 active:scale-95 transition-all">
                             <ChevronLeft size={22} />
@@ -158,9 +159,9 @@ const Marketing = () => {
 
     // Otherwise show the 4 cards Information Center (guide to earning systems)
     return (
-        <div className="flex flex-col min-h-screen bg-[#F8FAFC] font-sans pb-24 relative overflow-hidden">
+        <div className="flex flex-col min-h-fit bg-[#F8FAFC] font-sans pb-24 relative overflow-hidden">
             {/* ── Header ── */}
-            <div className="bg-white px-5 py-4 flex items-center gap-4 sticky top-0 z-40 border-b border-slate-100 shadow-sm">
+            <div className="bg-white px-5 py-2.5 flex items-center gap-4 sticky top-0 z-40 border-b border-slate-100 shadow-sm">
                 <button 
                     onClick={() => navigate(-1)} 
                     className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 active:scale-90 transition-all shadow-sm shrink-0"
@@ -174,7 +175,7 @@ const Marketing = () => {
             </div>
 
             {/* Content: 4 Cards */}
-            <div className="px-4 py-6 flex flex-col gap-6 relative z-10 overflow-y-auto max-w-md mx-auto w-full">
+            <div className="px-4 pt-3 pb-6 flex flex-col gap-4 relative z-10 overflow-y-auto max-w-md mx-auto w-full">
                 {/* Card 1: Referral SysteM */}
                 <div className="bg-white rounded-[1.75rem] border border-slate-100 shadow-xl shadow-slate-200/30 p-5 transition-all hover:shadow-2xl">
                     <div className="flex items-center gap-4 mb-5">

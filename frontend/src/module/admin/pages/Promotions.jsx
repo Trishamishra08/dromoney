@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Megaphone, Trash2, CheckCircle2, MessageSquare, Clock, User, Phone, Globe, DollarSign, Users, X, Send } from 'lucide-react';
+import { Megaphone, Trash2, CheckCircle2, MessageSquare, Clock, User, Phone, Globe, DollarSign, Users, X, Send, AlertCircle } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import api from '../../shared/services/api';
 
@@ -9,6 +9,14 @@ const Promotions = () => {
     const [isMsgModalOpen, setIsMsgModalOpen] = useState(false);
     const [selectedPromo, setSelectedPromo] = useState(null);
     const [adminMsg, setAdminMsg] = useState('');
+
+    // Toast state
+    const [toast, setToast] = useState(null); // { message: '', type: 'success' | 'error' }
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     useEffect(() => {
         fetchPromotions();
@@ -21,13 +29,13 @@ const Promotions = () => {
             if (response.success) {
                 const mapped = response.data.map(p => ({
                     id: p._id,
-                    name: p.user?.name || 'Unknown',
-                    mobile: p.user?.phone || 'N/A',
-                    whatsapp: p.whatsappNumber,
-                    category: p.taskType,
+                    name: p.brandName || p.user?.name || 'Unknown',
+                    mobile: p.mobile || p.user?.phone || 'N/A',
+                    whatsapp: p.whatsapp || p.whatsappNumber || 'N/A',
+                    category: p.category || p.taskType || 'N/A',
                     budget: p.budget,
-                    usersRequired: p.targetUsers,
-                    link: p.taskLink,
+                    usersRequired: p.usersRequired || p.targetUsers || 0,
+                    link: p.brandLink || p.taskLink || '#',
                     description: p.description,
                     status: p.status,
                     date: new Date(p.createdAt).toLocaleDateString(),
@@ -46,29 +54,38 @@ const Promotions = () => {
         if (window.confirm("Are you sure you want to delete this brand request?")) {
             try {
                 const response = await api.delete(`/admin/content/promotion/${id}`);
-                if (response.success) fetchPromotions();
+                if (response.success) {
+                    showToast("Promotion deleted successfully!", "success");
+                    fetchPromotions();
+                }
             } catch (err) {
-                console.error(err);
+                showToast(err.message || "Failed to delete promotion", "error");
             }
         }
     };
 
     const updateStatus = async (id, newStatus) => {
+        // Optimistically update status in local state for instant UI response
+        setPromotions(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
         try {
             const response = await api.put(`/admin/promotions/${id}`, { status: newStatus });
             if (response.success) {
                 fetchPromotions();
-                alert(`Status updated to ${newStatus}`);
+                showToast(`Status updated to ${newStatus}`, "success");
             }
         } catch (err) {
-            alert(err);
+            fetchPromotions(); // Revert back on error
+            showToast(err.message || "Something went wrong", "error");
         }
     };
 
     const handleMessageSubmit = async () => {
         if (!adminMsg) return;
+        const targetId = selectedPromo.id;
+        // Optimistically update status and adminResponse in local state
+        setPromotions(prev => prev.map(p => p.id === targetId ? { ...p, status: 'Contacted', adminResponse: adminMsg } : p));
         try {
-            const response = await api.put(`/admin/promotions/${selectedPromo.id}`, { 
+            const response = await api.put(`/admin/promotions/${targetId}`, { 
                 status: 'Contacted',
                 adminResponse: adminMsg 
             });
@@ -76,15 +93,31 @@ const Promotions = () => {
                 fetchPromotions();
                 setIsMsgModalOpen(false);
                 setAdminMsg('');
-                alert("Message sent to user and status updated!");
+                showToast("Message sent to user and status updated!", "success");
             }
         } catch (err) {
-            alert(err);
+            fetchPromotions(); // Revert back on error
+            showToast(err.message || "Something went wrong", "error");
         }
     };
 
     return (
-        <div className="p-6 animate-in fade-in duration-500">
+        <div className="p-6 animate-in fade-in duration-500 relative">
+            {toast && (
+                <div className={`fixed top-5 right-5 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 ${
+                    toast.type === 'success' 
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+                        : 'bg-rose-50 border-rose-100 text-rose-800'
+                }`}>
+                    {toast.type === 'success' ? (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 animate-bounce" />
+                    ) : (
+                        <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                    )}
+                    <span className="text-xs font-semibold">{toast.message}</span>
+                </div>
+            )}
+
             <PageHeader title="Brand Promotions" subtitle="Review and manage brand promotion requests from users" />
 
             {promotions.length === 0 ? (
@@ -162,32 +195,45 @@ const Promotions = () => {
                                 </div>
 
                                 {/* Actions Section */}
-                                <div className="flex md:flex-col gap-2 shrink-0">
-                                    <button 
-                                        onClick={() => { setSelectedPromo(promo); setIsMsgModalOpen(true); }}
-                                        className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-600 font-black text-[10px] uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all active:scale-95"
-                                    >
-                                        <MessageSquare size={14} /> Message
-                                    </button>
-                                    
-                                    <div className="flex gap-2">
-                                        <button 
-                                            onClick={() => updateStatus(promo.id, 'Approved')}
-                                            className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest px-4 py-3 rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-95"
-                                        >
-                                            <CheckCircle2 size={14} /> Approve
-                                        </button>
-                                        <button 
-                                            onClick={() => updateStatus(promo.id, 'Rejected')}
-                                            className="flex-1 flex items-center justify-center gap-1.5 bg-rose-500 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest px-4 py-3 rounded-xl shadow-lg shadow-rose-100 transition-all active:scale-95"
-                                        >
-                                            <X size={14} /> Reject
-                                        </button>
-                                    </div>
+                                <div className="flex md:flex-col gap-2.5 shrink-0 min-w-[200px]">
+                                    {['pending', 'contacted'].includes(String(promo.status).toLowerCase()) ? (
+                                        <>
+                                            <button 
+                                                onClick={() => { setSelectedPromo(promo); setIsMsgModalOpen(true); }}
+                                                className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-600 font-black text-[10px] uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all active:scale-95 cursor-pointer"
+                                            >
+                                                <MessageSquare size={14} /> Message
+                                            </button>
+                                            
+                                            <div className="flex gap-2">
+                                                <button 
+                                                    onClick={() => updateStatus(promo.id, 'Approved')}
+                                                    className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest px-4 py-3 rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-95 cursor-pointer"
+                                                >
+                                                    <CheckCircle2 size={14} /> Approve
+                                                </button>
+                                                <button 
+                                                    onClick={() => updateStatus(promo.id, 'Rejected')}
+                                                    className="flex-1 flex items-center justify-center gap-1.5 bg-rose-500 hover:bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest px-4 py-3 rounded-xl shadow-lg shadow-rose-100 transition-all active:scale-95 cursor-pointer"
+                                                >
+                                                    <X size={14} /> Reject
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className={`flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-[0.15em] px-4 py-3.5 rounded-xl text-center shadow-md select-none border ${
+                                            ['approved', 'active'].includes(String(promo.status).toLowerCase()) 
+                                                ? 'bg-emerald-500 border-emerald-600 text-white shadow-emerald-100' 
+                                                : 'bg-rose-500 border-rose-600 text-white shadow-rose-100'
+                                        }`}>
+                                            {['approved', 'active'].includes(String(promo.status).toLowerCase()) ? <CheckCircle2 size={14} className="animate-pulse" /> : <X size={14} />}
+                                            {['approved', 'active'].includes(String(promo.status).toLowerCase()) ? 'APPROVED & LIVE' : 'REQUEST REJECTED'}
+                                        </div>
+                                    )}
 
                                     <button 
                                         onClick={() => deletePromo(promo.id)}
-                                        className="mt-2 md:mt-auto flex items-center justify-center gap-1.5 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 font-black text-[10px] uppercase tracking-widest py-2 rounded-xl border border-transparent hover:border-rose-100 transition-all"
+                                        className="mt-2 md:mt-auto flex items-center justify-center gap-1.5 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 font-black text-[10px] uppercase tracking-widest py-2 rounded-xl border border-transparent hover:border-rose-100 transition-all cursor-pointer"
                                     >
                                         <Trash2 size={14} /> Delete Request
                                     </button>

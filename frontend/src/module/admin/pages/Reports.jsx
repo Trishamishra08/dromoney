@@ -122,68 +122,123 @@ const Reports = () => {
             <div className="animate-in slide-in-from-bottom-4 duration-500 pb-20">
                 
                 {/* ── TAB 1: USER FEEDBACKS ── */}
-                {activeTab === 'feedback' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {feedbacks.filter(f => f.status === 'Unread').map(f => (
-                            <div key={f._id} className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm hover:shadow-xl hover:shadow-slate-100 transition-all relative group overflow-hidden">
-                                {/* Subtle Background Element */}
-                                <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/10 transition-colors"></div>
-                                
-                                {/* Card Header */}
-                                <div className="flex flex-col gap-4 relative z-10">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-slate-900 border border-slate-800 text-white rounded-xl flex items-center justify-center font-black shadow-lg overflow-hidden shrink-0">
-                                                {f.user?.profileImage ? (
-                                                    <img 
-                                                        src={`http://localhost:5000/uploads/${f.user.profileImage}`} 
-                                                        className="w-full h-full object-cover" 
-                                                        alt="User"
-                                                        onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.classList.add('hidden'); }} 
-                                                    />
-                                                ) : null}
-                                                <User size={16} />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <h4 className="text-[13px] font-black text-slate-800 tracking-tight leading-none uppercase truncate max-w-[120px]">{f.user?.name || 'Anonymous'}</h4>
-                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 opacity-70">{formatTime(f.createdAt)}</p>
-                                            </div>
-                                        </div>
+                {activeTab === 'feedback' && (() => {
+                    const totalFeedbacks = feedbacks.length;
+                    const averageRating = totalFeedbacks > 0 
+                        ? (feedbacks.reduce((acc, curr) => acc + curr.rating, 0) / totalFeedbacks).toFixed(1)
+                        : '0.0';
 
-                                        {/* Mark as Read - Now more visible and not overlapping */}
-                                        <button 
-                                            onClick={() => handleDeleteFeedback(f._id)} 
-                                            className="w-8 h-8 bg-emerald-50 text-emerald-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-emerald-500 hover:text-white shadow-sm border border-emerald-100"
-                                            title="Mark as Read"
-                                        >
-                                            <CheckCircle2 size={16} />
-                                        </button>
-                                    </div>
-
-                                    {/* Star Rating Section */}
-                                    <div className="flex gap-0.5 bg-slate-50 w-fit px-3 py-1.5 rounded-full border border-slate-100">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star key={i} size={11} className={i < f.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'} />
+                    return (
+                        <div className="space-y-8 animate-in fade-in duration-500">
+                            {/* Dynamic App Rating Dashboard Card */}
+                            <div className="bg-white rounded-[36px] border border-slate-100 p-8 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-5xl">
+                                {/* Average Score Section */}
+                                <div className="flex flex-col items-center justify-center text-center md:border-r border-slate-100 md:pr-8 py-2">
+                                    <h3 className="text-6xl font-black text-slate-800 leading-none mb-4">{averageRating}</h3>
+                                    <div className="flex gap-1 mb-3">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <Star 
+                                                key={star} 
+                                                size={20} 
+                                                className={`${star <= Math.round(Number(averageRating)) ? 'text-amber-400 fill-amber-400 drop-shadow-sm scale-110' : 'text-slate-200'} transition-all`} 
+                                            />
                                         ))}
                                     </div>
+                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Dynamic App Rate</p>
+                                    <p className="text-[10px] font-bold text-indigo-500 bg-indigo-50 border border-indigo-100/30 px-3 py-1 rounded-full mt-3 uppercase tracking-wider">{totalFeedbacks} Total Reviews</p>
                                 </div>
 
-                                {/* Message Body */}
-                                <div className="mt-4 bg-slate-50/50 rounded-2xl p-4 border border-slate-50 relative z-10">
-                                    <p className="text-[12px] font-bold text-slate-600 leading-relaxed italic line-clamp-4 group-hover:line-clamp-none transition-all">
-                                        "{f.message}"
-                                    </p>
+                                {/* Star Breakdown Progress Bars */}
+                                <div className="md:col-span-2 space-y-2.5 flex flex-col justify-center">
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2 leading-none">Rating Breakdown</h4>
+                                    {[5, 4, 3, 2, 1].map((stars) => {
+                                        const starCount = feedbacks.filter(f => f.rating === stars).length;
+                                        const percentage = totalFeedbacks > 0 ? (starCount / totalFeedbacks) * 100 : 0;
+                                        return (
+                                            <div key={stars} className="flex items-center gap-4">
+                                                <span className="text-[11px] font-black text-slate-500 w-4 leading-none text-right">{stars} ★</span>
+                                                <div className="flex-1 h-3.5 bg-slate-50 border border-slate-100 rounded-full overflow-hidden p-0.5 relative">
+                                                    <div 
+                                                        className="h-full bg-amber-400 rounded-full transition-all duration-1000 shadow-sm"
+                                                        style={{ width: `${percentage}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-[10px] font-black text-slate-400 w-8 text-right leading-none">{starCount}</span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
-                        ))}
-                        {feedbacks.length === 0 && !loading && (
-                            <div className="col-span-full py-20 text-center">
-                                <MessageSquare size={48} className="text-slate-200 mx-auto mb-4" />
-                                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No active feedbacks found.</p>
+
+                            {/* Feedbacks Grid */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-black text-slate-700 uppercase tracking-wider pl-1 flex items-center gap-2">
+                                    <MessageSquare size={16} className="text-sky-500" /> Active Unread Reviews
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {feedbacks.filter(f => f.status === 'Unread').map(f => (
+                                        <div key={f._id} className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm hover:shadow-xl hover:shadow-slate-100 transition-all relative group overflow-hidden">
+                                            {/* Subtle Background Element */}
+                                            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/10 transition-colors"></div>
+                                            
+                                            {/* Card Header */}
+                                            <div className="flex flex-col gap-4 relative z-10">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 bg-slate-900 border border-slate-800 text-white rounded-xl flex items-center justify-center font-black shadow-lg overflow-hidden shrink-0">
+                                                            {f.user?.profileImage ? (
+                                                                <img 
+                                                                    src={`http://localhost:5000/uploads/${f.user.profileImage}`} 
+                                                                    className="w-full h-full object-cover" 
+                                                                    alt="User"
+                                                                    onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.classList.add('hidden'); }} 
+                                                                />
+                                                            ) : null}
+                                                            <User size={16} />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <h4 className="text-[13px] font-black text-slate-800 tracking-tight leading-none uppercase truncate max-w-[120px]">{f.user?.name || 'Anonymous'}</h4>
+                                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 opacity-70">{formatTime(f.createdAt)}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Mark as Read - Now more visible and not overlapping */}
+                                                    <button 
+                                                        onClick={() => handleDeleteFeedback(f._id)} 
+                                                        className="w-8 h-8 bg-emerald-50 text-emerald-500 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-emerald-500 hover:text-white shadow-sm border border-emerald-100 cursor-pointer"
+                                                        title="Mark as Read"
+                                                    >
+                                                        <CheckCircle2 size={16} />
+                                                    </button>
+                                                </div>
+
+                                                {/* Star Rating Section */}
+                                                <div className="flex gap-0.5 bg-slate-50 w-fit px-3 py-1.5 rounded-full border border-slate-100">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star key={i} size={11} className={i < f.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'} />
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Message Body */}
+                                            <div className="mt-4 bg-slate-50/50 rounded-2xl p-4 border border-slate-50 relative z-10">
+                                                <p className="text-[12px] font-bold text-slate-600 leading-relaxed italic line-clamp-4 group-hover:line-clamp-none transition-all">
+                                                    "{f.message}"
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {feedbacks.filter(f => f.status === 'Unread').length === 0 && (
+                                        <div className="col-span-full py-16 text-center bg-white rounded-3xl border border-slate-100 shadow-sm max-w-5xl">
+                                            <MessageSquare size={40} className="text-slate-200 mx-auto mb-3" />
+                                            <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">No unread feedbacks remaining!</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        )}
-                    </div>
-                )}
+                        </div>
+                    );
+                })()}
 
                 {/* ── TAB 2: PROBLEM REPORTS ── */}
                 {activeTab === 'problems' && (

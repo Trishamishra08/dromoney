@@ -14,6 +14,9 @@ const EventParticipantSchema = new mongoose.Schema({
     score: {
         type: Number
     },
+    timeTaken: {
+        type: Number
+    },
     result: {
         type: String
     },

@@ -140,12 +140,13 @@ const ScratchCardView = () => {
         setCompletedCount(prev => {
             const next = prev + 1;
             if (next === 3) {
-                taskStorage.markComplete(task?.id);
+                taskStorage.markComplete(task?._id || task?.id);
                 addNotification("Awesome!", "3/3 Cards Scratched!", "success");
             }
             return next;
         });
-        addCoins(Math.floor(task?.reward / 3) || 1, 'Scratch Card Reward');
+        const rewardCoins = Math.floor(task?.reward / 3) || 1;
+        addCoins(rewardCoins, 'Scratch Card Reward', (completedCount + 1 === 3) ? (task?._id || task?.id) : undefined);
     };
 
     if (!task) return null;

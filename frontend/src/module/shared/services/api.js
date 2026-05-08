@@ -34,7 +34,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response.data,
     (error) => {
-        const message = error.response?.data?.error || 'Something went wrong';
+        const message = error.response?.data?.error || error.response?.data?.message || 'Something went wrong';
         const status = error.response?.status;
         console.error('API Error:', message);
         return Promise.reject({ message, status });

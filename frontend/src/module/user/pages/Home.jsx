@@ -156,7 +156,7 @@ const AdBanners = ({ navigate }) => {
 
 const Home = () => {
     const { userData, addNotification, refreshUserProfile } = useUser();
-    const { earnings, coins, referrals, futureFund, isPaid } = userData;
+    const { earnings, coins, referrals, futureFund, isPaid, isBoosterActive } = userData || {};
     const navigate = useNavigate();
 
     // Custom States for Booster Cards
@@ -164,7 +164,7 @@ const Home = () => {
     const [isTaskExpanded, setIsTaskExpanded] = useState(false);
     const [introConfig, setIntroConfig] = useState(null);
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-    const [paymentConfig, setPaymentConfig] = useState({ isOpen: false, plan: '', amount: 0 });
+    const [paymentConfig, setPaymentConfig] = useState({ isOpen: false, plan: '', amount: 0, type: 'PLATFORM_UNLOCK' });
     const [isFcmLoading, setIsFcmLoading] = useState(false);
 
     // FCM Registration & Foreground Handling
@@ -226,11 +226,12 @@ const Home = () => {
     const [footerPolicies, setFooterPolicies] = useState([
         { label: 'Privacy Policy', path: 'privacy' },
         { label: 'Terms & Conditions', path: 'terms' },
-        { label: 'Guidelines', path: 'guidelines' }
+        { label: 'Guidelines', path: 'guidelines' },
+        { label: 'No Refund Policy', path: 'refund-policy' }
     ]);
 
     const fetchHomeData = async () => {
-        const keys = ['lifetime_promo', 'menu_privacy', 'menu_terms', 'menu_guidelines', 'platform_intro_video'];
+        const keys = ['lifetime_promo', 'menu_privacy', 'menu_terms', 'menu_guidelines', 'menu_refund_policy', 'platform_intro_video'];
         try {
             const res = await api.get(`/public/content/bulk?keys=${keys.join(',')}`);
             if (res.success && res.data) {
@@ -247,18 +248,22 @@ const Home = () => {
                 }
                 
                 // 3. Footer Policies
-                const policyKeys = ['menu_privacy', 'menu_terms', 'menu_guidelines'];
+                const policyKeys = ['menu_privacy', 'menu_terms', 'menu_guidelines', 'menu_refund_policy'];
                 const policies = policyKeys.map(key => {
                     const item = data[key];
+                    const urlPath = key === 'menu_refund_policy' ? 'refund-policy' : key.replace('menu_', '');
                     if (item && item.data) {
                         return { 
                             label: item.data.title || item.title, 
-                            path: key.replace('menu_', '') 
+                            path: urlPath 
                         };
                     }
                     // Fallback
-                    const label = key === 'menu_privacy' ? 'Privacy Policy' : key === 'menu_terms' ? 'Terms & Conditions' : 'Guidelines';
-                    return { label, path: key.replace('menu_', '') };
+                    let label = 'Guidelines';
+                    if (key === 'menu_privacy') label = 'Privacy Policy';
+                    else if (key === 'menu_terms') label = 'Terms & Conditions';
+                    else if (key === 'menu_refund_policy') label = 'No Refund Policy';
+                    return { label, path: urlPath };
                 });
                 setFooterPolicies(policies);
             }
@@ -293,16 +298,36 @@ const Home = () => {
     const handleBuy = (plan, amount) => {
         if (!isPaid) {
             // Must buy ₹499 first — show the main 499 plan modal
-            setPaymentConfig({ isOpen: true, plan: 'Lifetime Access Plan', amount: 499 });
+            setPaymentConfig({ isOpen: true, plan: 'Lifetime Access Plan', amount: 499, type: 'PLATFORM_UNLOCK' });
         } else {
-            // User has already paid — boosters not yet active, show a toast
-            addNotification("Coming Soon!", "Booster packs will be available soon.", "info");
+            // Calculate price with 4% markup
+            const markupPrice = Math.round(amount * 1.04 * 100) / 100;
+            const boosterType = plan.toLowerCase().includes('support') ? 'SUPPORT_BOOSTER' : 'TASK_BOOSTER';
+            setPaymentConfig({ isOpen: true, plan, amount: markupPrice, type: boosterType });
         }
     };
 
     const handleCopy = () => {
         navigator.clipboard.writeText(referrals.link);
         addNotification("Copied!", "Link copied to clipboard.", "success");
+    };
+
+    const handleServiceClick = (service) => {
+        const path = service.path;
+        const isTargetService = path === '/user/earn' || path === '/user/future-fund' || path === '/user/events';
+        
+        if (isTargetService) {
+            const kycStr = (userData?.kycStatus || 'Not Started').toLowerCase();
+            if (kycStr === 'verified' || kycStr === 'approved') {
+                navigate('/user/marketing', { state: { showReferral: true } });
+            } else if (kycStr === 'pending' || kycStr === 'rejected') {
+                navigate('/user/auth/pending');
+            } else {
+                navigate('/user/auth/kyc');
+            }
+        } else {
+            navigate(path);
+        }
     };
 
     return (
@@ -344,7 +369,7 @@ const Home = () => {
                     ].map((service, i) => (
                         <button
                             key={i}
-                            onClick={() => navigate(service.path)}
+                            onClick={() => handleServiceClick(service)}
                             className="flex flex-col items-center gap-2 group transition-all"
                         >
                             <div className={`w-12 h-12 ${service.color} rounded-2xl flex items-center justify-center shadow-sm group-hover:-translate-y-1 transition-transform`}>
@@ -448,11 +473,12 @@ const Home = () => {
                                 >
                                     <ChevronDown size={18} strokeWidth={2.5} />
                                 </button>
-                                <button
-                                    onClick={() => handleBuy(boosters.support.title, boosters.support.price)}
-                                    className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight active:scale-95 transition-all"
+                                <button 
+                                    onClick={() => !isBoosterActive && handleBuy('₹22 Support Booster', 22)}
+                                    disabled={isBoosterActive}
+                                    className={`${isBoosterActive ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-[#10B981] text-white hover:bg-[#059669] shadow-lg shadow-emerald-500/30'} px-5 py-2.5 rounded-xl text-[11px] font-black tracking-tight active:scale-95 transition-all w-full sm:w-auto`}
                                 >
-                                    Buy Now
+                                    {isBoosterActive ? 'Already Bought' : 'Boost Support'}
                                 </button>
                             </div>
                         </div>
@@ -617,15 +643,29 @@ const Home = () => {
                         <div className="space-y-4">
                             <h4 className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-[0.2em] not-italic font-sans">Legal Policies</h4>
                             <div className="flex flex-col gap-3">
-                                <a href="/user/info/privacy" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">Privacy Policy</a>
-                                <a href="/user/info/terms" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">Terms & Conditions</a>
-                                <a href="/user/info/refund-policy" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">Refund Policy</a>
+                                {footerPolicies.filter(p => p.path !== 'guidelines').map((policy, pIdx) => (
+                                    <a 
+                                        key={pIdx}
+                                        href={`/user/info/${policy.path}`} 
+                                        className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide"
+                                    >
+                                        {policy.label}
+                                    </a>
+                                ))}
                             </div>
                         </div>
                         <div className="space-y-4">
                             <h4 className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-[0.2em] not-italic font-sans">Organization</h4>
                             <div className="flex flex-col gap-3">
-                                <a href="#" className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide">Community Guidelines</a>
+                                {footerPolicies.filter(p => p.path === 'guidelines').map((policy, pIdx) => (
+                                    <a 
+                                        key={pIdx}
+                                        href={`/user/info/${policy.path}`} 
+                                        className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide"
+                                    >
+                                        Community Guidelines
+                                    </a>
+                                ))}
                             </div>
                         </div>
                     </div>
@@ -650,10 +690,14 @@ const Home = () => {
                 onClose={() => setPaymentConfig({ ...paymentConfig, isOpen: false })}
                 plan={paymentConfig.plan}
                 amount={paymentConfig.amount}
+                type={paymentConfig.type}
                 onSuccess={async () => {
                     setPaymentConfig({ ...paymentConfig, isOpen: false });
                     await refreshUserProfile();
-                    addNotification("Unlocked!", "Platform access granted. Welcome!", "success");
+                    const successMessage = paymentConfig.type.includes('BOOSTER')
+                        ? `${paymentConfig.plan} activated successfully!`
+                        : "Platform access granted. Welcome!";
+                    addNotification("Success!", successMessage, "success");
                 }}
             />
 

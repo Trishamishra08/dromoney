@@ -42,15 +42,6 @@ const events = [
         }
     },
     {
-        title: 'Gold Prediction',
-        tag: 'Prediction',
-        fee: 20,
-        prize: '₹2000',
-        startTime: 'Live Now',
-        participantsCount: 5,
-        status: 'Active'
-    },
-    {
         title: 'Memory Master',
         tag: 'Brain',
         fee: 25,

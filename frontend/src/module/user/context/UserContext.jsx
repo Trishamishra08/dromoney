@@ -10,6 +10,7 @@ const INITIAL_USER_STATE = {
     name: '',
     email: '',
     id: '',
+    mongoId: '',
     isPaid: false,
     earnings: { today: 0, total: 0, referral: 0 },
     coins: { total: 0, history: [] },
@@ -18,7 +19,8 @@ const INITIAL_USER_STATE = {
     kycStatus: 'Not Started',
     profileImage: '',
     futureFund: { status: 'locked', progress: 0, criteria: [] },
-    isBoosterActive: false
+    isBoosterActive: false,
+    completedTasks: []
 };
 
 export const UserProvider = ({ children }) => {
@@ -31,18 +33,33 @@ export const UserProvider = ({ children }) => {
 
     useEffect(() => {
         if (isAuthenticated) {
-            refreshUserProfile();
             fetchNotifications();
 
-            // Setup Socket Connection
-            const newSocket = io(SOCKET_URL);
-            setSocket(newSocket);
+            let activeSocket = null;
 
-            newSocket.on('new_broadcast', (notif) => {
-                addNotification(notif.title, notif.message, 'broadcast');
+            refreshUserProfile().then((profile) => {
+                if (profile && profile._id) {
+                    // Setup Socket Connection
+                    activeSocket = io(SOCKET_URL);
+                    setSocket(activeSocket);
+
+                    activeSocket.on('new_broadcast', (notif) => {
+                        addNotification(notif.title, notif.message, 'broadcast');
+                    });
+
+                    // Listen to real-time withdrawal updates for this specific user
+                    activeSocket.on(`withdrawal_update_${profile._id}`, (data) => {
+                        refreshUserProfile();
+                        // Dispatch custom browser event so active screens like Wallet.jsx can show instant alerts/popups
+                        const event = new CustomEvent('withdrawal_status_updated', { detail: data });
+                        window.dispatchEvent(event);
+                    });
+                }
             });
 
-            return () => newSocket.close();
+            return () => {
+                if (activeSocket) activeSocket.close();
+            };
         } else {
             setUserData(INITIAL_USER_STATE);
             setNotifications([]);
@@ -82,13 +99,23 @@ export const UserProvider = ({ children }) => {
         setNotifications([]);
     };
 
-    const refreshUserProfile = async () => {
-        if (!isAuthenticated) return;
-        setLoading(true);
+    const refreshUserProfile = async (showSpinner = false) => {
+        if (!isAuthenticated) return null;
+        if (showSpinner) {
+            setLoading(true);
+        }
         try {
-            const response = await api.get('/user/auth/me');
-            if (response.success && response.data) {
-                mapAndSetUserData(response.data);
+            const [profileRes, txRes] = await Promise.all([
+                api.get('/user/auth/me'),
+                api.get('/user/wallet/transactions').catch(err => {
+                    console.error("Failed to load transactions:", err);
+                    return { success: false, data: [] };
+                })
+            ]);
+            if (profileRes.success && profileRes.data) {
+                const transactions = txRes.success && txRes.data ? txRes.data : [];
+                mapAndSetUserData(profileRes.data, transactions);
+                return profileRes.data;
             }
         } catch (err) {
             console.error("Profile Sync Error:", err);
@@ -96,12 +123,14 @@ export const UserProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
+        return null;
     };
 
-    const mapAndSetUserData = (dbUser) => {
+    const mapAndSetUserData = (dbUser, transactions = []) => {
         setUserData({
             name: dbUser.name,
             id: `AFF-${dbUser.referralCode}`,
+            mongoId: dbUser._id,
             email: dbUser.email,
             phone: dbUser.phone,
             isPaid: dbUser.isPaid,
@@ -113,7 +142,7 @@ export const UserProvider = ({ children }) => {
             },
             coins: {
                 total: dbUser.coins?.balance || 0,
-                history: []
+                history: transactions.filter(t => t.currency === 'COIN')
             },
             referrals: {
                 count: dbUser.referralCount || 0,
@@ -122,7 +151,7 @@ export const UserProvider = ({ children }) => {
             },
             wallet: {
                 balance: dbUser.wallet?.balance || 0,
-                transactions: []
+                transactions: transactions.filter(t => t.currency === 'INR')
             },
             kycStatus: dbUser.kyc?.status || 'Not Started',
             kycRejectionReason: dbUser.kyc?.rejectionReason || '',
@@ -134,7 +163,8 @@ export const UserProvider = ({ children }) => {
             },
             watchedAdsCount: dbUser.watchedAds ? dbUser.watchedAds.length : 0,
             supportExpiry: dbUser.supportExpiry,
-            businessHubFirstAccessedAt: dbUser.businessHubFirstAccessedAt
+            businessHubFirstAccessedAt: dbUser.businessHubFirstAccessedAt,
+            completedTasks: dbUser.completedTasks || []
         });
     };
 
@@ -216,17 +246,17 @@ export const UserProvider = ({ children }) => {
         } catch (err) { return false; }
     };
 
-    const addCoins = async (amount, source) => {
+    const addCoins = async (amount, source, taskId) => {
         try {
-            await api.post('/user/wallet/add-coins', { amount, source });
+            await api.post('/user/wallet/add-coins', { amount, source, taskId });
             await refreshUserProfile();
         } catch (err) { console.error(err); }
     };
 
-    const requestWithdrawal = async (amount) => {
+    const requestWithdrawal = async (amount, bankDetails) => {
         try {
-            await api.post('/user/wallet/withdraw', { amount });
-            await refreshUserProfile();
+            await api.post('/user/wallet/withdraw', { amount, bankDetails });
+            // Note: refreshUserProfile is called by the caller AFTER showing success modal
             return { success: true };
         } catch (err) {
             return { 

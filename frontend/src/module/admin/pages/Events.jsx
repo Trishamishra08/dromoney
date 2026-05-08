@@ -2,22 +2,26 @@ import React, { useState, useEffect } from 'react';
 import {
     Trophy, Plus, Play, Square, CheckCircle, Edit3, Trash2, Save,
     Users, Gift, Zap, ClipboardList, Award, Eye, ChevronDown, ChevronRight,
-    ToggleLeft, ToggleRight, Star, Coins, X, AlertCircle, Check, Sparkles
+    ToggleLeft, ToggleRight, Star, Coins, X, AlertCircle, Check, Sparkles, Clock
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
-import { eventStorage } from '../../shared/services/eventStorage';
+import api from '../../shared/services/api';
 
 const TAG_COLORS = {
     Quiz: 'bg-blue-50 text-blue-600 border-blue-100',
     Draw: 'bg-purple-50 text-purple-600 border-purple-100',
     Prediction: 'bg-amber-50 text-amber-600 border-amber-100',
-    Task: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    Brain: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+    Tapper: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    Scratch: 'bg-rose-50 text-rose-600 border-rose-100'
 };
 
 const STATUS_COLORS = {
     Active: 'bg-emerald-50 text-emerald-700 border-emerald-100',
     Inactive: 'bg-slate-50 text-slate-500 border-slate-100',
+    Draft: 'bg-slate-50 text-slate-500 border-slate-100',
     Ended: 'bg-rose-50 text-rose-600 border-rose-100',
+    'Coming Soon': 'bg-amber-50 text-amber-600 border-amber-100'
 };
 
 // ─── Sub-components ───────────────────────────────────────
@@ -43,7 +47,7 @@ const Toast = ({ msg, type }) => (
 
 // ─── Tab 1: Events Overview ───────────────────────────────
 
-const OverviewTab = ({ events, onUpdateEvent, onShowToast }) => {
+const OverviewTab = ({ events, onUpdateEvent, onDeleteEvent, onShowToast }) => {
     const [editingId, setEditingId] = useState(null);
     const [editData, setEditData] = useState({});
 
@@ -53,7 +57,14 @@ const OverviewTab = ({ events, onUpdateEvent, onShowToast }) => {
     };
 
     const saveEdit = () => {
-        onUpdateEvent(editingId, editData);
+        onUpdateEvent(editingId, {
+            title: editData.title,
+            tag: editData.tag,
+            fee: +editData.fee,
+            prize: editData.prize,
+            startTime: editData.startTime,
+            status: editData.status
+        });
         setEditingId(null);
         onShowToast('Event updated successfully!', 'success');
     };
@@ -64,20 +75,30 @@ const OverviewTab = ({ events, onUpdateEvent, onShowToast }) => {
         onShowToast(`Event "${event.title}" set to ${next}`, 'success');
     };
 
-    const stats = (id) => eventStorage.getEventStats(id);
-
     return (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
             {events.map(event => {
-                const s = stats(event.id);
                 const isEditing = editingId === event.id;
 
                 return (
-                    <div key={event.id} className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow">
+                    <div key={event.id} className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative group">
+                        {/* Delete Button on Hover */}
+                        <button
+                            onClick={() => {
+                                if (window.confirm(`Are you sure you want to delete the event "${event.title}"?`)) {
+                                    onDeleteEvent(event.id);
+                                }
+                            }}
+                            className="absolute top-5 right-5 p-2 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                            title="Delete Event"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+
                         {/* Header */}
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start justify-between mb-4 pr-8">
                             <div className="flex items-center gap-3">
-                                <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${TAG_COLORS[event.tag]}`}>
+                                <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${TAG_COLORS[event.tag] || 'bg-slate-50 border-slate-100'}`}>
                                     <Trophy size={20} />
                                 </div>
                                 <div>
@@ -90,14 +111,27 @@ const OverviewTab = ({ events, onUpdateEvent, onShowToast }) => {
                                     ) : (
                                         <h3 className="font-black text-slate-800 text-[14px] leading-none">{event.title}</h3>
                                     )}
-                                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${TAG_COLORS[event.tag]}`}>
+                                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${TAG_COLORS[event.tag] || 'bg-slate-50 border-slate-100'}`}>
                                         {event.tag}
                                     </span>
                                 </div>
                             </div>
-                            <span className={`px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border ${STATUS_COLORS[event.status] || STATUS_COLORS.Inactive}`}>
-                                {event.status}
-                            </span>
+                            {isEditing ? (
+                                <select
+                                    value={editData.status}
+                                    onChange={e => setEditData(p => ({ ...p, status: e.target.value }))}
+                                    className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 text-[9px] font-black text-slate-700 outline-none"
+                                >
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                    <option value="Draft">Draft</option>
+                                    <option value="Coming Soon">Coming Soon</option>
+                                </select>
+                            ) : (
+                                <span className={`px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border ${STATUS_COLORS[event.status] || STATUS_COLORS.Inactive}`}>
+                                    {event.status}
+                                </span>
+                            )}
                         </div>
 
                         {/* Stats */}
@@ -105,8 +139,8 @@ const OverviewTab = ({ events, onUpdateEvent, onShowToast }) => {
                             {[
                                 { label: 'Entry', value: isEditing ? null : `${event.fee} Coins`, edit: <input type="number" value={editData.fee} onChange={e => setEditData(p => ({ ...p, fee: +e.target.value }))} className="w-14 border-b border-sky-300 text-center text-sm font-black outline-none bg-transparent" /> },
                                 { label: 'Prize', value: isEditing ? null : event.prize, edit: <input value={editData.prize} onChange={e => setEditData(p => ({ ...p, prize: e.target.value }))} className="w-16 border-b border-sky-300 text-center text-sm font-black outline-none bg-transparent" /> },
-                                { label: 'Joined', value: s.total },
-                                { label: 'Awarded', value: s.awarded },
+                                { label: 'Joined', value: event.participantsCount || 0 },
+                                { label: 'Awarded', value: event.awardedCount || 0 },
                             ].map((stat, i) => (
                                 <div key={i} className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 text-center">
                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
@@ -163,8 +197,8 @@ const OverviewTab = ({ events, onUpdateEvent, onShowToast }) => {
 
 // ─── Tab 2: Content Editor ───────────────────────────────
 
-const ContentTab = ({ events, onShowToast }) => {
-    const [selectedEventId, setSelectedEventId] = useState('quiz-daily');
+const ContentTab = ({ events, onRefreshEvents, onShowToast }) => {
+    const [selectedEventId, setSelectedEventId] = useState('');
     const [questions, setQuestions] = useState([]);
     const [prizes, setPrizes] = useState([]);
     const [cards, setCards] = useState([]);
@@ -172,18 +206,24 @@ const ContentTab = ({ events, onShowToast }) => {
     const [peekTime, setPeekTime] = useState(2.5);
     const [maxTime, setMaxTime] = useState(60);
 
-    useEffect(() => {
-        setQuestions(eventStorage.getQuestions());
-        setPrizes(eventStorage.getPrizes());
-        setCards(eventStorage.getCards());
-        const gpConf = eventStorage.getEvents().find(e => e.id === 'gold-prediction');
-        const mmConf = eventStorage.getEvents().find(e => e.id === 'memory-master');
-        setGoldReward(gpConf?.coinReward || 40);
-        setPeekTime(mmConf?.peekTime || 2.5);
-        setMaxTime(mmConf?.maxTime || 60);
-    }, []);
+    const sel = events.find(e => e.id === selectedEventId) || events[0];
 
-    const sel = events.find(e => e.id === selectedEventId);
+    useEffect(() => {
+        if (events && events.length > 0 && !selectedEventId) {
+            setSelectedEventId(events[0].id);
+        }
+    }, [events, selectedEventId]);
+
+    useEffect(() => {
+        if (sel) {
+            setQuestions(sel.config?.questions || []);
+            setPrizes(sel.config?.prizes || []);
+            setCards(sel.config?.cards || []);
+            setGoldReward(sel.config?.coinReward || 40);
+            setPeekTime(sel.config?.peekTime || 2.5);
+            setMaxTime(sel.config?.maxTime || 60);
+        }
+    }, [sel]);
 
     // ── Quiz ──
     const addQuestion = () => {
@@ -197,24 +237,82 @@ const ContentTab = ({ events, onShowToast }) => {
         setQuestions(prev => prev.map((q, i) => i === qIdx ? { ...q, options: q.options.map((o, j) => j === oIdx ? val : o) } : q));
     };
     const deleteQuestion = (idx) => setQuestions(prev => prev.filter((_, i) => i !== idx));
-    const saveQuestions = () => { eventStorage.updateQuestions(questions); onShowToast('Quiz questions saved!', 'success'); };
+
+    const saveQuestions = async () => {
+        try {
+            const res = await api.put(`/admin/events/${selectedEventId}`, {
+                config: {
+                    ...sel?.config,
+                    questions: questions.map(q => ({
+                        question: q.question,
+                        options: q.options,
+                        answer: q.answer
+                    }))
+                }
+            });
+            if (res.success) {
+                onShowToast('Quiz questions saved!', 'success');
+                onRefreshEvents();
+            }
+        } catch (err) {
+            console.error(err);
+            onShowToast('Failed to save questions', 'error');
+        }
+    };
 
     // ── Draw ──
     const addPrize = () => setPrizes(prev => [...prev, { id: Date.now(), label: 'New Prize', coins: 0, cash: 0 }]);
     const updatePrize = (idx, field, val) => setPrizes(prev => prev.map((p, i) => i === idx ? { ...p, [field]: val } : p));
     const deletePrize = (idx) => setPrizes(prev => prev.filter((_, i) => i !== idx));
-    const savePrizes = () => { eventStorage.updatePrizes(prizes); onShowToast('Lucky Draw prizes saved!', 'success'); };
+
+    const savePrizes = async () => {
+        try {
+            const res = await api.put(`/admin/events/${selectedEventId}`, {
+                config: {
+                    ...sel?.config,
+                    prizes: prizes.map(p => ({
+                        label: p.label,
+                        coins: p.coins,
+                        cash: p.cash
+                    }))
+                }
+            });
+            if (res.success) {
+                onShowToast('Lucky Draw prizes saved!', 'success');
+                onRefreshEvents();
+            }
+        } catch (err) {
+            console.error(err);
+            onShowToast('Failed to save prizes', 'error');
+        }
+    };
 
     // ── Memory Master ──
     const updateCard = (idx, field, val) => setCards(prev => prev.map((c, i) => i === idx ? { ...c, [field]: val } : c));
-    const saveMemoryGame = () => {
-        eventStorage.updateCards(cards);
-        eventStorage.updateEvent('memory-master', { peekTime: +peekTime, maxTime: +maxTime });
-        onShowToast('Memory Master updated!', 'success');
+    const saveMemoryGame = async () => {
+        try {
+            const res = await api.put(`/admin/events/${selectedEventId}`, {
+                config: {
+                    ...sel?.config,
+                    cards: cards.map(c => ({
+                        icon: c.icon,
+                        color: c.color
+                    })),
+                    peekTime: +peekTime,
+                    maxTime: +maxTime
+                }
+            });
+            if (res.success) {
+                onShowToast('Memory Master updated!', 'success');
+                onRefreshEvents();
+            }
+        } catch (err) {
+            console.error(err);
+            onShowToast('Failed to save Memory configuration', 'error');
+        }
     };
 
-    // ── Gold ──
-    const saveGold = () => { eventStorage.updateEvent('gold-prediction', { coinReward: +goldReward }); onShowToast('Gold Prediction updated!', 'success'); };
+    if (!sel) return <div className="text-center py-12 text-slate-400">Please create an event first.</div>;
 
     return (
         <div className="space-y-6">
@@ -230,8 +328,8 @@ const ContentTab = ({ events, onShowToast }) => {
             </div>
 
             {/* Quiz Content */}
-            {selectedEventId === 'quiz-daily' && (
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            {sel.tag === 'Quiz' && (
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 animate-in fade-in">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-[15px] font-black text-slate-800">Quiz Questions ({questions.length})</h3>
                         <div className="flex gap-2">
@@ -245,7 +343,7 @@ const ContentTab = ({ events, onShowToast }) => {
                     </div>
                     <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
                         {questions.map((q, qIdx) => (
-                            <div key={q.id} className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3">
+                            <div key={q.id || qIdx} className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3 animate-in fade-in duration-300">
                                 <div className="flex items-start gap-3">
                                     <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">{qIdx + 1}</span>
                                     <input
@@ -281,8 +379,8 @@ const ContentTab = ({ events, onShowToast }) => {
             )}
 
             {/* Lucky Draw Content */}
-            {selectedEventId === 'lucky-draw' && (
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            {sel.tag === 'Draw' && (
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 animate-in fade-in">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-[15px] font-black text-slate-800">Draw Prizes ({prizes.length})</h3>
                         <div className="flex gap-2">
@@ -296,7 +394,7 @@ const ContentTab = ({ events, onShowToast }) => {
                     </div>
                     <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                         {prizes.map((p, idx) => (
-                            <div key={p.id} className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3">
+                            <div key={p.id || idx} className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3 animate-in fade-in duration-350">
                                 <Gift size={16} className="text-purple-500 shrink-0" />
                                 <input value={p.label} onChange={e => updatePrize(idx, 'label', e.target.value)} className="flex-1 text-sm font-bold text-slate-800 bg-white border border-slate-200 rounded-lg px-3 py-1.5 outline-none" placeholder="Label (e.g. ₹500)" />
                                 <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1.5">
@@ -316,31 +414,10 @@ const ContentTab = ({ events, onShowToast }) => {
                 </div>
             )}
 
-            {/* Gold Prediction Content */}
-            {selectedEventId === 'gold-prediction' && (
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                    <h3 className="text-[15px] font-black text-slate-800 mb-6">Gold Prediction Settings</h3>
-                    <div className="max-w-xs space-y-4">
-                        <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 space-y-2">
-                            <label className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Coin Reward (correct prediction)</label>
-                            <input
-                                type="number"
-                                value={goldReward}
-                                onChange={e => setGoldReward(e.target.value)}
-                                className="w-full text-3xl font-black text-amber-700 bg-transparent outline-none border-b-2 border-amber-300"
-                            />
-                            <p className="text-[10px] font-bold text-amber-500">Coins awarded when user predicts correctly</p>
-                        </div>
-                        <button onClick={saveGold} className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-500 text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-md active:scale-95 transition-all">
-                            <Save size={14} /> Save Settings
-                        </button>
-                    </div>
-                </div>
-            )}
 
             {/* Memory Master Content */}
-            {selectedEventId === 'memory-master' && (
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            {sel.tag === 'Brain' && (
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 animate-in fade-in">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-[15px] font-black text-slate-800">Card Symbols ({cards.length})</h3>
                         <div className="flex items-center gap-3">
@@ -358,9 +435,9 @@ const ContentTab = ({ events, onShowToast }) => {
                         </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-1">
                         {cards.map((c, idx) => (
-                            <div key={c.id} className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-2xl p-4">
+                            <div key={c.id || idx} className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-2xl p-4 animate-in fade-in duration-350">
                                 <div className={`w-12 h-12 bg-white rounded-xl border border-slate-200 flex items-center justify-center ${c.color} shadow-sm`}>
                                     <Sparkles size={20} />
                                 </div>
@@ -391,9 +468,10 @@ const ContentTab = ({ events, onShowToast }) => {
 // ─── Tab 3: Participants ──────────────────────────────────
 
 const ParticipantsTab = ({ events, onShowToast }) => {
-    const [selectedEventId, setSelectedEventId] = useState('quiz-daily');
+    const [selectedEventId, setSelectedEventId] = useState('');
     const [timeFilter, setTimeFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [sortBy, setSortBy] = useState('timeTaken');
     const [searchQuery, setSearchQuery] = useState('');
     const [participants, setParticipants] = useState([]);
     const [awardNote, setAwardNote] = useState('');
@@ -401,28 +479,62 @@ const ParticipantsTab = ({ events, onShowToast }) => {
     const [viewingParticipant, setViewingParticipant] = useState(null);
 
     useEffect(() => {
-        setParticipants(eventStorage.getParticipants(selectedEventId));
+        if (events && events.length > 0 && !selectedEventId) {
+            setSelectedEventId(events[0].id);
+        }
+    }, [events, selectedEventId]);
+
+    const fetchParticipants = async () => {
+        if (!selectedEventId) return;
+        try {
+            const res = await api.get(`/admin/events/${selectedEventId}/participants`);
+            if (res.success && res.data) {
+                setParticipants(res.data.map(p => ({
+                    ...p,
+                    id: p._id,
+                    name: p.user?.name || 'Anonymous User',
+                    email: p.user?.email || 'N/A',
+                    phone: p.user?.phone || 'N/A',
+                    joinedAt: new Date(p.joinedAt).toLocaleDateString('en-IN', {
+                        day: '2-digit', month: 'short', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    })
+                })));
+            }
+        } catch (err) {
+            console.error("Failed to fetch participants:", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchParticipants();
     }, [selectedEventId]);
 
-    const handleAward = (p) => {
-        eventStorage.awardPrize(selectedEventId, p.id, awardNote || 'Prize Awarded by Admin');
-        setParticipants(eventStorage.getParticipants(selectedEventId));
-        setAwardingId(null);
-        setAwardNote('');
-        onShowToast(`Prize awarded to ${p.name}!`, 'success');
+    const handleAward = async (p) => {
+        try {
+            const res = await api.put(`/admin/events/participants/${p.id}`, {
+                prizeStatus: 'Awarded',
+                prizeNote: awardNote || 'Prize Awarded by Admin'
+            });
+            if (res.success) {
+                onShowToast(`Prize successfully awarded to ${p.name}!`, 'success');
+                setAwardingId(null);
+                setAwardNote('');
+                fetchParticipants();
+            }
+        } catch (err) {
+            console.error(err);
+            onShowToast('Failed to award prize', 'error');
+        }
     };
 
     const filteredParticipants = participants.filter(p => {
-        // Status filter (Winners)
         if (statusFilter === 'winner' && p.prizeStatus !== 'Awarded') return false;
-
-        // Search filter
         if (searchQuery && !p.name?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
 
-        // Time filter
         if (timeFilter === 'all') return true;
         const now = Date.now();
-        const pTimestamp = p.timestamp || 0;
+        const pTimestamp = p.createdAt ? new Date(p.createdAt).getTime() : 0;
         const ONE_DAY = 24 * 60 * 60 * 1000;
 
         if (timeFilter === 'today') {
@@ -443,7 +555,37 @@ const ParticipantsTab = ({ events, onShowToast }) => {
         return true;
     });
 
-    const stats = eventStorage.getEventStats(selectedEventId);
+    const sortedParticipants = [...filteredParticipants].sort((a, b) => {
+        if (sortBy === 'timeTaken') {
+            const timeA = a.timeTaken !== undefined && a.timeTaken !== null ? a.timeTaken : Infinity;
+            const timeB = b.timeTaken !== undefined && b.timeTaken !== null ? b.timeTaken : Infinity;
+            return timeA - timeB;
+        }
+        if (sortBy === 'score') {
+            const scoreA = a.score !== undefined && a.score !== null ? a.score : -Infinity;
+            const scoreB = b.score !== undefined && b.score !== null ? b.score : -Infinity;
+            return scoreB - scoreA;
+        }
+        // default recent joins
+        const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tB - tA;
+    });
+
+    // Min completion time of valid completions
+    const validTimes = participants
+        .map(p => p.timeTaken)
+        .filter(t => t !== undefined && t !== null && t > 0);
+    const minTime = validTimes.length > 0 ? Math.min(...validTimes) : null;
+
+    // Find the participant with the minimum timeTaken (fastest)
+    const fastestParticipant = minTime !== null 
+        ? participants.find(p => p.timeTaken === minTime)
+        : null;
+
+    const totalJoined = participants.length;
+    const prizesAwarded = participants.filter(p => p.prizeStatus === 'Awarded').length;
+    const topScore = participants.length > 0 ? Math.max(...participants.map(p => p.score || 0)) : 0;
 
     return (
         <div className="space-y-6">
@@ -461,7 +603,7 @@ const ParticipantsTab = ({ events, onShowToast }) => {
             {/* Filter Controls */}
             <div className="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm">
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 ml-1">Filter by:</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 ml-1">Filter:</span>
                     <select
                         value={timeFilter}
                         onChange={e => setTimeFilter(e.target.value)}
@@ -474,9 +616,20 @@ const ParticipantsTab = ({ events, onShowToast }) => {
                         <option value="month">Past 30 Days</option>
                     </select>
 
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 ml-2">Sort:</span>
+                    <select
+                        value={sortBy}
+                        onChange={e => setSortBy(e.target.value)}
+                        className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-1.5 text-[11px] font-black text-amber-800 outline-none focus:border-amber-400"
+                    >
+                        <option value="timeTaken">Completion Speed (Fastest First)</option>
+                        <option value="score">Highest Score / Remaining</option>
+                        <option value="joined">Recent Joins</option>
+                    </select>
+
                     <button
                         onClick={() => setStatusFilter(statusFilter === 'all' ? 'winner' : 'all')}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest border transition-all ${statusFilter === 'winner' ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest border transition-all ${statusFilter === 'winner' ? 'bg-amber-100 border-amber-300 text-amber-700 font-bold ml-2' : 'bg-slate-50 border-slate-200 text-slate-500 ml-2'}`}
                     >
                         <Award size={14} className={statusFilter === 'winner' ? 'fill-amber-500' : ''} />
                         {statusFilter === 'winner' ? 'Showing Winners' : 'Filter Winners'}
@@ -498,21 +651,66 @@ const ParticipantsTab = ({ events, onShowToast }) => {
             {/* Stats Bar */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                    { label: 'Total Joined', value: stats.total, color: 'text-sky-600', bg: 'bg-sky-50', icon: Users },
-                    { label: 'Prizes Awarded', value: stats.awarded, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: CheckCircle },
-                    { label: 'Top Score', value: stats.topScore || '—', color: 'text-amber-600', bg: 'bg-amber-50', icon: Trophy },
+                    { label: 'Total Joined', value: totalJoined, color: 'text-sky-600', bg: 'bg-sky-50', icon: Users },
+                    { label: 'Prizes Awarded', value: prizesAwarded, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: CheckCircle },
+                    { 
+                        label: minTime !== null ? `Fastest (${fastestParticipant?.name || 'User'})` : 'Top Score', 
+                        value: minTime !== null ? `${minTime}s` : topScore || '—', 
+                        color: 'text-amber-600', 
+                        bg: 'bg-amber-50', 
+                        icon: Trophy 
+                    },
                 ].map(s => (
                     <div key={s.label} className={`${s.bg} rounded-2xl p-4 flex items-center justify-between border border-white shadow-sm`}>
-                         <div className={`p-3 rounded-xl bg-white/50`}>
+                         <div className="p-3 rounded-xl bg-white/50">
                             <s.icon size={20} className={s.color} />
                         </div>
                         <div className="text-right">
-                            <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+                            <p className={`text-xl md:text-2xl font-black ${s.color}`}>{s.value}</p>
                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{s.label}</p>
                         </div>
                     </div>
                 ))}
             </div>
+
+            {/* Winner Spotlight Card */}
+            {fastestParticipant && (
+                <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 rounded-3xl p-5 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border border-orange-400 relative overflow-hidden">
+                    <div className="absolute right-0 top-0 translate-x-1/4 -translate-y-1/4 opacity-10 text-[120px] select-none pointer-events-none">🏆</div>
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white text-xl font-black shrink-0 shadow-inner">
+                            🏅
+                        </div>
+                        <div className="text-left">
+                            <span className="bg-white/20 text-white px-2.5 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest">
+                                👑 Record Holder (Minimum Completion Time)
+                            </span>
+                            <h4 className="text-lg font-black tracking-tight mt-1">{fastestParticipant.name || 'Anonymous User'}</h4>
+                            <p className="text-[11px] font-bold text-amber-50 mt-0.5">
+                                Finished with {fastestParticipant.result || 'perfect matching'} in a record-breaking <strong className="text-white text-xs font-black bg-white/20 px-2 py-0.5 rounded-md">{fastestParticipant.timeTaken} seconds</strong>!
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 relative z-10">
+                        {fastestParticipant.prizeStatus !== 'Awarded' ? (
+                            <button
+                                onClick={() => { 
+                                    setAwardingId(fastestParticipant.id); 
+                                    setAwardNote(`Winner with record-breaking speed of ${fastestParticipant.timeTaken} seconds! 🎉`); 
+                                }}
+                                className="bg-white text-orange-600 hover:bg-orange-50 px-4.5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md cursor-pointer"
+                            >
+                                🎁 Approve & Give Prize
+                            </button>
+                        ) : (
+                            <span className="bg-emerald-500/30 border border-emerald-400 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white font-extrabold">
+                                <CheckCircle size={12} /> Approved Winner
+                            </span>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Participants Table */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden min-h-[400px]">
@@ -530,11 +728,11 @@ const ParticipantsTab = ({ events, onShowToast }) => {
                         >
                             <ClipboardList size={12} /> Export Excel
                         </button>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Showing {filteredParticipants.length} results</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Showing {sortedParticipants.length} results</p>
                     </div>
                 </div>
 
-                {filteredParticipants.length === 0 ? (
+                {sortedParticipants.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-24 text-slate-300">
                         <div className="p-6 bg-slate-50 rounded-full mb-4">
                             <Users size={48} strokeWidth={1} />
@@ -544,88 +742,100 @@ const ParticipantsTab = ({ events, onShowToast }) => {
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-50">
-                        {filteredParticipants.map(p => (
-                            <div key={p.id}>
-                                <div 
-                                    onClick={() => setViewingParticipant(p)}
-                                    className={`flex items-center p-4 hover:bg-slate-50 cursor-pointer transition-colors ${p.prizeStatus === 'Awarded' ? 'bg-emerald-50/10' : ''}`}
-                                >
-                                    {/* Avatar */}
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-sm mr-4 shrink-0 shadow-sm ${p.prizeStatus === 'Awarded' ? 'bg-gradient-to-br from-amber-400 to-orange-500' : 'bg-gradient-to-br from-slate-400 to-slate-600'}`}>
-                                        {p.prizeStatus === 'Awarded' ? <Award size={18} /> : (p.name || 'U')[0].toUpperCase()}
-                                    </div>
-                                    
-                                    {/* Name & Details */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <p className="font-black text-slate-800 text-[13px] truncate">{p.name || 'Anonymous User'}</p>
-                                            {p.prizeStatus === 'Awarded' && (
-                                                <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border border-amber-200">WINNER</span>
-                                            )}
+                        {sortedParticipants.map(p => {
+                            const isFastest = p.timeTaken !== undefined && p.timeTaken !== null && p.timeTaken > 0 && p.timeTaken === minTime;
+                            return (
+                                <div key={p.id}>
+                                    <div 
+                                        onClick={() => setViewingParticipant(p)}
+                                        className={`flex items-center p-4 hover:bg-slate-50 cursor-pointer transition-colors ${p.prizeStatus === 'Awarded' ? 'bg-emerald-50/10' : ''}`}
+                                    >
+                                        {/* Avatar */}
+                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-sm mr-4 shrink-0 shadow-sm ${p.prizeStatus === 'Awarded' ? 'bg-gradient-to-br from-amber-400 to-orange-500' : isFastest ? 'bg-gradient-to-br from-rose-500 to-amber-500 animate-pulse' : 'bg-gradient-to-br from-slate-400 to-slate-600'}`}>
+                                            {p.prizeStatus === 'Awarded' ? <Award size={18} /> : isFastest ? <Trophy size={18} className="text-white fill-white" /> : (p.name || 'U')[0].toUpperCase()}
                                         </div>
-                                        <div className="flex items-center gap-3 mt-1">
-                                            <div className="flex items-center gap-1.5">
-                                                <Zap size={10} className="text-slate-400" />
-                                                <span className="text-[10px] font-bold text-slate-500">{p.result || '—'}</span>
+                                        
+                                        {/* Name & Details */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <p className="font-black text-slate-800 text-[13px] truncate">{p.name || 'Anonymous User'}</p>
+                                                {p.prizeStatus === 'Awarded' && (
+                                                    <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border border-amber-200">WINNER</span>
+                                                )}
+                                                {isFastest && (
+                                                    <span className="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border border-rose-200 flex items-center gap-1 animate-pulse">⚡ FASTEST COMPLETION</span>
+                                                )}
                                             </div>
-                                            <span className="text-[10px] text-slate-300">|</span>
-                                            <div className="flex items-center gap-1.5">
-                                                <Timer size={10} className="text-slate-400" />
-                                                <span className="text-[10px] font-bold text-slate-500">{p.joinedAt}</span>
+                                            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                                                <div className="flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
+                                                    <Zap size={10} className="text-slate-500" />
+                                                    <span className="text-[10px] font-bold">{p.result || '—'}</span>
+                                                </div>
+                                                {p.timeTaken !== undefined && p.timeTaken !== null && (
+                                                    <div className="flex items-center gap-1 bg-sky-50 text-sky-700 px-2 py-0.5 rounded-md border border-sky-100">
+                                                        <Clock size={10} className="text-sky-500" />
+                                                        <span className="text-[10px] font-black">Completed in {p.timeTaken}s</span>
+                                                    </div>
+                                                )}
+                                                <span className="text-[10px] text-slate-300 hidden sm:inline">|</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Clock size={10} className="text-slate-400" />
+                                                    <span className="text-[10px] font-bold text-slate-500">{p.joinedAt}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Prize & Status */}
+                                        <div className="flex items-center gap-6 pr-2">
+                                            <div className="text-right hidden sm:block">
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Prize Won</p>
+                                                <p className="text-[13px] font-black text-amber-600">{p.prize || 'No Prize'}</p>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-1.5">
+                                                <span className={`px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border flex items-center gap-1.5 ${p.prizeStatus === 'Awarded' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                                                    {p.prizeStatus === 'Awarded' ? <CheckCircle size={10} /> : <AlertCircle size={10} />}
+                                                    {p.prizeStatus}
+                                                </span>
+                                                {p.prizeStatus !== 'Awarded' && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setAwardingId(awardingId === p.id ? null : p.id); }}
+                                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-sky-50 text-sky-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-sky-100 active:scale-95 transition-all border border-sky-100"
+                                                    >
+                                                        <Award size={11} /> Give Prize
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Prize & Status */}
-                                    <div className="flex items-center gap-6 pr-2">
-                                        <div className="text-right hidden sm:block">
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Prize Won</p>
-                                            <p className="text-[13px] font-black text-amber-600">{p.prize || 'No Prize'}</p>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-1.5">
-                                            <span className={`px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border flex items-center gap-1.5 ${p.prizeStatus === 'Awarded' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                                                {p.prizeStatus === 'Awarded' ? <CheckCircle size={10} /> : <AlertCircle size={10} />}
-                                                {p.prizeStatus}
-                                            </span>
-                                            {p.prizeStatus !== 'Awarded' && (
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); setAwardingId(awardingId === p.id ? null : p.id); }}
-                                                    className="flex items-center gap-1 px-2.5 py-1.5 bg-sky-50 text-sky-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-sky-100 active:scale-95 transition-all border border-sky-100"
-                                                >
-                                                    <Award size={11} /> Give Prize
+                                    {/* Award Awarding UI */}
+                                    {awardingId === p.id && (
+                                        <div className="mx-4 mb-4 bg-slate-50 border border-sky-200 rounded-2xl p-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-300">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-[10px] font-black text-sky-600 uppercase tracking-widest">Award Prize to {p.name}</p>
+                                                <button onClick={() => setAwardingId(null)}>
+                                                    <X size={14} className="text-slate-400" />
                                                 </button>
-                                            )}
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    value={awardNote}
+                                                    onChange={e => setAwardNote(e.target.value)}
+                                                    placeholder="Add a congratulation note or transaction ID..."
+                                                    className="flex-1 text-[12px] font-bold text-slate-700 bg-white border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400"
+                                                />
+                                                <button
+                                                    onClick={() => handleAward(p)}
+                                                    className="flex items-center gap-2 px-6 py-3 bg-sky-500 text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-sky-200 active:scale-95 transition-all"
+                                                >
+                                                    <CheckCircle size={16} /> Confirm
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
-
-                                {/* Award Awarding UI */}
-                                {awardingId === p.id && (
-                                    <div className="mx-4 mb-4 bg-slate-50 border border-sky-200 rounded-2xl p-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-300">
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-[10px] font-black text-sky-600 uppercase tracking-widest">Award Prize to {p.name}</p>
-                                            <button onClick={() => setAwardingId(null)}>
-                                                <X size={14} className="text-slate-400" />
-                                            </button>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <input
-                                                value={awardNote}
-                                                onChange={e => setAwardNote(e.target.value)}
-                                                placeholder="Add a congratulation note or transaction ID..."
-                                                className="flex-1 text-[12px] font-bold text-slate-700 bg-white border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400"
-                                            />
-                                            <button
-                                                onClick={() => handleAward(p)}
-                                                className="flex items-center gap-2 px-6 py-3 bg-sky-500 text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-sky-200 active:scale-95 transition-all"
-                                            >
-                                                <CheckCircle size={16} /> Confirm
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -641,7 +851,7 @@ const ParticipantsTab = ({ events, onShowToast }) => {
 
                             <div className="flex items-center gap-6 mb-8">
                                 <div className="w-20 h-20 bg-gradient-to-br from-sky-400 to-blue-600 rounded-3xl flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-sky-100">
-                                    {viewingParticipant.name[0].toUpperCase()}
+                                    {(viewingParticipant.name || 'U')[0].toUpperCase()}
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-black text-slate-800 tracking-tight">{viewingParticipant.name}</h2>
@@ -652,14 +862,20 @@ const ParticipantsTab = ({ events, onShowToast }) => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 mb-8">
-                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Event Performance</p>
-                                    <p className="text-xl font-black text-slate-800 text-center">{viewingParticipant.result || 'No Result'}</p>
+                            <div className="grid grid-cols-3 gap-3 mb-8">
+                                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Performance</p>
+                                    <p className="text-sm font-black text-slate-800 text-center">{viewingParticipant.result || 'No Result'}</p>
                                 </div>
-                                <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
-                                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1 text-center">Reward Status</p>
-                                    <p className="text-xl font-black text-amber-700 text-center">{viewingParticipant.prize || 'Claimable'}</p>
+                                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Completion Time</p>
+                                    <p className="text-sm font-black text-slate-800 text-center">
+                                        {viewingParticipant.timeTaken !== undefined && viewingParticipant.timeTaken !== null ? `${viewingParticipant.timeTaken}s` : 'N/A'}
+                                    </p>
+                                </div>
+                                <div className="bg-amber-50 p-3 rounded-2xl border border-amber-100 flex flex-col justify-center">
+                                    <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1 text-center">Reward Status</p>
+                                    <p className="text-sm font-black text-amber-700 text-center">{viewingParticipant.prize || 'Claimable'}</p>
                                 </div>
                             </div>
 
@@ -668,15 +884,15 @@ const ParticipantsTab = ({ events, onShowToast }) => {
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
                                         <span className="text-[11px] font-bold text-slate-400">Email Address</span>
-                                        <span className="text-[11px] font-black text-slate-700">{viewingParticipant.name.toLowerCase().replace(/ /g, '')}@gmail.com</span>
+                                        <span className="text-[11px] font-black text-slate-700">{viewingParticipant.email}</span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
                                         <span className="text-[11px] font-bold text-slate-400">Mobile Number</span>
-                                        <span className="text-[11px] font-black text-slate-700">+91 98765 43210</span>
+                                        <span className="text-[11px] font-black text-slate-700">{viewingParticipant.phone}</span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
                                         <span className="text-[11px] font-bold text-slate-400">Registration Date</span>
-                                        <span className="text-[11px] font-black text-slate-700">12 Feb 2026</span>
+                                        <span className="text-[11px] font-black text-slate-700">{viewingParticipant.joinedAt}</span>
                                     </div>
                                 </div>
                             </div>
@@ -710,15 +926,120 @@ const ParticipantsTab = ({ events, onShowToast }) => {
 const EventsAdmin = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [events, setEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState(null);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [newEventData, setNewEventData] = useState({
+        title: '',
+        tag: 'Quiz',
+        fee: 10,
+        prize: '₹500',
+        startTime: 'Live Now',
+        status: 'Active'
+    });
+
+    const fetchEvents = async () => {
+        try {
+            const res = await api.get('/admin/events');
+            if (res.success && res.data) {
+                setEvents(res.data.map(e => ({
+                    ...e,
+                    id: e._id // map DB _id to id so overview/tabs continue to work perfectly
+                })));
+            }
+        } catch (err) {
+            console.error("Failed to load events from server:", err);
+            showToast("Failed to load events", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        setEvents(eventStorage.getEvents());
+        fetchEvents();
     }, []);
 
-    const handleUpdateEvent = (eventId, updates) => {
-        const updated = eventStorage.updateEvent(eventId, updates);
-        setEvents(updated);
+    const handleUpdateEvent = async (eventId, updates) => {
+        try {
+            const res = await api.put(`/admin/events/${eventId}`, updates);
+            if (res.success) {
+                showToast("Event updated successfully", "success");
+                await fetchEvents();
+            }
+        } catch (err) {
+            console.error("Failed to update event:", err);
+            showToast("Failed to update event", "error");
+        }
+    };
+
+    const handleDeleteEvent = async (eventId) => {
+        try {
+            const res = await api.delete(`/admin/events/${eventId}`);
+            if (res.success) {
+                showToast("Event deleted successfully", "success");
+                await fetchEvents();
+            }
+        } catch (err) {
+            console.error("Failed to delete event:", err);
+            showToast("Failed to delete event", "error");
+        }
+    };
+
+    const handleAddEvent = async (e) => {
+        e.preventDefault();
+        try {
+            // Setup default config templates based on tag
+            let defaultConfig = {};
+            if (newEventData.tag === 'Quiz') {
+                defaultConfig = {
+                    questions: [
+                        { question: "What is the capital of India?", options: ["Mumbai", "New Delhi", "Kolkata", "Chennai"], answer: 1 }
+                    ]
+                };
+            } else if (newEventData.tag === 'Draw') {
+                defaultConfig = {
+                    prizes: [
+                        { label: '50 Coins', coins: 50, cash: 0 },
+                        { label: '₹100', coins: 0, cash: 100 }
+                    ]
+                };
+            } else if (newEventData.tag === 'Brain') {
+                defaultConfig = {
+                    cards: [
+                        { icon: 'Trophy', color: 'text-amber-500' },
+                        { icon: 'Zap', color: 'text-blue-500' },
+                        { icon: 'Heart', color: 'text-rose-500' },
+                        { icon: 'Star', color: 'text-emerald-500' },
+                        { icon: 'Ghost', color: 'text-purple-500' },
+                        { icon: 'Gem', color: 'text-indigo-500' }
+                    ],
+                    peekTime: 2.5,
+                    maxTime: 60
+                };
+            }
+
+            const res = await api.post('/admin/events', {
+                ...newEventData,
+                config: defaultConfig
+            });
+
+            if (res.success) {
+                showToast("Event created successfully!", "success");
+                setIsAddModalOpen(false);
+                setNewEventData({
+                    title: '',
+                    tag: 'Quiz',
+                    fee: 10,
+                    prize: '₹500',
+                    startTime: 'Live Now',
+                    status: 'Active'
+                });
+                await fetchEvents();
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Failed to create event", "error");
+        }
     };
 
     const showToast = (msg, type = 'success') => {
@@ -730,7 +1051,15 @@ const EventsAdmin = () => {
         <div className="p-6 animate-in fade-in duration-500">
             {toast && <Toast msg={toast.msg} type={toast.type} />}
 
-            <PageHeader title="Events & Contests" subtitle="Manage live events, content, and participants" />
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <PageHeader title="Events & Contests" subtitle="Manage live events, content, and participants" />
+                <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="flex items-center gap-2 px-5 py-3 bg-sky-500 text-white rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-lg shadow-sky-200 hover:bg-sky-600 active:scale-95 transition-all"
+                >
+                    <Plus size={16} /> Add Event
+                </button>
+            </div>
 
             {/* Tabs */}
             <div className="flex gap-2 mb-8 mt-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm w-fit">
@@ -739,14 +1068,123 @@ const EventsAdmin = () => {
                 <TabBtn active={activeTab === 'participants'} onClick={() => setActiveTab('participants')} icon={Users} label="Participants" />
             </div>
 
-            {activeTab === 'overview' && (
-                <OverviewTab events={events} onUpdateEvent={handleUpdateEvent} onShowToast={showToast} />
+            {loading ? (
+                <div className="min-h-[400px] flex items-center justify-center">
+                    <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            ) : (
+                <>
+                    {activeTab === 'overview' && (
+                        <OverviewTab events={events} onUpdateEvent={handleUpdateEvent} onDeleteEvent={handleDeleteEvent} onShowToast={showToast} />
+                    )}
+                    {activeTab === 'content' && (
+                        <ContentTab events={events} onRefreshEvents={fetchEvents} onShowToast={showToast} />
+                    )}
+                    {activeTab === 'participants' && (
+                        <ParticipantsTab events={events} onShowToast={showToast} />
+                    )}
+                </>
             )}
-            {activeTab === 'content' && (
-                <ContentTab events={events} onShowToast={showToast} />
-            )}
-            {activeTab === 'participants' && (
-                <ParticipantsTab events={events} onShowToast={showToast} />
+
+            {/* Add Event Modal */}
+            {isAddModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                        <form onSubmit={handleAddEvent} className="p-8 relative space-y-6">
+                            <button type="button" onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                                <X size={20} />
+                            </button>
+
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Create New Event</h2>
+                                <p className="text-slate-400 font-bold text-xs mt-1">Configure event metadata and default parameters</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Event Title</label>
+                                    <input
+                                        required
+                                        value={newEventData.title}
+                                        onChange={e => setNewEventData(p => ({ ...p, title: e.target.value }))}
+                                        placeholder="e.g. Daily Brain Quiz"
+                                        className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white transition-all"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Game Type</label>
+                                        <select
+                                            value={newEventData.tag}
+                                            onChange={e => setNewEventData(p => ({ ...p, tag: e.target.value }))}
+                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white"
+                                        >
+                                            <option value="Quiz">Quiz Game</option>
+                                            <option value="Draw">Lucky Draw</option>
+                                            <option value="Brain">Memory Master</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Entry Fee (Coins)</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            value={newEventData.fee}
+                                            onChange={e => setNewEventData(p => ({ ...p, fee: +e.target.value }))}
+                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pool Prize Description</label>
+                                        <input
+                                            required
+                                            value={newEventData.prize}
+                                            onChange={e => setNewEventData(p => ({ ...p, prize: e.target.value }))}
+                                            placeholder="e.g. ₹500 Pool"
+                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Start Time</label>
+                                        <input
+                                            required
+                                            value={newEventData.startTime}
+                                            onChange={e => setNewEventData(p => ({ ...p, startTime: e.target.value }))}
+                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+                                    <select
+                                        value={newEventData.status}
+                                        onChange={e => setNewEventData(p => ({ ...p, status: e.target.value }))}
+                                        className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white"
+                                    >
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                        <option value="Draft">Draft</option>
+                                        <option value="Coming Soon">Coming Soon</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="w-full bg-sky-500 text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-xl shadow-sky-200 hover:bg-sky-600 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Plus size={16} /> Create Event
+                            </button>
+                        </form>
+                    </div>
+                </div>
             )}
         </div>
     );

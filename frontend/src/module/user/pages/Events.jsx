@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import {
-    ChevronLeft, ChevronRight, ChevronDown, Trophy, Timer, Users, Calendar,
-    CircleHelp, Sparkles, Zap, Coins, Clock, Info, Lightbulb, Rocket, Award, CheckCircle2, AlertCircle
+    ChevronLeft, ChevronDown, Trophy, Users,
+    Sparkles, Zap, Coins, Clock, Lightbulb, Rocket, Award, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import UnlockModal from '../components/UnlockModal';
 import PaymentModal from '../components/PaymentModal';
@@ -11,7 +11,7 @@ import { eventStorage } from '../../shared/services/eventStorage';
 import api from '../../shared/services/api';
 
 const Events = () => {
-    const { userData, addCoins, addNotification } = useUser();
+    const { userData, addCoins, addNotification, refreshUserProfile } = useUser();
     const [isUnlockOpen, setIsUnlockOpen] = useState(false);
     const [isBoosterExpanded, setIsBoosterExpanded] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -21,9 +21,6 @@ const Events = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const saved = JSON.parse(localStorage.getItem('dromoney_joined_events') || '[]');
-        setJoinedEvents(saved);
-        
         // Load events from Backend API
         const fetchEvents = async () => {
             try {
@@ -32,16 +29,23 @@ const Events = () => {
                     setEventList(res.data);
                     if (res.joinedEvents) {
                         setJoinedEvents(res.joinedEvents);
+                        localStorage.setItem('dromoney_joined_events', JSON.stringify(res.joinedEvents));
+                    } else {
+                        setJoinedEvents([]);
                     }
                 } else {
                     // Fallback to local storage if DB is empty
                     const allEvents = eventStorage.getEvents();
                     setEventList(allEvents.filter(e => e.status === 'Active'));
+                    const saved = JSON.parse(localStorage.getItem('dromoney_joined_events') || '[]');
+                    setJoinedEvents(saved);
                 }
             } catch (err) {
                 console.error("Failed to fetch events from DB:", err);
                 const allEvents = eventStorage.getEvents();
                 setEventList(allEvents.filter(e => e.status === 'Active'));
+                const saved = JSON.parse(localStorage.getItem('dromoney_joined_events') || '[]');
+                setJoinedEvents(saved);
             }
         };
 
@@ -64,11 +68,11 @@ const Events = () => {
     };
 
     const navigateToEvent = (event) => {
+        const id = event._id || event.id;
         switch (event.tag) {
-            case 'Quiz': navigate(`/user/quiz/${event.id}`); break;
-            case 'Draw': navigate(`/user/lucky-draw/${event.id}`); break;
-            case 'Prediction': navigate(`/user/gold-prediction/${event.id}`); break;
-            case 'Brain': navigate(`/user/memory-master/${event.id}`); break;
+            case 'Quiz': navigate(`/user/quiz/${id}`); break;
+            case 'Draw': navigate(`/user/lucky-draw/${id}`); break;
+            case 'Brain': navigate(`/user/memory-master/${id}`); break;
             default: break;
         }
     };
@@ -79,20 +83,22 @@ const Events = () => {
             return;
         }
 
-        // If already joined, just navigate
-        if (joinedEvents.includes(event._id)) {
+        const id = event._id || event.id;
+
+        // Strict double-check: If already joined, just navigate and block any API calls
+        if (joinedEvents.includes(id)) {
             navigateToEvent(event);
             return;
         }
 
         try {
-            const res = await api.post(`/user/data/events/${event._id}/join`);
+            const res = await api.post(`/user/data/events/${id}/join`);
             if (res.success) {
                 // Refresh profile to see updated coins
-                await refreshUserProfile();
+                await refreshUserProfile(false);
                 
                 // Save joined status locally and update state
-                const newJoined = [...joinedEvents, event._id];
+                const newJoined = [...joinedEvents, id];
                 setJoinedEvents(newJoined);
                 localStorage.setItem('dromoney_joined_events', JSON.stringify(newJoined));
 
@@ -106,24 +112,66 @@ const Events = () => {
         }
     };
 
+    // Pastel palette styles configuration per event tag
+    const getPastelTheme = (tag) => {
+        switch (tag) {
+            case 'Quiz':
+                return {
+                    cardBg: 'bg-gradient-to-br from-[#F5F3FF] via-[#FAF9FF] to-[#EEF2FF]', // Soft Lavender-Indigo
+                    border: 'border-purple-100/80',
+                    tagBadge: 'bg-purple-100/60 text-purple-600 border border-purple-200/40',
+                    statsBg: 'bg-white/60 border border-purple-100/40',
+                    button: 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-100',
+                    accentIcon: <Trophy size={14} className="text-indigo-500" />
+                };
+            case 'Draw':
+                return {
+                    cardBg: 'bg-gradient-to-br from-[#FFF1F2] via-[#FFF8F8] to-[#FFF5F5]', // Soft Rose-Pink
+                    border: 'border-rose-100/80',
+                    tagBadge: 'bg-rose-100/60 text-rose-600 border border-rose-200/40',
+                    statsBg: 'bg-white/60 border border-rose-100/40',
+                    button: 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-100',
+                    accentIcon: <Sparkles size={14} className="text-rose-500" />
+                };
+            case 'Brain':
+                return {
+                    cardBg: 'bg-gradient-to-br from-[#ECFDF5] via-[#F9FEFB] to-[#F0FDF4]', // Soft Mint-Emerald
+                    border: 'border-emerald-100/80',
+                    tagBadge: 'bg-emerald-100/60 text-emerald-700 border border-[#A7F3D0]/40',
+                    statsBg: 'bg-white/60 border border-emerald-100/40',
+                    button: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-100',
+                    accentIcon: <Lightbulb size={14} className="text-emerald-600" />
+                };
+            default:
+                return {
+                    cardBg: 'bg-gradient-to-br from-slate-50 via-white to-slate-100', // Neutral Pastel
+                    border: 'border-slate-200/60',
+                    tagBadge: 'bg-slate-100 text-slate-600 border border-slate-200/30',
+                    statsBg: 'bg-white/60 border border-slate-100',
+                    button: 'bg-blue-600 hover:bg-blue-700 text-white',
+                    accentIcon: <Sparkles size={14} className="text-blue-500" />
+                };
+        }
+    };
+
     return (
-        <div className="flex flex-col min-h-screen bg-[#F8FAFC] pb-24">
+        <div className="flex flex-col min-h-screen bg-[#F8FAFC] pb-28">
             <UnlockModal isOpen={isUnlockOpen} onClose={() => setIsUnlockOpen(false)} />
             
-            {/* Header - Ultra Compact Dark Blue */}
+            {/* Header - Compact Dark Blue gradient consistent with DroMoney branding */}
             <div className="bg-gradient-to-br from-slate-950 via-blue-900 to-slate-900 p-4 rounded-b-[1.5rem] shadow-lg sticky top-[57px] z-40 relative overflow-hidden">
                 <div className="absolute -right-10 -top-10 w-24 h-24 bg-white/5 rounded-full blur-3xl"></div>
                 
-                <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center justify-between relative z-10 max-w-md mx-auto">
                     <div className="flex items-center gap-3">
                         <button 
                             onClick={() => navigate('/user/home')}
-                            className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 active:scale-95 transition-all"
+                            className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 active:scale-95 transition-all cursor-pointer"
                         >
                             <ChevronLeft size={18} />
                         </button>
-                        <div className="flex flex-col">
-                            <h1 className="text-lg font-black text-white tracking-tight leading-none">Events</h1>
+                        <div className="flex flex-col text-left">
+                            <h1 className="text-base font-black text-white tracking-tight leading-none">Events</h1>
                             <p className="text-[9px] font-bold text-blue-300 opacity-80 uppercase tracking-widest mt-1">Win Big Rewards</p>
                         </div>
                     </div>
@@ -134,117 +182,130 @@ const Events = () => {
                     </div>
                 </div>
 
-                {/* Trophy Banner - Slim Version */}
-                <div className="mt-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3 flex items-center gap-3">
+                {/* Trophy Banner */}
+                <div className="mt-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3 flex items-center gap-3 max-w-md mx-auto">
                     <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center shadow-lg shrink-0">
                         <Trophy size={20} className="text-white" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 text-left">
                         <h2 className="text-[13px] font-black text-white leading-none">Join & Win Prizes!</h2>
-                        <p className="text-[8px] font-bold text-blue-100 opacity-60 mt-1">Use coins to participate.</p>
+                        <p className="text-[8px] font-bold text-blue-100 opacity-60 mt-1">Use coins to participate and earn huge Cash payouts.</p>
                     </div>
                 </div>
             </div>
 
-            <div className="p-3 space-y-3">
-                {/* Event Cards - Colored & High Density */}
+            <div className="p-4 space-y-4 max-w-md mx-auto w-full">
+                {/* Event Cards Section */}
                 <div className="space-y-3">
-                    <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Active Events</h2>
-                    {eventList.map((event, idx) => {
-                        const isJoined = joinedEvents.includes(event._id);
-                        const isComingSoon = event.status !== 'Active';
+                    <div className="flex justify-between items-center px-1">
+                        <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-left">Active Live Events</h2>
+                        <span className="bg-emerald-50 text-emerald-600 px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border border-emerald-100/50 animate-pulse">Live Dashboard</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-3">
+                        {eventList.map((event) => {
+                            const id = event._id || event.id;
+                            const isJoined = joinedEvents.includes(id);
+                            const isComingSoon = event.status !== 'Active';
+                            const theme = getPastelTheme(event.tag);
 
-                        // Theme Mapping
-                        const THEMES = [
-                            { bg: 'bg-indigo-50', border: 'border-indigo-100', accent: 'bg-indigo-600', text: 'text-indigo-600', iconBg: 'bg-indigo-100', shadow: 'shadow-indigo-100' },
-                            { bg: 'bg-rose-50', border: 'border-rose-100', accent: 'bg-rose-600', text: 'text-rose-600', iconBg: 'bg-rose-100', shadow: 'shadow-rose-100' },
-                            { bg: 'bg-amber-50', border: 'border-amber-100', accent: 'bg-amber-600', text: 'text-amber-600', iconBg: 'bg-amber-100', shadow: 'shadow-amber-100' },
-                            { bg: 'bg-emerald-50', border: 'border-emerald-100', accent: 'bg-emerald-600', text: 'text-emerald-600', iconBg: 'bg-emerald-100', shadow: 'shadow-emerald-100' },
-                        ];
-                        const theme = THEMES[idx % THEMES.length];
-
-                        return (
-                            <div key={event._id} className={`${theme.bg} border ${theme.border} rounded-2xl p-4 shadow-sm relative overflow-hidden group`}>
-                                {/* Decorative circle */}
-                                <div className={`absolute -right-6 -top-6 w-20 h-20 ${theme.accent} opacity-[0.03] rounded-full`}></div>
-
-                                <div className="flex justify-between items-start mb-3 relative z-10">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 ${theme.iconBg} rounded-xl flex items-center justify-center ${theme.text} shadow-inner`}>
-                                            {event.tag === 'Quiz' ? <Zap size={20} /> : event.tag === 'Draw' ? <Sparkles size={20} /> : <Rocket size={20} />}
+                            return (
+                                <div 
+                                    key={id} 
+                                    onClick={() => isJoined && navigateToEvent(event)}
+                                    className={`border rounded-3xl p-4 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden flex flex-col gap-3.5 group cursor-pointer ${theme.cardBg} ${theme.border}`}
+                                >
+                                    {/* Top row: Title, tag, button */}
+                                    <div className="flex justify-between items-start">
+                                        <div className="space-y-1 flex-1 pr-2 text-left">
+                                            <div className="flex items-center gap-1.5">
+                                                {theme.accentIcon}
+                                                <h3 className="text-[15px] font-black text-slate-800 leading-tight group-hover:text-blue-600 transition-colors">{event.title}</h3>
+                                            </div>
+                                            <span className={`inline-block text-[8px] font-black tracking-widest px-2 py-0.5 rounded-md uppercase w-fit ${theme.tagBadge}`}>
+                                                {event.tag}
+                                            </span>
                                         </div>
-                                        <div className="space-y-0.5">
-                                            <h3 className="text-[15px] font-black text-slate-800 leading-none tracking-tight">{event.title}</h3>
-                                            <span className={`inline-block text-[8px] font-black ${theme.text} uppercase tracking-widest`}>{event.tag}</span>
+
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Prevent card onClick trigger
+                                                if (isJoined) {
+                                                    navigateToEvent(event);
+                                                } else {
+                                                    handleJoinEvent(event);
+                                                }
+                                            }}
+                                            disabled={isComingSoon}
+                                            className={`px-4.5 py-2.5 rounded-2xl text-[9px] font-black tracking-widest uppercase transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer ${
+                                                isJoined 
+                                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-100 font-extrabold' 
+                                                : isComingSoon
+                                                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                                : `${theme.button}`
+                                            }`}
+                                        >
+                                            {isJoined ? "JOINED" : isComingSoon ? "Soon" : "JOIN EVENT"}
+                                        </button>
+                                    </div>
+
+                                    {/* Compact 2x2 stats block with theme-specific pastel border and backdrop */}
+                                    <div className={`grid grid-cols-2 gap-3 p-3 rounded-2xl ${theme.statsBg}`}>
+                                        <div className="space-y-0.5 text-left">
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Entry Fee</p>
+                                            <div className="flex items-center gap-1">
+                                                <Coins size={11} className="text-amber-500 fill-amber-500" />
+                                                <span className="text-[11px] font-black text-slate-700">{event.fee} Coins</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-0.5 text-left">
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Pool Prize</p>
+                                            <p className="text-[11px] font-black text-emerald-600 leading-none">{event.prize || '₹500'}</p>
+                                        </div>
+
+                                        <div className="flex items-center gap-1 text-slate-500 pt-1 border-t border-slate-100 text-left">
+                                            <Clock size={11} className="text-slate-400" />
+                                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tight">
+                                                {event.startTime}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-1 text-slate-500 pt-1 border-t border-slate-100 text-left">
+                                            <Users size={11} className="text-slate-400" />
+                                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tight">
+                                                {event.participantsCount || event.participants || 0} Joined
+                                            </span>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => handleJoinEvent(event)}
-                                        disabled={isComingSoon}
-                                        className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-95 ${
-                                            isJoined 
-                                            ? 'bg-emerald-500 text-white shadow-emerald-100' 
-                                            : isComingSoon
-                                            ? 'bg-slate-200 text-slate-400'
-                                            : `${theme.accent} text-white ${theme.shadow}`
-                                        }`}
-                                    >
-                                        {isJoined ? "Joined" : isComingSoon ? "Soon" : "Join"}
-                                    </button>
                                 </div>
-
-                                <div className="grid grid-cols-2 gap-2 bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-white/80 relative z-10">
-                                    <div className="flex flex-col">
-                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Entry Fee</p>
-                                        <div className="flex items-center gap-1">
-                                            <Coins size={10} className="text-amber-500" />
-                                            <p className="text-[12px] font-black text-slate-800">{event.fee}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Pool Prize</p>
-                                        <p className={`text-[12px] font-black ${theme.text}`}>{event.prize}</p>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 text-slate-500 mt-1">
-                                        <Clock size={12} className="opacity-60" />
-                                        <span className="text-[9px] font-bold opacity-80 uppercase tracking-tighter">
-                                            {event.startTime}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 text-slate-500 mt-1">
-                                        <Users size={12} className="opacity-60" />
-                                        <span className="text-[9px] font-bold opacity-80 uppercase tracking-tighter">
-                                            {event.participants} Users
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Support Booster - Premium Compact */}
-                <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-3xl overflow-hidden shadow-xl mt-2">
                     <div className="p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-amber-400/20 rounded-xl flex items-center justify-center border border-amber-400/20 shadow-inner">
+                            <div className="w-10 h-10 bg-amber-400/20 rounded-xl flex items-center justify-center border border-amber-400/20 shadow-inner shrink-0">
                                 <Zap size={20} className="text-amber-400 fill-amber-400" />
                             </div>
-                            <div>
-                                <h4 className="text-[14px] font-black text-white tracking-tight leading-none mb-1">₹11 Support Booster</h4>
+                            <div className="text-left">
+                                <h4 className="text-[13px] font-black text-white tracking-tight leading-none mb-1">₹11 Support Booster</h4>
                                 <p className="text-[9px] font-bold text-slate-400 leading-none">Activate 60% Winning Chance</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
                              <button
                                 onClick={() => setIsBoosterExpanded(!isBoosterExpanded)}
-                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isBoosterExpanded ? 'bg-amber-400 text-slate-900 rotate-180' : 'bg-white/5 text-slate-400 border border-white/10'}`}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${isBoosterExpanded ? 'bg-amber-400 text-slate-900 rotate-180' : 'bg-white/5 text-white/40 border border-white/10'}`}
                             >
                                 <ChevronDown size={16} />
                             </button>
                             <button
                                 onClick={handleBuyBooster}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase shadow-lg shadow-blue-900/20 active:scale-95 transition-all"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase shadow-lg shadow-blue-900/20 active:scale-95 transition-all cursor-pointer"
                             >
                                 Buy
                             </button>
@@ -254,12 +315,12 @@ const Events = () => {
                     {isBoosterExpanded && (
                         <div className="bg-white/5 border-t border-white/5 p-4 space-y-3 animate-in slide-in-from-top-4 duration-300">
                             {[
-                                { icon: <Zap size={14} />, title: "60% Winning Boost", desc: "Win big in every event", color: "text-amber-400" },
-                                { icon: <Lightbulb size={14} />, title: "Quiz Support", desc: "Platform support in 6/10 questions", color: "text-yellow-400" },
-                                { icon: <Rocket size={14} />, title: "Priority Entry", desc: "Early access to premium events", color: "text-orange-400" },
-                                { icon: <Award size={14} />, title: "Elite Badge", desc: "Exclusive profile support badge", color: "text-blue-400" }
+                                { icon: <Zap size={14} />, title: "60% Winning Boost", desc: "Win big in every event with high prioritization", color: "text-amber-400" },
+                                { icon: <Lightbulb size={14} />, title: "Quiz Support", desc: "Platform support in 6/10 questions automatically", color: "text-yellow-400" },
+                                { icon: <Rocket size={14} />, title: "Priority Entry", desc: "Early access to premium and high prize events", color: "text-orange-400" },
+                                { icon: <Award size={14} />, title: "Elite Badge", desc: "Exclusive profile support badge next to your user name", color: "text-blue-400" }
                             ].map((item, i) => (
-                                <div key={i} className="flex items-center gap-3">
+                                <div key={i} className="flex items-center gap-3 text-left">
                                     <div className={`w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center ${item.color}`}>
                                         {item.icon}
                                     </div>

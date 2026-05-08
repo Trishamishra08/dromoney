@@ -166,6 +166,11 @@ const WatchAndEarnAdmin = () => {
             return;
         }
 
+        if (payload.duration < 30 || payload.duration > 60) {
+            alert("Video watch duration must be between 30 and 60 seconds.");
+            return;
+        }
+
         try {
             if (editId) {
                 await api.put(`/admin/ads/${editId}`, payload);
@@ -487,12 +492,15 @@ const WatchAndEarnAdmin = () => {
                                         <input 
                                             required
                                             type="number"
+                                            min="30"
+                                            max="60"
                                             placeholder="30"
                                             className="w-full bg-slate-50 border border-slate-200 rounded-[22px] p-5 pl-14 text-sm font-bold text-slate-800 focus:outline-none focus:border-indigo-500"
                                             value={adForm.duration || ''}
                                             onChange={(e) => setAdForm(prev => ({...prev, duration: e.target.value}))}
                                         />
                                     </div>
+                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wide ml-1">Must be between 30 and 60 seconds</p>
                                 </div>
                             </div>
 

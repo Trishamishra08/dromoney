@@ -15,6 +15,14 @@ const Payments = () => {
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    // Toast state
+    const [toast, setToast] = useState(null); // { message: '', type: 'success' | 'error' }
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
+
     useEffect(() => {
         fetchPayments();
     }, []);
@@ -50,11 +58,12 @@ const Payments = () => {
         try {
             const response = await api.put(`/admin/payments/${id}`, { status: newStatus });
             if (response.success) {
+                showToast(`Payment activation ${newStatus.toLowerCase()} successfully!`, 'success');
                 fetchPayments();
                 setIsModalOpen(false);
             }
         } catch (err) {
-            alert(err);
+            showToast(err.message || "Something went wrong", 'error');
         }
     };
 
@@ -88,7 +97,21 @@ const Payments = () => {
     const failedCount = paymentsList.filter(p => p.status === 'Failed').length;
 
     return (
-        <div className="p-6 animate-in fade-in duration-500">
+        <div className="p-6 animate-in fade-in duration-500 relative">
+            {toast && (
+                <div className={`fixed top-5 right-5 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 ${
+                    toast.type === 'success' 
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+                        : 'bg-rose-50 border-rose-100 text-rose-800'
+                }`}>
+                    {toast.type === 'success' ? (
+                        <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0 animate-bounce" />
+                    ) : (
+                        <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                    )}
+                    <span className="text-xs font-semibold">{toast.message}</span>
+                </div>
+            )}
             <PageHeader title="Payments Tracking" subtitle="Manage account activation fees and verification" />
 
             {/* Stat Cards */}
