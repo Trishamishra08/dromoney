@@ -38,8 +38,11 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
         planName = '3 Months Support Extension';
         pType = 'SUPPORT_CHAT_RENEWAL';
     } else if (type === 'SUPPORT_BOOSTER' || type === 'TASK_BOOSTER') {
-        if (user.isBoosterActive) {
-            return next(new ErrorResponse('You already have an active booster.', 400));
+        const isSupport = type === 'SUPPORT_BOOSTER';
+        const hasActive = isSupport ? user.isSupportBoosterActive : user.isTaskBoosterActive;
+        
+        if (hasActive) {
+            return next(new ErrorResponse(`You already have an active ${isSupport ? 'Support' : 'Task'} booster.`, 400));
         }
         const boosterType = type === 'SUPPORT_BOOSTER' ? 'support' : 'task';
         const Booster = require('../models/Booster');
@@ -139,11 +142,22 @@ exports.verifyPayment = asyncHandler(async (req, res, next) => {
             }
         } else if (payment.paymentType === 'SUPPORT_BOOSTER' || payment.paymentType === 'TASK_BOOSTER') {
             console.log(`[PAYMENT] Activating Booster ${payment.paymentType} for user ${user._id}`);
-            user.isBoosterActive = true;
             
             const expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + 30); // 30 Days expiry
+
+            if (payment.paymentType === 'SUPPORT_BOOSTER') {
+                user.isSupportBoosterActive = true;
+                user.supportBoosterExpiry = expiryDate;
+            } else {
+                user.isTaskBoosterActive = true;
+                user.taskBoosterExpiry = expiryDate;
+            }
+
+            // Legacy support
+            user.isBoosterActive = true;
             user.boosterExpiry = expiryDate;
+            
             await user.save();
         } else {
             console.log(`[PAYMENT] Unlocking Platform for user ${user._id}`);
