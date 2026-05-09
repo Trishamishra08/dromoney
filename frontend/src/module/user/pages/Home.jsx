@@ -156,7 +156,7 @@ const AdBanners = ({ navigate }) => {
 
 const Home = () => {
     const { userData, addNotification, refreshUserProfile } = useUser();
-    const { earnings, coins, referrals, futureFund, isPaid, isBoosterActive } = userData || {};
+    const { earnings, coins, referrals, futureFund, isPaid, isSupportBoosterActive, isTaskBoosterActive } = userData || {};
     const navigate = useNavigate();
 
     // Custom States for Booster Cards
@@ -220,8 +220,8 @@ const Home = () => {
     };
     const [lifetimePromo, setLifetimePromo] = useState(null);
     const [boosters, setBoosters] = useState({
-        support: { title: 'Support Booster', subtitle: 'Boost participation & win more!', price: 11, validity: '30 Days', benefits: [] },
-        task: { title: 'Task Booster', subtitle: 'Increase coin value 3X now!', price: 49, validity: '30 Days', benefits: [] }
+        support: { title: '₹22 Support Booster', subtitle: 'Boost participation & win more!', price: 22, validity: '2 Months', benefits: [] },
+        task: { title: '₹49 Task Booster', subtitle: 'Increase coin value 3X now!', price: 49, validity: '30 Days', benefits: [] }
     });
     const [footerPolicies, setFooterPolicies] = useState([
         { label: 'Privacy Policy', path: 'privacy' },
@@ -279,6 +279,11 @@ const Home = () => {
                 const results = { ...boosters };
                 res.data.forEach(item => {
                     if (item.type === 'support' || item.type === 'task') {
+                        // Ensure title has price prefix if missing
+                        const pricePrefix = `₹${item.price} `;
+                        if (!item.title.includes('₹')) {
+                            item.title = pricePrefix + item.title;
+                        }
                         results[item.type] = item;
                     }
                 });
@@ -474,11 +479,11 @@ const Home = () => {
                                     <ChevronDown size={18} strokeWidth={2.5} />
                                 </button>
                                 <button 
-                                    onClick={() => !isBoosterActive && handleBuy('₹22 Support Booster', 22)}
-                                    disabled={isBoosterActive}
-                                    className={`${isBoosterActive ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-[#10B981] text-white hover:bg-[#059669] shadow-lg shadow-emerald-500/30'} px-5 py-2.5 rounded-xl text-[11px] font-black tracking-tight active:scale-95 transition-all w-full sm:w-auto`}
+                                    onClick={() => !isSupportBoosterActive && handleBuy(boosters.support.title, boosters.support.price)}
+                                    disabled={isSupportBoosterActive}
+                                    className={`${isSupportBoosterActive ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-[#10B981] text-white hover:bg-[#059669] shadow-lg shadow-emerald-500/30'} px-5 py-2.5 rounded-xl text-[11px] font-black tracking-tight active:scale-95 transition-all w-full sm:w-auto`}
                                 >
-                                    {isBoosterActive ? 'Already Bought' : 'Boost Support'}
+                                    {isSupportBoosterActive ? 'Already Bought' : 'Boost Support'}
                                 </button>
                             </div>
                         </div>
@@ -524,10 +529,11 @@ const Home = () => {
                                     <ChevronDown size={18} strokeWidth={2.5} />
                                 </button>
                                 <button
-                                    onClick={() => handleBuy(boosters.task.title, boosters.task.price)}
-                                    className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight active:scale-95 transition-all"
+                                    onClick={() => !isTaskBoosterActive && handleBuy(boosters.task.title, boosters.task.price)}
+                                    disabled={isTaskBoosterActive}
+                                    className={`${isTaskBoosterActive ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-sky-500 hover:bg-sky-600 text-white shadow-lg shadow-sky-500/30'} px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-tight active:scale-95 transition-all`}
                                 >
-                                    Buy Now
+                                    {isTaskBoosterActive ? 'Already Bought' : 'Buy Now'}
                                 </button>
                             </div>
                         </div>

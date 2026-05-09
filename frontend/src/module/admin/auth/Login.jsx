@@ -42,10 +42,10 @@ const AdminLogin = () => {
                 <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[150px]"></div>
             </div>
 
-            <div className="w-full max-w-[950px] h-[600px] bg-white rounded-[40px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] flex flex-col md:flex-row transition-all duration-500 relative z-10">
+            <div className="w-full max-w-[800px] min-h-[500px] bg-white rounded-[32px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] flex flex-col md:flex-row transition-all duration-500 relative z-10">
                 
                 {/* ── Left Section: Welcome ── */}
-                <div className="flex-1 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] relative overflow-hidden flex flex-col justify-center px-14 text-white">
+                <div className="flex-1 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] relative overflow-hidden flex flex-col justify-center px-10 py-12 text-white">
                     {/* Dynamic Background Elements */}
                     <div className="absolute top-[-10%] right-[-10%] w-[300px] h-[300px] bg-indigo-600/20 rounded-full blur-[80px] animate-pulse"></div>
                     <div className="absolute bottom-[-5%] left-[-5%] w-[250px] h-[250px] bg-sky-500/20 rounded-full blur-[60px]"></div>
@@ -56,20 +56,20 @@ const AdminLogin = () => {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-white/5 rounded-full pointer-events-none opacity-20"></div>
 
                     <div className="relative z-10 space-y-8">
-                        <div className="flex items-center gap-4 animate-in fade-in slide-in-from-left-4 duration-700">
-                            <div className="p-2 bg-white/5 rounded-2xl backdrop-blur-md border border-white/10 shadow-xl">
-                                <img src={logo} alt="Dromoney" className="w-12 h-12 object-contain brightness-0 invert" />
+                        <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-700">
+                            <div className="p-1.5 bg-white/5 rounded-xl backdrop-blur-md border border-white/10">
+                                <img src={logo} alt="Dromoney" className="w-10 h-10 object-contain brightness-0 invert" />
                             </div>
-                            <span className="text-2xl font-black tracking-tighter uppercase text-white/90">Dromoney</span>
+                            <span className="text-xl font-black tracking-tighter uppercase text-white/90">Dromoney</span>
                         </div>
                         
-                        <div className="space-y-2">
-                            <h1 className="text-6xl font-black tracking-tight leading-none text-white animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">WELCOME</h1>
-                            <p className="text-lg font-bold text-indigo-400 uppercase tracking-[0.3em] pl-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">Admin Gateway</p>
+                        <div className="space-y-1">
+                            <h1 className="text-5xl font-black tracking-tight leading-none text-white animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">WELCOME</h1>
+                            <p className="text-base font-bold text-indigo-400 uppercase tracking-[0.3em] pl-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">Admin Gateway</p>
                         </div>
                         
-                        <p className="text-[15px] text-slate-400 max-w-[320px] leading-relaxed font-medium animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-                            Secure institutional access to the Dromoney financial core. Manage transactions, verify users, and monitor ecosystem health.
+                        <p className="text-[13px] text-slate-400 max-w-[280px] leading-relaxed font-medium animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                            Secure institutional access to the Dromoney financial core.
                         </p>
 
                         <div className="pt-6 animate-in fade-in duration-1000 delay-500">
@@ -81,11 +81,11 @@ const AdminLogin = () => {
                 </div>
 
                 {/* ── Right Section: Sign In Form ── */}
-                <div className="flex-1 bg-white p-16 flex flex-col justify-center relative">
-                    <div className="max-w-[340px] w-full mx-auto space-y-10">
-                        <div className="space-y-2">
-                            <h2 className="text-4xl font-black text-slate-900 tracking-tight">Sign in</h2>
-                            <p className="text-sm text-slate-400 font-medium">Enter your authorized credentials.</p>
+                <div className="flex-1 bg-white p-10 py-12 flex flex-col justify-center relative">
+                    <div className="max-w-[300px] w-full mx-auto space-y-8">
+                        <div className="space-y-1">
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Sign in</h2>
+                            <p className="text-xs text-slate-400 font-medium">Enter your authorized credentials.</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -141,7 +141,7 @@ const AdminLogin = () => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full bg-[#0f172a] hover:bg-slate-800 text-white py-4.5 rounded-2xl text-[15px] font-bold transition-all active:scale-[0.98] shadow-xl shadow-slate-200 flex items-center justify-center gap-3 group"
+                                    className="w-full bg-[#0f172a] hover:bg-slate-800 text-white py-3.5 rounded-xl text-[14px] font-bold transition-all active:scale-[0.98] shadow-lg shadow-slate-200 flex items-center justify-center gap-2 group"
                                 >
                                     {loading ? (
                                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -160,7 +160,7 @@ const AdminLogin = () => {
 
                                 <button
                                     type="button"
-                                    className="w-full bg-white border-2 border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600 py-4 rounded-2xl text-[14px] font-bold transition-all active:scale-[0.98]"
+                                    className="w-full bg-white border-2 border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600 py-3.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
                                 >
                                     Institutional Login
                                 </button>

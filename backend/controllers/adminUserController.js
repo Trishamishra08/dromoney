@@ -1,4 +1,8 @@
 const User = require('../models/User');
+const Transaction = require('../models/Transaction');
+const Payment = require('../models/Payment');
+const Withdrawal = require('../models/Withdrawal');
+const ReferralTransaction = require('../models/ReferralTransaction');
 const ErrorResponse = require('../utils/errorResponse');
 
 // @desc    Get all users
@@ -105,6 +109,35 @@ exports.toggleBlock = async (req, res, next) => {
         res.status(200).json({
             success: true,
             message: `User ${user.isBlocked ? 'Blocked' : 'Unblocked'} successfully`
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// @desc    Delete User
+// @route   DELETE /api/admin/users/:id
+// @access  Private (Admin)
+exports.deleteUser = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return next(new ErrorResponse('User not found', 404));
+        }
+
+        // Cleanup related data
+        await Promise.all([
+            Transaction.deleteMany({ user: user._id }),
+            Payment.deleteMany({ user: user._id }),
+            Withdrawal.deleteMany({ user: user._id }),
+            ReferralTransaction.deleteMany({ $or: [{ referrer: user._id }, { referee: user._id }] }),
+            User.findByIdAndDelete(req.params.id)
+        ]);
+
+        res.status(200).json({
+            success: true,
+            message: 'User and associated data deleted successfully'
         });
     } catch (err) {
         next(err);

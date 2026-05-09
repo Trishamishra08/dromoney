@@ -36,12 +36,27 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    isBlocked: {
+    boosterExpiry: {
+        type: Date,
+    },
+    // Distinguished Booster States
+    isSupportBoosterActive: {
         type: Boolean,
         default: false,
     },
-    boosterExpiry: {
+    supportBoosterExpiry: {
         type: Date,
+    },
+    isTaskBoosterActive: {
+        type: Boolean,
+        default: false,
+    },
+    taskBoosterExpiry: {
+        type: Date,
+    },
+    isBlocked: {
+        type: Boolean,
+        default: false,
     },
     profileImage: {
         type: String,

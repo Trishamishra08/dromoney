@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { login, getMe } = require('../controllers/adminAuthController');
 const { getStats, getAlerts } = require('../controllers/adminDashboardController');
-const { getUsers, manageKYC, toggleBlock, getPendingKyc } = require('../controllers/adminUserController');
+const { getUsers, manageKYC, toggleBlock, getPendingKyc, deleteUser } = require('../controllers/adminUserController');
 const { 
     createTask, getTasks, updateTask,
     deleteContent 
@@ -45,6 +45,7 @@ router.get('/dashboard/alerts', protectAdmin, getAlerts);
 router.get('/users', protectAdmin, getUsers);
 router.put('/users/:id/kyc', protectAdmin, manageKYC);
 router.put('/users/:id/block', protectAdmin, toggleBlock);
+router.delete('/users/:id', protectAdmin, deleteUser);
 router.get('/kyc/pending', protectAdmin, getPendingKyc);
 
 // Content Management Routes

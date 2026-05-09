@@ -159,52 +159,47 @@ const BusinessIdeas = () => {
                 </button>
             </div>
 
-            <div className="flex flex-col items-center justify-center p-6 pt-10">
-                <div className="w-full max-w-sm bg-gradient-to-br from-[#5D38F0] to-[#8643FF] rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden mb-12 flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center p-5 pt-6">
+                <div className="w-full max-w-[340px] bg-gradient-to-br from-[#5D38F0] to-[#8643FF] rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden mb-8 flex flex-col items-center justify-center">
                     {/* Decorative Elements */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/20 rounded-full -ml-16 -mb-16 blur-2xl" />
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl" />
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-400/20 rounded-full -ml-12 -mb-12 blur-2xl" />
 
-                    <div className="text-center space-y-2 relative z-10">
-                        <div className="flex items-center justify-center gap-2 mb-1">
-                            <Star size={14} className="text-[#FFE03D]" fill="#FFE03D" />
-                            <p className="text-[11px] font-black text-white/70 uppercase tracking-[0.3em]">महीने की कमाई</p>
-                            <Star size={14} className="text-[#FFE03D]" fill="#FFE03D" />
+                    <div className="text-center space-y-1 relative z-10">
+                        <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                            <Star size={12} className="text-[#FFE03D]" fill="#FFE03D" />
+                            <p className="text-[10px] font-black text-white/70 uppercase tracking-[0.2em]">महीने की कमाई</p>
+                            <Star size={12} className="text-[#FFE03D]" fill="#FFE03D" />
                         </div>
-                        <p className="text-[38px] font-black text-white leading-none drop-shadow-lg">
+                        <p className="text-[32px] font-black text-white leading-none drop-shadow-md">
                             ₹50k - <span className="text-[#FFE03D]">₹{selectedIdea?.potentialEarnings || '1 Lakh'}</span>
                         </p>
                     </div>
 
-                    <div className="my-10 relative z-10">
-                        {/* Boost Glow */}
-                        <div className="absolute inset-0 bg-white/20 blur-[60px] rounded-full scale-150 animate-pulse" />
-                        
+                    <div className="my-8 relative z-10">
+                        <div className="absolute inset-0 bg-white/10 blur-[40px] rounded-full scale-125 animate-pulse" />
                         <div className="animate-boost relative">
-                            {/* White Splash / Smoke Puffs */}
-                            <div className="absolute -bottom-8 -right-8 z-0 flex gap-1">
-                                <div className="animate-puff w-8 h-8 bg-white/40 rounded-full blur-md" style={{ animationDelay: '0s' }} />
-                                <div className="animate-puff w-10 h-10 bg-white/20 rounded-full blur-lg" style={{ animationDelay: '0.2s' }} />
-                                <div className="animate-puff w-6 h-6 bg-white/30 rounded-full blur-sm" style={{ animationDelay: '0.4s' }} />
+                            <div className="absolute -bottom-6 -right-6 z-0 flex gap-1">
+                                <div className="animate-puff w-6 h-6 bg-white/40 rounded-full blur-md" style={{ animationDelay: '0s' }} />
+                                <div className="animate-puff w-8 h-8 bg-white/20 rounded-full blur-lg" style={{ animationDelay: '0.2s' }} />
                             </div>
-
-                            <Rocket size={150} className="text-white drop-shadow-[0_20px_20px_rgba(255,255,255,0.3)] relative z-10" fill="white" fillOpacity={0.2} />
+                            <Rocket size={110} className="text-white drop-shadow-[0_15px_15px_rgba(255,255,255,0.25)] relative z-10" fill="white" fillOpacity={0.2} />
                         </div>
                     </div>
 
-                    <div className="text-center space-y-2 relative z-10">
-                        <div className="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl">
-                            <p className="text-[14px] font-black text-[#00FF94] leading-tight uppercase tracking-widest">बहुत कम इन्वेस्टमेंट से</p>
+                    <div className="text-center space-y-1 relative z-10">
+                        <div className="bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-xl">
+                            <p className="text-[12px] font-black text-[#00FF94] leading-tight uppercase tracking-wider">बहुत कम इन्वेस्टमेंट से</p>
                         </div>
-                        <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] mt-2">Start Your Own Brand Today</p>
+                        <p className="text-[9px] font-bold text-white/60 uppercase tracking-[0.2em] mt-1.5">Start Your Own Brand Today</p>
                     </div>
                 </div>
 
                 <button 
                     onClick={() => navigate('/user/business-ideas/all')}
-                    className="w-full bg-[#5D38F0] hover:bg-[#4C2CD9] text-white font-black text-[16px] py-5 rounded-[2.5rem] shadow-2xl shadow-indigo-200 flex items-center justify-center gap-3 transition-all active:scale-95 uppercase tracking-widest border-b-4 border-indigo-800"
+                    className="w-full max-w-[340px] bg-[#5D38F0] hover:bg-[#4C2CD9] text-white font-black text-[14px] py-4.5 rounded-[2rem] shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 transition-all active:scale-95 uppercase tracking-widest border-b-4 border-indigo-800"
                 >
-                    LET'S START <ArrowRight size={20} />
+                    LET'S START <ArrowRight size={18} />
                 </button>
             </div>
         </div>
@@ -225,49 +220,46 @@ const BusinessIdeas = () => {
                 </div>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="p-4 space-y-4">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-3">
                         <div className="w-12 h-12 border-4 border-[#5D38F0] border-t-transparent rounded-full animate-spin" />
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Searching Best Ideas...</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Searching Best Ideas...</p>
                     </div>
                 ) : (
                     ideas.map((idea) => (
                         <div 
                             key={idea._id}
                             onClick={() => handleIdeaSelect(idea)}
-                            className="bg-white rounded-[2.5rem] p-5 flex flex-col gap-4 shadow-[0_15px_30px_-10px_rgba(93,56,240,0.1)] border border-slate-50 group hover:shadow-xl hover:shadow-indigo-100 transition-all cursor-pointer active:scale-[0.98] relative overflow-hidden"
+                            className="bg-white rounded-[1.5rem] p-4 flex flex-col gap-3 shadow-md border border-slate-50 group hover:shadow-lg transition-all cursor-pointer active:scale-[0.98] relative overflow-hidden"
                         >
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50/50 rounded-full -mr-8 -mt-8" />
-                            
-                            <div className="flex items-center gap-5 relative z-10">
-                                <div className="w-16 h-16 bg-gradient-to-br from-[#5D38F0] to-[#8643FF] rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 shrink-0 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-white/10 animate-pulse" />
+                            <div className="flex items-center gap-4 relative z-10">
+                                <div className="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center shrink-0 relative overflow-hidden border border-slate-50">
                                     {idea.bannerImage ? (
                                         <img src={idea.bannerImage} className="w-full h-full object-cover relative z-10" alt="" />
                                     ) : (
-                                        <Rocket size={32} className="text-white -rotate-45 relative z-10 group-hover:translate-y-[-2px] group-hover:translate-x-[2px] transition-transform" fill="white" fillOpacity={0.2} />
+                                        <Rocket size={28} className="text-[#5D38F0]/40 -rotate-45 relative z-10" />
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex flex-wrap gap-1 mb-1">
+                                    <div className="flex flex-wrap gap-1 mb-0.5">
                                         {(idea.badges && idea.badges.length > 0 ? idea.badges : ['Trending']).map((badge, idx) => (
-                                            <span key={idx} className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${idx % 2 === 0 ? 'bg-emerald-50 text-emerald-500' : 'bg-indigo-50 text-[#5D38F0]'}`}>
+                                            <span key={idx} className={`text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase ${idx % 2 === 0 ? 'bg-emerald-50 text-emerald-500' : 'bg-indigo-50 text-[#5D38F0]'}`}>
                                                 {badge}
                                             </span>
                                         ))}
                                     </div>
-                                    <h3 className="text-[17px] font-black text-slate-900 leading-tight truncate">{idea.title}</h3>
-                                    <p className="text-[11px] text-[#5D38F0] font-black mt-1 line-clamp-1 uppercase tracking-tight">₹{idea.potentialEarnings || "50,000"}+ Potential Monthly</p>
+                                    <h3 className="text-[15px] font-black text-slate-900 leading-tight truncate uppercase tracking-tight">{idea.title}</h3>
+                                    <p className="text-[10px] text-[#5D38F0] font-black mt-0.5 line-clamp-1 uppercase tracking-tight">₹{idea.potentialEarnings || "50,000"}+ Monthly</p>
                                 </div>
                             </div>
                             
-                            <div className="flex items-center justify-between border-t border-slate-50 pt-4 mt-2 relative z-10">
-                                <p className="text-[10px] font-bold text-slate-400 leading-relaxed max-w-[70%] line-clamp-2">
+                            <div className="flex items-center justify-between border-t border-slate-50 pt-3 mt-1 relative z-10">
+                                <p className="text-[9px] font-bold text-slate-400 leading-relaxed max-w-[75%] line-clamp-2">
                                     {idea.desc || "विशेषज्ञ मार्गदर्शन के साथ अपनी व्यावसायिक यात्रा शुरू करें..."}
                                 </p>
-                                <div className="w-10 h-10 bg-[#EEF2FF] rounded-full flex items-center justify-center text-[#5D38F0] group-hover:bg-[#5D38F0] group-hover:text-white transition-all shadow-sm">
-                                    <ArrowRight size={18} />
+                                <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover:bg-[#5D38F0] group-hover:text-white transition-all">
+                                    <ArrowRight size={14} />
                                 </div>
                             </div>
                         </div>
@@ -280,77 +272,77 @@ const BusinessIdeas = () => {
     // --- SCREEN 1: START JOURNEY (Business Details) ---
     const DetailsScreen = () => (
         <div className="min-h-screen bg-white pb-40">
-            <div className="px-6 pt-12 pb-4 flex items-center justify-between bg-white sticky top-0 z-40">
-                <button onClick={() => navigate('/user/business-ideas/all')} className="w-10 h-10 flex items-center justify-center text-slate-900">
-                    <ChevronLeft size={24} />
+            <div className="px-5 pt-8 pb-2 flex items-center justify-between bg-white sticky top-0 z-40">
+                <button onClick={() => navigate('/user/business-ideas/all')} className="w-9 h-9 flex items-center justify-center text-slate-900 bg-slate-50 rounded-xl active:scale-90 transition-all border border-slate-100">
+                    <ChevronLeft size={20} />
                 </button>
-                <h1 className="text-lg font-black text-slate-900">Start Journey</h1>
-                <button className="w-10 h-10 flex items-center justify-center text-slate-400 border-2 border-slate-100 rounded-full">
-                    <span className="font-bold text-sm">?</span>
+                <h1 className="text-base font-black text-slate-900 uppercase tracking-tight">Start Journey</h1>
+                <button className="w-9 h-9 flex items-center justify-center text-slate-400 border border-slate-100 rounded-xl">
+                    <span className="font-bold text-xs">?</span>
                 </button>
             </div>
-            <div className="px-6 py-6 flex items-center justify-center">
-                <div className="flex items-center w-full max-w-sm relative">
+            <div className="px-6 py-4 flex items-center justify-center">
+                <div className="flex items-center w-full max-w-xs relative">
                     <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-100 -translate-y-1/2 z-0"></div>
                     {[
                         { num: 1, label: 'Idea', active: true },
                         { num: 2, label: 'Upgrade', active: false },
                         { num: 3, label: 'Ecosystem', active: false }
                     ].map((s, idx) => (
-                        <div key={idx} className="flex flex-col items-center gap-2 relative z-10 flex-1">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${s.active ? 'bg-[#5D38F0] text-white shadow-lg' : 'bg-slate-50 border-2 border-slate-100 text-slate-300'}`}>
-                                {s.active ? s.num : <LockIcon size={12} className="opacity-60" />}
+                        <div key={idx} className="flex flex-col items-center gap-1.5 relative z-10 flex-1">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-[10px] transition-all duration-300 ${s.active ? 'bg-[#5D38F0] text-white shadow-md' : 'bg-white border border-slate-100 text-slate-300'}`}>
+                                {s.active ? s.num : <LockIcon size={10} className="opacity-60" />}
                             </div>
-                            <span className={`text-[8px] font-black uppercase tracking-widest ${s.active ? 'text-[#5D38F0]' : 'text-slate-300'}`}>{s.label}</span>
+                            <span className={`text-[7px] font-black uppercase tracking-widest ${s.active ? 'text-[#5D38F0]' : 'text-slate-300'}`}>{s.label}</span>
                         </div>
                     ))}
                 </div>
             </div>
-            <div className="px-6 mt-4">
-                <div className="flex items-center gap-5">
-                    <div className="w-20 h-20 bg-indigo-50 rounded-3xl overflow-hidden flex items-center justify-center border border-slate-100 shrink-0">
-                        {selectedIdea?.bannerImage ? <img src={selectedIdea.bannerImage} className="w-full h-full object-cover" alt="icon" /> : <Rocket size={36} className="text-[#5D38F0]" />}
+            <div className="px-6 mt-2">
+                <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-indigo-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shrink-0">
+                        {selectedIdea?.bannerImage ? <img src={selectedIdea.bannerImage} className="w-full h-full object-cover" alt="icon" /> : <Rocket size={28} className="text-[#5D38F0]" />}
                     </div>
-                    <div className="flex-1">
-                        <h2 className="text-2xl font-black text-[#1E293B] leading-tight">{selectedIdea?.hindiTitle || "बिजनेस आइडिया"}</h2>
-                        <p className="text-base font-bold text-slate-500 mt-1">{selectedIdea?.title}</p>
-                        <p className="text-[11px] font-medium text-slate-400 mt-1 leading-snug">कम निवेश में शुरू करें और हर महीने ₹{selectedIdea?.potentialEarnings || "50,000"} तक कमाएं।</p>
+                    <div className="flex-1 min-w-0">
+                        <h2 className="text-[19px] font-black text-[#1E293B] leading-tight truncate uppercase">{selectedIdea?.hindiTitle || "बिजनेस आइडिया"}</h2>
+                        <p className="text-[13px] font-bold text-slate-400 truncate uppercase mt-0.5">{selectedIdea?.title}</p>
+                        <p className="text-[9px] font-black text-indigo-500 mt-1 leading-snug uppercase tracking-tight">₹{selectedIdea?.potentialEarnings || "50,000"} Monthly Potential</p>
                     </div>
                 </div>
             </div>
-            <div className="px-6 mt-10 space-y-6">
-                <h3 className="text-lg font-black text-slate-900">बिजनेस डिटेल्स</h3>
-                <div className="grid grid-cols-3 gap-3">
+            <div className="px-6 mt-8 space-y-4">
+                <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">बिजनेस डिटेल्स</h3>
+                <div className="grid grid-cols-3 gap-2">
                     <div 
                         onClick={() => navigate(`/user/business-ideas/${ideaId}/info/howItWorks`)}
-                        className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 hover:border-emerald-200 transition-all"
+                        className="bg-white border border-slate-100 rounded-2xl p-3 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 transition-all"
                     >
-                        <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-3"><Sparkles size={24} /></div>
-                        <h4 className="text-[10px] font-black text-slate-900 leading-tight">कैसे करें<br/>(How it work 🤔)</h4>
-                        <p className="text-[8px] font-bold text-slate-400 mt-2">स्टेप बाय स्टेप प्रोसेस से समझें।</p>
+                        <div className="w-10 h-10 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center mb-2"><Sparkles size={18} /></div>
+                        <h4 className="text-[9px] font-black text-slate-900 leading-tight">कैसे करें</h4>
+                        <p className="text-[7px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">प्रोसेस समझें</p>
                     </div>
                     <div 
                         onClick={() => navigate(`/user/business-ideas/${ideaId}/info/investmentDetails`)}
-                        className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 hover:border-amber-200 transition-all"
+                        className="bg-white border border-slate-100 rounded-2xl p-3 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 transition-all"
                     >
-                        <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-3"><Briefcase size={24} /></div>
-                        <h4 className="text-[10px] font-black text-slate-900 leading-tight">इन्वेस्टमेंट<br/>(खर्च)</h4>
-                        <p className="text-[8px] font-bold text-slate-400 mt-2">शुरुआत करने में कुल कितना खर्च आएगा।</p>
+                        <div className="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center mb-2"><Briefcase size={18} /></div>
+                        <h4 className="text-[9px] font-black text-slate-900 leading-tight">इन्वेस्टमेंट</h4>
+                        <p className="text-[7px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">कुल खर्च</p>
                     </div>
                     <div 
-                        onClick={() => navigate(`/user/business-ideas/${ideaId}/info/profitDetails`)}
-                        className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 hover:border-indigo-200 transition-all"
+                        onClick={() => navigate(`/user/business-ideas/${ideaId}/profitDetails`)}
+                        className="bg-white border border-slate-100 rounded-2xl p-3 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 transition-all"
                     >
-                        <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-3"><TrendingUp size={24} /></div>
-                        <h4 className="text-[10px] font-black text-slate-900 leading-tight">प्रॉफिट</h4>
-                        <p className="text-[8px] font-bold text-slate-400 mt-2">आपकी कमाई कितनी होगी जानें।</p>
+                        <div className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-xl flex items-center justify-center mb-2"><TrendingUp size={18} /></div>
+                        <h4 className="text-[9px] font-black text-slate-900 leading-tight">प्रॉफिट</h4>
+                        <p className="text-[7px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">कमाई जानें</p>
                     </div>
                 </div>
             </div>
             
-            <div className="px-6 mt-10 space-y-4">
-                <h3 className="text-lg font-black text-slate-900">सपोर्ट वीडियो</h3>
-                <div className="relative aspect-video bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white" onClick={() => setIsPlaying(!isPlaying)}>
+            <div className="px-6 mt-8 space-y-3">
+                <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">सपोर्ट वीडियो</h3>
+                <div className="relative aspect-video bg-slate-900 rounded-[1.5rem] overflow-hidden shadow-lg border border-slate-100" onClick={() => setIsPlaying(!isPlaying)}>
                     {selectedIdea?.videoUrl ? (
                         <UniversalVideoPlayer 
                             url={selectedIdea.videoUrl} 
@@ -360,9 +352,9 @@ const BusinessIdeas = () => {
                             controls={true}
                         />
                     ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-slate-800">
-                            <Video size={48} className="text-white/20" />
-                            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Video Not Available</p>
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-slate-800">
+                            <Video size={32} className="text-white/20" />
+                            <p className="text-white/40 text-[9px] font-black uppercase tracking-widest">Video Not Available</p>
                         </div>
                     )}
                 </div>
@@ -552,18 +544,16 @@ const BusinessIdeas = () => {
                     <p className="text-[12px] font-bold text-slate-400">Unlock your business potential with these steps</p>
                 </div>
 
-                <div className="px-6 mt-10 grid grid-cols-2 gap-5">
+                <div className="px-6 mt-6 grid grid-cols-2 gap-4">
                     {cards.map((card, i) => {
                         const c = ecoColors[i % ecoColors.length];
-                        
-                        // Icon mapping based on index or ID
                         const getIcon = (idx) => {
                             switch(idx) {
-                                case 0: return <TrendingUp size={20} />;
-                                case 1: return <Zap size={20} />;
-                                case 2: return <Briefcase size={20} />;
-                                case 3: return <Crown size={20} />;
-                                default: return <Sparkles size={20} />;
+                                case 0: return <TrendingUp size={18} />;
+                                case 1: return <Zap size={18} />;
+                                case 2: return <Briefcase size={18} />;
+                                case 3: return <Crown size={18} />;
+                                default: return <Sparkles size={18} />;
                             }
                         };
 
@@ -571,31 +561,26 @@ const BusinessIdeas = () => {
                             <div
                                 key={card.id || i}
                                 onClick={() => { navigate(`/user/business-ideas/${ideaId}/ecosystem/${card.id}`); }}
-                                className={`group relative bg-white/70 backdrop-blur-sm border border-white rounded-[2.5rem] p-6 shadow-[0_12px_40px_rgb(0,0,0,0.06)] overflow-hidden transition-all duration-500 hover:shadow-[0_25px_60px_rgba(93,56,240,0.2)] hover:-translate-y-3 hover:ring-2 ${c.ring} cursor-pointer active:scale-95`}
-                                style={{ animationDelay: `${i * 0.15}s` }}
+                                className={`group relative bg-white border border-slate-100 rounded-2xl p-4 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md cursor-pointer active:scale-95`}
                             >
-                                {/* Animated Glow Effect */}
-                                <div className={`absolute -top-10 -left-10 w-32 h-32 ${c.bg} opacity-30 blur-[40px] group-hover:opacity-60 transition-opacity duration-700`}></div>
-                                
                                 <div className="relative z-10 flex flex-col h-full">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className={`w-11 h-11 ${c.bg} rounded-2xl flex items-center justify-center shadow-inner transition-transform duration-700 group-hover:scale-125 group-hover:rotate-[15deg]`}>
-                                            <span className={`${c.color} transition-transform`}>{getIcon(i)}</span>
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className={`w-9 h-9 ${c.bg} rounded-xl flex items-center justify-center`}>
+                                            <span className={`${c.color}`}>{getIcon(i)}</span>
                                         </div>
-                                        <span className={`text-[10px] font-black ${c.color} opacity-40`}>0{i+1}</span>
+                                        <span className={`text-[9px] font-black text-slate-200 uppercase`}>0{i+1}</span>
                                     </div>
                                     
                                     <div className="flex-1">
-                                        <h4 className="text-[14px] font-black text-slate-800 leading-tight mb-2 group-hover:text-[#5D38F0] transition-colors">
+                                        <h4 className="text-[12px] font-black text-slate-800 leading-tight mb-2 group-hover:text-[#5D38F0] transition-colors line-clamp-2 uppercase">
                                             {card.title}
                                         </h4>
-                                        <div className={`h-1 w-8 ${c.bg} rounded-full mb-6 group-hover:w-16 transition-all duration-500`}></div>
                                     </div>
 
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-600 transition-colors">View Details</span>
-                                        <div className={`w-8 h-8 rounded-full ${c.bg} flex items-center justify-center ${c.color} group-hover:bg-[#5D38F0] group-hover:text-white group-hover:translate-x-1 transition-all duration-300`}>
-                                            <ArrowRight size={14} />
+                                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-50">
+                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Details</span>
+                                        <div className={`w-6 h-6 rounded-lg ${c.bg} flex items-center justify-center ${c.color} group-hover:bg-[#5D38F0] group-hover:text-white transition-all`}>
+                                            <ArrowRight size={12} />
                                         </div>
                                     </div>
                                 </div>
@@ -843,7 +828,7 @@ const BusinessIdeas = () => {
     };
 
     return (
-        <div className="max-w-md mx-auto bg-white min-h-screen font-inter shadow-xl relative overflow-x-hidden">
+        <div className="max-w-md mx-auto bg-white min-h-screen font-sans shadow-xl relative overflow-x-hidden">
             {step === -1 && <IntroScreen />}
             {step === 0 && <ListingScreen />}
             {step === 1 && <DetailsScreen />}

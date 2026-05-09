@@ -20,6 +20,8 @@ const INITIAL_USER_STATE = {
     profileImage: '',
     futureFund: { status: 'locked', progress: 0, criteria: [] },
     isBoosterActive: false,
+    isSupportBoosterActive: false,
+    isTaskBoosterActive: false,
     supportExpiry: null,
     activeBusinessPlan: 'Free',
     businessPlanStatus: 'none',
@@ -138,6 +140,8 @@ export const UserProvider = ({ children }) => {
             phone: dbUser.phone,
             isPaid: dbUser.isPaid,
             isBoosterActive: dbUser.isBoosterActive,
+            isSupportBoosterActive: dbUser.isSupportBoosterActive,
+            isTaskBoosterActive: dbUser.isTaskBoosterActive,
             earnings: {
                 today: dbUser.wallet?.todayEarnings || 0,
                 total: dbUser.wallet?.lifetimeEarnings || 0,

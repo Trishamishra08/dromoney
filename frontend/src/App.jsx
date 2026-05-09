@@ -60,6 +60,7 @@ import ChatSupportPage from './module/user/pages/ChatSupportPage';
 import { AdminProvider, useAdmin } from './module/admin/context/AdminContext';
 
 import { UserProvider, useUser } from './module/user/context/UserContext';
+import SplashScreen from './module/user/auth/SplashScreen';
 
 import { Loader2 } from 'lucide-react';
 
@@ -106,10 +107,15 @@ const ProtectedAdminRoute = ({ children }) => {
 };
 
 function App() {
+  const [showSplash, setShowSplash] = React.useState(true);
+
   return (
     <AdminProvider>
       <UserProvider>
-        <Router>
+        {showSplash ? (
+          <SplashScreen onComplete={() => setShowSplash(false)} />
+        ) : (
+          <Router>
           <Routes>
             {/* Redirecting root to login */}
             <Route path="/" element={<Navigate to="/user/auth/login" replace />} />
@@ -188,6 +194,7 @@ function App() {
             <Route path="*" element={<Navigate to="/user/auth/login" replace />} />
           </Routes>
         </Router>
+        )}
       </UserProvider>
     </AdminProvider>
   );
