@@ -20,6 +20,9 @@ const INITIAL_USER_STATE = {
     profileImage: '',
     futureFund: { status: 'locked', progress: 0, criteria: [] },
     isBoosterActive: false,
+    supportExpiry: null,
+    activeBusinessPlan: 'Free',
+    businessPlanStatus: 'none',
     completedTasks: []
 };
 
@@ -163,6 +166,8 @@ export const UserProvider = ({ children }) => {
             },
             watchedAdsCount: dbUser.watchedAds ? dbUser.watchedAds.length : 0,
             supportExpiry: dbUser.supportExpiry,
+            activeBusinessPlan: dbUser.activeBusinessPlan || 'Free',
+            businessPlanStatus: dbUser.businessPlanStatus || 'none',
             businessHubFirstAccessedAt: dbUser.businessHubFirstAccessedAt,
             completedTasks: dbUser.completedTasks || []
         });

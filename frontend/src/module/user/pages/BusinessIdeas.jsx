@@ -1,425 +1,872 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
-import {
-    Briefcase, ChevronLeft, Sparkles, Star,
-    Gift, ArrowRight, CheckCircle2, TrendingUp,
-    Rocket, Zap, Lock, Trophy, Shield,
-    Users, ClipboardList, CreditCard, Copy,
-    ExternalLink, Loader2, MessageSquare, ChevronRight
+import { useNavigate, useParams } from 'react-router-dom';
+import { 
+    Rocket, ChevronLeft, ArrowRight, 
+    Sparkles, Briefcase, MessageSquare,
+    Play, TrendingUp, Copy, Users,
+    Crown, ShieldCheck, Zap, Star, Video,
+    Lock as LockIcon, Loader2
 } from 'lucide-react';
 import api from '../../shared/services/api';
+import UniversalVideoPlayer from '../../shared/components/UniversalVideoPlayer';
+import { useUser } from '../context/UserContext';
 import PaymentModal from '../components/PaymentModal';
-
-// Icon Map for dynamic rendering - using only confirmed working icons
-const ICON_MAP = {
-    TrendingUp, Rocket, Zap, Trophy,
-    Sparkles, Gift, Shield, Users,
-    Briefcase, ClipboardList, CreditCard
-};
 
 const BusinessIdeas = () => {
     const navigate = useNavigate();
-    const { userData, refreshUserProfile } = useUser();
-    const [activeTab, setActiveTab] = useState('free');
-    const [viewIdea, setViewIdea] = useState(null);
-    const [showPayment, setShowPayment] = useState(null);
-    const [allIdeas, setAllIdeas] = useState([]);
+    const { ideaId, section, cardId } = useParams();
+    const { userData } = useUser();
+
+    const isSubscribed = userData?.supportExpiry && new Date(userData.supportExpiry) > new Date();
+
+    // Derive step from URL
+    const getStepFromUrl = () => {
+        if (!ideaId) return -1;           // Intro
+        if (ideaId === 'all') return 0;   // Listing
+        if (section === 'ecosystem' && cardId) return 4;
+        if (section === 'ecosystem') return 3;
+        if (section === 'info' && cardId) return 5;
+        if (section === 'subscription') return 2;
+        return 1;                         // idea detail
+    };
+
+    const [ideas, setIdeas] = useState([]);
+    const [selectedIdea, setSelectedIdea] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [selectedPlanIdx, setSelectedPlanIdx] = useState(0);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [selectedEcoCard, setSelectedEcoCard] = useState(null);
+    const [settings, setSettings] = useState({ businessPlans: [] });
+    const [refreshing, setRefreshing] = useState(false);
+    const [detailType, setDetailType] = useState(null); // 'howItWorks', 'investmentDetails', 'profitDetails'
+
+    const step = getStepFromUrl();
+
+    // Fetch single idea details when ideaId is present or step changes
+    useEffect(() => {
+        if (ideaId && step > 0) {
+            fetchIdeaDetails();
+        }
+    }, [ideaId, step]);
 
     useEffect(() => {
         fetchIdeas();
+        fetchSettings();
     }, []);
 
+    // When ideas load and ideaId is in URL, auto-select the idea
+    useEffect(() => {
+        if (ideaId && ideas.length > 0) {
+            const found = ideas.find(i => i._id === ideaId);
+            if (found) {
+                setSelectedIdea(found);
+                // Restore eco card from cardId if present
+                if (cardId && found.ecosystemCards) {
+                    const ecoColors = [
+                        { color: 'text-emerald-500', bg: 'bg-emerald-50', ring: 'ring-emerald-200' },
+                        { color: 'text-indigo-500',  bg: 'bg-indigo-50',  ring: 'ring-indigo-200' },
+                        { color: 'text-blue-500',    bg: 'bg-blue-50',    ring: 'ring-blue-200' },
+                        { color: 'text-amber-500',   bg: 'bg-amber-50',   ring: 'ring-amber-200' }
+                    ];
+                    const cardIdx = found.ecosystemCards.findIndex(c => c.id === cardId);
+                    if (cardIdx !== -1) {
+                        setSelectedEcoCard({ ...found.ecosystemCards[cardIdx], colorStyle: ecoColors[cardIdx % 4] });
+                    }
+                }
+            }
+        }
+    }, [ideaId, cardId, ideas]);
+
+    const fetchSettings = async () => {
+        try {
+            const res = await api.get('/public/settings');
+            if (res.success) setSettings({ businessPlans: res.data.businessPlans || [] });
+        } catch (err) { console.error('Settings fetch error:', err); }
+    };
+
     const fetchIdeas = async () => {
-        setLoading(true);
         try {
             const res = await api.get('/public/business-ideas');
             if (res.success) {
-                setAllIdeas(res.data);
+                setIdeas(res.data);
+                // Also update selectedIdea if it's already set to keep it in sync
+                if (ideaId) {
+                    const found = res.data.find(i => i._id === ideaId);
+                    if (found) setSelectedIdea(found);
+                }
             }
-        } catch (err) {
-            console.error("Fetch failed", err);
-        } finally {
-            setLoading(false);
-        }
-    };
-    const freeIdeas = allIdeas.filter(i => i.type === 'Free');
-    const premiumIdeas = allIdeas.filter(i => i.type === 'Premium');
-
-    const copyToClipboard = (text) => {
-        navigator.clipboard.writeText(text);
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
     };
 
-    const renderIcon = (iconName, size = 28) => {
-        const IconComponent = ICON_MAP[iconName] || Briefcase;
-        return <IconComponent size={size} />;
+    const fetchIdeaDetails = async () => {
+        if (!ideaId) return;
+        setRefreshing(true);
+        try {
+            const res = await api.get(`/public/business-ideas/${ideaId}`);
+            if (res.success) {
+                setSelectedIdea(res.data);
+            }
+        } catch (err) { console.error('Fetch detail error:', err); }
+        finally { setRefreshing(false); }
     };
 
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-                <Loader2 size={40} className="animate-spin text-indigo-600 mb-4" />
-                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Loading Strategies...</p>
-            </div>
-        );
-    }
+    const handleIdeaSelect = (idea) => {
+        setSelectedIdea(idea);
+        setIsPlaying(false);
+        navigate(`/user/business-ideas/${idea._id}`);
+    };
 
-    return (
-        <div className="flex flex-col min-h-screen bg-[#F8FAFC] pb-24 text-slate-900">
-            {/* Header - Ultra Compact Dark Blue */}
-            <div className="bg-gradient-to-br from-slate-950 via-blue-900 to-slate-900 p-4 rounded-b-[1.5rem] shadow-lg sticky top-[57px] z-40 relative overflow-hidden">
-                <div className="absolute -right-10 -top-10 w-24 h-24 bg-white/5 rounded-full blur-3xl"></div>
+    const getTimeRemaining = (expiryDate) => {
+        if (!expiryDate) return null;
+        const diff = new Date(expiryDate) - new Date();
+        if (diff <= 0) return null;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        return { days, hours };
+    };
 
-                <div className="flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => navigate('/user/home')}
-                            className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 active:scale-95 transition-all"
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                        <div className="flex flex-col">
-                            <h1 className="text-lg font-black text-white tracking-tight leading-none">Business Hub</h1>
-                            <p className="text-[9px] font-bold text-blue-300 opacity-80 uppercase tracking-widest mt-1">Start Your Journey</p>
-                        </div>
-                    </div>
+    const timeRem = getTimeRemaining(userData?.supportExpiry);
 
-                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
-                        <Sparkles size={12} className="text-amber-400 fill-amber-400" />
-                        <span className="text-[10px] font-black text-white uppercase tracking-wider">Growth</span>
-                    </div>
-                </div>
+    // --- SCREEN -1: INTRO (Premium Rocket Welcome) ---
+    const IntroScreen = () => (
+        <div className="min-h-screen bg-[#F8FAFF] pb-10">
+            <style>
+                {`
+                @keyframes boost {
+                    0%, 100% { transform: translateY(0) rotate(-45deg); }
+                    50% { transform: translateY(-10px) rotate(-45deg); }
+                }
+                @keyframes puff {
+                    0% { transform: scale(0.8) opacity(0); }
+                    50% { transform: scale(1.2) opacity(0.5); }
+                    100% { transform: scale(1.5) opacity(0); }
+                }
+                .animate-boost {
+                    animation: boost 3s ease-in-out infinite;
+                }
+                .animate-puff {
+                    animation: puff 2s ease-out infinite;
+                }
+                `}
+            </style>
 
-                {/* Info Bar - Slim Version */}
-                <div className="mt-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center shadow-lg shrink-0">
-                        <Briefcase size={20} className="text-white" />
-                    </div>
-                    <div className="flex-1">
-                        <h2 className="text-[13px] font-black text-white leading-none">Verified Strategies</h2>
-                        <p className="text-[8px] font-bold text-blue-100 opacity-60 mt-1">Tested by our expert team.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="px-3 pt-3">
-                {/* Chat Support Entry Box */}
-                <button 
-                    onClick={() => navigate('/user/chat-support')}
-                    className="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-800 rounded-2xl p-4 flex items-center justify-between text-white shadow-[0_10px_25px_rgba(99,102,241,0.25)] hover:shadow-[0_12px_30px_rgba(99,102,241,0.35)] hover:-translate-y-0.5 active:scale-[0.98] transition-all group overflow-hidden relative"
-                >
-                    <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-                    <div className="flex items-center gap-4 relative z-10">
-                        <div className="w-12 h-12 bg-white/15 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20 shadow-inner">
-                            <MessageSquare size={22} className="text-white" />
-                        </div>
-                        <div className="text-left">
-                            <h3 className="text-[15px] font-black tracking-tight leading-none mb-1.5">Continue to Support chat box</h3>
-                            <p className="text-[9px] font-bold text-indigo-200 uppercase tracking-widest flex items-center gap-1.5 opacity-90">
-                                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
-                                Talk to our Experts
-                            </p>
-                        </div>
-                    </div>
-                    <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center border border-white/10 group-hover:bg-white/20 transition-all relative z-10">
-                        <ChevronRight size={18} />
-                    </div>
+            {/* Sticky Header Row */}
+            <div className="bg-white/80 backdrop-blur-md px-6 py-4 flex items-center sticky top-0 z-40 border-b border-slate-100/50">
+                <button onClick={() => navigate('/user/home')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 active:scale-90 transition-all border border-slate-100">
+                    <ChevronLeft size={22} />
                 </button>
             </div>
 
-            <div className="p-3 space-y-3">
-                {/* Visual Tab Switcher - Compact Premium */}
-                <div className="bg-slate-200/50 p-1 rounded-2xl flex items-center">
-                    <button
-                        onClick={() => setActiveTab('free')}
-                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2
-                            ${activeTab === 'free' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        <Gift size={14} />
-                        Free
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('premium')}
-                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all flex items-center justify-center gap-2
-                            ${activeTab === 'premium' ? 'bg-[#1A1C30] text-white shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        <Lock size={14} />
-                        Premium
-                    </button>
+            <div className="flex flex-col items-center justify-center p-6 pt-10">
+                <div className="w-full max-w-sm bg-gradient-to-br from-[#5D38F0] to-[#8643FF] rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden mb-12 flex flex-col items-center justify-center">
+                    {/* Decorative Elements */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/20 rounded-full -ml-16 -mb-16 blur-2xl" />
+
+                    <div className="text-center space-y-2 relative z-10">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                            <Star size={14} className="text-[#FFE03D]" fill="#FFE03D" />
+                            <p className="text-[11px] font-black text-white/70 uppercase tracking-[0.3em]">महीने की कमाई</p>
+                            <Star size={14} className="text-[#FFE03D]" fill="#FFE03D" />
+                        </div>
+                        <p className="text-[38px] font-black text-white leading-none drop-shadow-lg">
+                            ₹50k - <span className="text-[#FFE03D]">₹{selectedIdea?.potentialEarnings || '1 Lakh'}</span>
+                        </p>
+                    </div>
+
+                    <div className="my-10 relative z-10">
+                        {/* Boost Glow */}
+                        <div className="absolute inset-0 bg-white/20 blur-[60px] rounded-full scale-150 animate-pulse" />
+                        
+                        <div className="animate-boost relative">
+                            {/* White Splash / Smoke Puffs */}
+                            <div className="absolute -bottom-8 -right-8 z-0 flex gap-1">
+                                <div className="animate-puff w-8 h-8 bg-white/40 rounded-full blur-md" style={{ animationDelay: '0s' }} />
+                                <div className="animate-puff w-10 h-10 bg-white/20 rounded-full blur-lg" style={{ animationDelay: '0.2s' }} />
+                                <div className="animate-puff w-6 h-6 bg-white/30 rounded-full blur-sm" style={{ animationDelay: '0.4s' }} />
+                            </div>
+
+                            <Rocket size={150} className="text-white drop-shadow-[0_20px_20px_rgba(255,255,255,0.3)] relative z-10" fill="white" fillOpacity={0.2} />
+                        </div>
+                    </div>
+
+                    <div className="text-center space-y-2 relative z-10">
+                        <div className="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl">
+                            <p className="text-[14px] font-black text-[#00FF94] leading-tight uppercase tracking-widest">बहुत कम इन्वेस्टमेंट से</p>
+                        </div>
+                        <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] mt-2">Start Your Own Brand Today</p>
+                    </div>
                 </div>
 
-                <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {activeTab === 'free' ? (
-                        <div className="space-y-3">
-                            <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Available Strategies</h2>
-                            {freeIdeas.map((idea, idx) => {
-                                const THEMES = [
-                                    { 
-                                        leftBar: 'bg-gradient-to-b from-emerald-400 to-teal-500', 
-                                        accent: 'bg-emerald-600 hover:bg-emerald-500', 
-                                        text: 'text-emerald-500', 
-                                        potText: 'text-emerald-600',
-                                        iconBg: 'bg-emerald-50 border border-emerald-100/30', 
-                                        shadow: 'shadow-emerald-200/50' 
-                                    },
-                                    { 
-                                        leftBar: 'bg-gradient-to-b from-indigo-400 to-blue-500', 
-                                        accent: 'bg-indigo-600 hover:bg-indigo-500', 
-                                        text: 'text-indigo-500', 
-                                        potText: 'text-indigo-600',
-                                        iconBg: 'bg-indigo-50 border border-indigo-100/30', 
-                                        shadow: 'shadow-indigo-200/50' 
-                                    },
-                                    { 
-                                        leftBar: 'bg-gradient-to-b from-amber-400 to-orange-500', 
-                                        accent: 'bg-amber-600 hover:bg-amber-500', 
-                                        text: 'text-amber-500', 
-                                        potText: 'text-amber-600',
-                                        iconBg: 'bg-amber-50 border border-amber-100/30', 
-                                        shadow: 'shadow-amber-200/50' 
-                                    },
-                                    { 
-                                        leftBar: 'bg-gradient-to-b from-rose-400 to-pink-500', 
-                                        accent: 'bg-rose-600 hover:bg-rose-500', 
-                                        text: 'text-rose-500', 
-                                        potText: 'text-rose-600',
-                                        iconBg: 'bg-rose-50 border border-rose-100/30', 
-                                        shadow: 'shadow-rose-200/50' 
-                                    },
-                                ];
-                                const theme = THEMES[idx % THEMES.length];
+                <button 
+                    onClick={() => navigate('/user/business-ideas/all')}
+                    className="w-full bg-[#5D38F0] hover:bg-[#4C2CD9] text-white font-black text-[16px] py-5 rounded-[2.5rem] shadow-2xl shadow-indigo-200 flex items-center justify-center gap-3 transition-all active:scale-95 uppercase tracking-widest border-b-4 border-indigo-800"
+                >
+                    LET'S START <ArrowRight size={20} />
+                </button>
+            </div>
+        </div>
+    );
 
-                                return (
-                                    <div key={idea._id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-[0_8px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:-translate-y-0.5 relative overflow-hidden pl-5 group transition-all">
-                                        {/* Left accent color bar */}
-                                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${theme.leftBar}`}></div>
+    // --- SCREEN 0: PREMIUM CARDS LISTING ---
+    const ListingScreen = () => (
+        <div className="min-h-screen bg-[#F8FAFF] pb-10">
+            <div className="bg-white px-6 pt-12 pb-6 flex items-center justify-between sticky top-0 z-30 shadow-sm shadow-indigo-50/50 rounded-b-[2.5rem]">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => navigate('/user/business-ideas')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 active:scale-90 transition-all border border-slate-100">
+                        <ChevronLeft size={22} />
+                    </button>
+                    <div>
+                        <h1 className="text-xl font-black text-slate-900 tracking-tight">Business Hub</h1>
+                        <p className="text-[10px] font-bold text-[#5D38F0] uppercase tracking-widest">Explore Opportunities</p>
+                    </div>
+                </div>
+            </div>
 
-                                        <div className="flex justify-between items-start mb-3 relative z-10">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-12 h-12 ${theme.iconBg} rounded-xl flex items-center justify-center ${theme.text} shadow-inner`}>
-                                                    {renderIcon(idea.icon, 22)}
-                                                </div>
-                                                <div className="space-y-0.5">
-                                                    <h3 className="text-[15px] font-black text-slate-800 leading-none tracking-tight">{idea.title}</h3>
-                                                    <span className={`inline-block text-[8px] font-black ${theme.text} uppercase tracking-widest`}>Free Access</span>
-                                                </div>
-                                            </div>
-                                            <div className="bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                                                <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Active</span>
-                                            </div>
-                                        </div>
-
-                                        <p className="text-[11px] font-medium text-slate-400 mt-1 line-clamp-2 leading-relaxed">{idea.desc}</p>
-
-                                        <div className="mt-4 flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl p-3 relative z-10">
-                                            <div>
-                                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">Earning Potential</p>
-                                                <p className={`text-[13px] font-black ${theme.potText} tracking-tight`}>{idea.potential}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => setViewIdea(idea)}
-                                                className={`${theme.accent} text-white p-2.5 rounded-xl shadow-lg ${theme.shadow} active:scale-95 transition-all`}
-                                            >
-                                                <ArrowRight size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {/* Premium Banner - Ultra Premium */}
-                            <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 rounded-3xl p-5 text-white shadow-[0_10px_25px_rgba(99,102,241,0.2)] relative overflow-hidden group">
-                                <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-9 h-9 bg-white/15 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/25">
-                                        <Sparkles size={16} className="text-amber-300" />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-100">Premium Vault</span>
+            <div className="p-6 space-y-5">
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-20 gap-3">
+                        <div className="w-12 h-12 border-4 border-[#5D38F0] border-t-transparent rounded-full animate-spin" />
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Searching Best Ideas...</p>
+                    </div>
+                ) : (
+                    ideas.map((idea) => (
+                        <div 
+                            key={idea._id}
+                            onClick={() => handleIdeaSelect(idea)}
+                            className="bg-white rounded-[2.5rem] p-5 flex flex-col gap-4 shadow-[0_15px_30px_-10px_rgba(93,56,240,0.1)] border border-slate-50 group hover:shadow-xl hover:shadow-indigo-100 transition-all cursor-pointer active:scale-[0.98] relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50/50 rounded-full -mr-8 -mt-8" />
+                            
+                            <div className="flex items-center gap-5 relative z-10">
+                                <div className="w-16 h-16 bg-gradient-to-br from-[#5D38F0] to-[#8643FF] rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 shrink-0 relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-white/10 animate-pulse" />
+                                    {idea.bannerImage ? (
+                                        <img src={idea.bannerImage} className="w-full h-full object-cover relative z-10" alt="" />
+                                    ) : (
+                                        <Rocket size={32} className="text-white -rotate-45 relative z-10 group-hover:translate-y-[-2px] group-hover:translate-x-[2px] transition-transform" fill="white" fillOpacity={0.2} />
+                                    )}
                                 </div>
-                                <h3 className="text-lg font-black leading-tight tracking-tight">High-Ticket Frameworks</h3>
-                                <p className="text-[11px] font-medium text-indigo-100/80 mt-1.5 leading-relaxed">
-                                    Access pre-built business models and 1-on-1 expert mentorship.
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex flex-wrap gap-1 mb-1">
+                                        {(idea.badges && idea.badges.length > 0 ? idea.badges : ['Trending']).map((badge, idx) => (
+                                            <span key={idx} className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${idx % 2 === 0 ? 'bg-emerald-50 text-emerald-500' : 'bg-indigo-50 text-[#5D38F0]'}`}>
+                                                {badge}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <h3 className="text-[17px] font-black text-slate-900 leading-tight truncate">{idea.title}</h3>
+                                    <p className="text-[11px] text-[#5D38F0] font-black mt-1 line-clamp-1 uppercase tracking-tight">₹{idea.potentialEarnings || "50,000"}+ Potential Monthly</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-between border-t border-slate-50 pt-4 mt-2 relative z-10">
+                                <p className="text-[10px] font-bold text-slate-400 leading-relaxed max-w-[70%] line-clamp-2">
+                                    {idea.desc || "विशेषज्ञ मार्गदर्शन के साथ अपनी व्यावसायिक यात्रा शुरू करें..."}
                                 </p>
+                                <div className="w-10 h-10 bg-[#EEF2FF] rounded-full flex items-center justify-center text-[#5D38F0] group-hover:bg-[#5D38F0] group-hover:text-white transition-all shadow-sm">
+                                    <ArrowRight size={18} />
+                                </div>
                             </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
 
-                            <div className="space-y-3">
-                                <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Exclusive Vault</h2>
-                                {premiumIdeas.map((idea, idx) => {
-                                    const THEMES = [
-                                        { 
-                                            leftBar: 'bg-gradient-to-b from-indigo-400 to-blue-500', 
-                                            text: 'text-indigo-500', 
-                                            iconBg: 'bg-indigo-50 border border-indigo-100/30' 
-                                        },
-                                        { 
-                                            leftBar: 'bg-gradient-to-b from-purple-400 to-pink-500', 
-                                            text: 'text-purple-500', 
-                                            iconBg: 'bg-purple-50 border border-purple-100/30' 
-                                        },
-                                    ];
-                                    const theme = THEMES[idx % THEMES.length];
-
-                                    return (
-                                        <div key={idea._id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-[0_8px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:-translate-y-0.5 relative overflow-hidden pl-5 group transition-all">
-                                            {/* Left accent color bar */}
-                                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${theme.leftBar}`}></div>
-
-                                            <div className="flex justify-between items-start mb-3 relative z-10">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-12 h-12 ${theme.iconBg} rounded-xl flex items-center justify-center ${theme.text} shadow-inner`}>
-                                                        {renderIcon(idea.icon, 22)}
-                                                    </div>
-                                                    <div className="space-y-0.5">
-                                                        <h3 className="text-[15px] font-black text-slate-800 leading-none tracking-tight">{idea.title}</h3>
-                                                        <span className="inline-block text-[8px] font-black text-slate-400 uppercase tracking-widest">Premium Content</span>
-                                                    </div>
-                                                </div>
-                                                {idea.isLocked ? (
-                                                    <div className="bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20 flex items-center gap-1 shrink-0">
-                                                        <Lock size={10} className="text-amber-500" />
-                                                        <span className="text-[8px] font-black text-amber-500 uppercase tracking-wider">Locked</span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 flex items-center gap-1 shrink-0">
-                                                        <CheckCircle2 size={10} className="text-emerald-400" />
-                                                        <span className="text-[8px] font-black text-emerald-400 uppercase tracking-wider">Unlocked</span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <p className="text-[11px] font-medium text-slate-400 mt-1 line-clamp-2 leading-relaxed">{idea.desc}</p>
-
-                                            <div className="mt-4 flex items-center justify-between rounded-xl p-3 bg-slate-50 border border-slate-100 relative z-10">
-                                                <div>
-                                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">Earning Potential</p>
-                                                    <p className={`text-[13px] font-black ${idea.isLocked ? 'text-amber-500' : 'text-emerald-500'} tracking-tight`}>{idea.potential}</p>
-                                                </div>
-                                                <button
-                                                    onClick={() => !idea.isLocked ? setViewIdea(idea) : setShowPayment(idea)}
-                                                    className={`p-2.5 rounded-xl text-white font-bold flex items-center justify-center transition-all active:scale-95 shadow-md
-                                                        ${idea.isLocked 
-                                                            ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-amber-200' 
-                                                            : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-emerald-200'
-                                                        }`}
-                                                >
-                                                    {idea.isLocked ? <Lock size={16} /> : <ArrowRight size={16} />}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+    // --- SCREEN 1: START JOURNEY (Business Details) ---
+    const DetailsScreen = () => (
+        <div className="min-h-screen bg-white pb-40">
+            <div className="px-6 pt-12 pb-4 flex items-center justify-between bg-white sticky top-0 z-40">
+                <button onClick={() => navigate('/user/business-ideas/all')} className="w-10 h-10 flex items-center justify-center text-slate-900">
+                    <ChevronLeft size={24} />
+                </button>
+                <h1 className="text-lg font-black text-slate-900">Start Journey</h1>
+                <button className="w-10 h-10 flex items-center justify-center text-slate-400 border-2 border-slate-100 rounded-full">
+                    <span className="font-bold text-sm">?</span>
+                </button>
+            </div>
+            <div className="px-6 py-6 flex items-center justify-center">
+                <div className="flex items-center w-full max-w-sm relative">
+                    <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-100 -translate-y-1/2 z-0"></div>
+                    {[
+                        { num: 1, label: 'Idea', active: true },
+                        { num: 2, label: 'Upgrade', active: false },
+                        { num: 3, label: 'Ecosystem', active: false }
+                    ].map((s, idx) => (
+                        <div key={idx} className="flex flex-col items-center gap-2 relative z-10 flex-1">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${s.active ? 'bg-[#5D38F0] text-white shadow-lg' : 'bg-slate-50 border-2 border-slate-100 text-slate-300'}`}>
+                                {s.active ? s.num : <LockIcon size={12} className="opacity-60" />}
                             </div>
+                            <span className={`text-[8px] font-black uppercase tracking-widest ${s.active ? 'text-[#5D38F0]' : 'text-slate-300'}`}>{s.label}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="px-6 mt-4">
+                <div className="flex items-center gap-5">
+                    <div className="w-20 h-20 bg-indigo-50 rounded-3xl overflow-hidden flex items-center justify-center border border-slate-100 shrink-0">
+                        {selectedIdea?.bannerImage ? <img src={selectedIdea.bannerImage} className="w-full h-full object-cover" alt="icon" /> : <Rocket size={36} className="text-[#5D38F0]" />}
+                    </div>
+                    <div className="flex-1">
+                        <h2 className="text-2xl font-black text-[#1E293B] leading-tight">{selectedIdea?.hindiTitle || "बिजनेस आइडिया"}</h2>
+                        <p className="text-base font-bold text-slate-500 mt-1">{selectedIdea?.title}</p>
+                        <p className="text-[11px] font-medium text-slate-400 mt-1 leading-snug">कम निवेश में शुरू करें और हर महीने ₹{selectedIdea?.potentialEarnings || "50,000"} तक कमाएं।</p>
+                    </div>
+                </div>
+            </div>
+            <div className="px-6 mt-10 space-y-6">
+                <h3 className="text-lg font-black text-slate-900">बिजनेस डिटेल्स</h3>
+                <div className="grid grid-cols-3 gap-3">
+                    <div 
+                        onClick={() => navigate(`/user/business-ideas/${ideaId}/info/howItWorks`)}
+                        className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 hover:border-emerald-200 transition-all"
+                    >
+                        <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-3"><Sparkles size={24} /></div>
+                        <h4 className="text-[10px] font-black text-slate-900 leading-tight">कैसे करें<br/>(How it work 🤔)</h4>
+                        <p className="text-[8px] font-bold text-slate-400 mt-2">स्टेप बाय स्टेप प्रोसेस से समझें।</p>
+                    </div>
+                    <div 
+                        onClick={() => navigate(`/user/business-ideas/${ideaId}/info/investmentDetails`)}
+                        className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 hover:border-amber-200 transition-all"
+                    >
+                        <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-3"><Briefcase size={24} /></div>
+                        <h4 className="text-[10px] font-black text-slate-900 leading-tight">इन्वेस्टमेंट<br/>(खर्च)</h4>
+                        <p className="text-[8px] font-bold text-slate-400 mt-2">शुरुआत करने में कुल कितना खर्च आएगा।</p>
+                    </div>
+                    <div 
+                        onClick={() => navigate(`/user/business-ideas/${ideaId}/info/profitDetails`)}
+                        className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 hover:border-indigo-200 transition-all"
+                    >
+                        <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-3"><TrendingUp size={24} /></div>
+                        <h4 className="text-[10px] font-black text-slate-900 leading-tight">प्रॉफिट</h4>
+                        <p className="text-[8px] font-bold text-slate-400 mt-2">आपकी कमाई कितनी होगी जानें।</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div className="px-6 mt-10 space-y-4">
+                <h3 className="text-lg font-black text-slate-900">सपोर्ट वीडियो</h3>
+                <div className="relative aspect-video bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white" onClick={() => setIsPlaying(!isPlaying)}>
+                    {selectedIdea?.videoUrl ? (
+                        <UniversalVideoPlayer 
+                            url={selectedIdea.videoUrl} 
+                            className="w-full h-full object-cover"
+                            autoPlay={false}
+                            playing={isPlaying}
+                            controls={true}
+                        />
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-slate-800">
+                            <Video size={48} className="text-white/20" />
+                            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Video Not Available</p>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Razorpay Payment Modal */}
-            <PaymentModal
-                isOpen={!!showPayment}
-                onClose={() => setShowPayment(null)}
-                plan={showPayment?.title}
-                amount={showPayment?.price || 50}
-                type="BUSINESS_IDEA_UNLOCK"
-                itemId={showPayment?._id}
-                onSuccess={() => {
-                    fetchIdeas();
-                    setShowPayment(null);
-                }}
-            />
+            <div className="mx-6 mt-6 bg-[#EEF2FF] rounded-2xl p-4 flex items-center gap-4 shadow-sm shadow-indigo-100">
+                <Sparkles size={20} className="text-[#5D38F0]" fill="currentColor" />
+                <p className="text-[11px] font-black text-[#5D38F0]">यह एक लो इन्वेस्टमेंट हाई प्रॉफिट बिजनेस आइडिया है।</p>
+            </div>
 
-            {/* Idea Detail Overlay - Refined Premium */}
-            {viewIdea && (
-                <div className="fixed inset-0 z-[100] flex flex-col bg-white animate-in slide-in-from-bottom duration-500">
-                    <div className="bg-gradient-to-br from-slate-950 via-blue-900 to-slate-900 p-6 pt-12 relative overflow-hidden text-white shrink-0">
-                        <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/5 rounded-full blur-[100px]"></div>
+            <div className="fixed bottom-24 left-6 right-6 z-50 max-w-sm mx-auto">
+                <button 
+                    onClick={() => navigate(`/user/business-ideas/${ideaId}/subscription`)} 
+                    className="w-full bg-[#5D38F0] hover:bg-[#4C2CD9] text-white font-black py-4 rounded-2xl shadow-2xl flex items-center justify-center gap-3 uppercase tracking-widest border border-white/20"
+                >
+                    Next <ArrowRight size={20} />
+                </button>
+            </div>
+        </div>
+    );
 
+    // --- SCREEN 2: SUBSCRIPTION ---
+    const SubscriptionScreen = () => (
+        <div className="min-h-screen bg-[#F8FAFF] pb-40">
+            <div className="px-6 pt-12 pb-4 flex items-center justify-between sticky top-0 z-40 bg-[#F8FAFF]/80 backdrop-blur-md">
+                <button onClick={() => navigate(`/user/business-ideas/${ideaId}`)} className="w-10 h-10 flex items-center justify-center text-slate-900 bg-white rounded-xl shadow-sm"><ChevronLeft size={24} /></button>
+                <h1 className="text-lg font-black text-slate-900">Unlock Premium</h1>
+                <div className="w-10" />
+            </div>
+
+            {settings.businessPlans.length > 1 && (
+                <div className="px-6 mt-4 overflow-x-auto flex gap-3 pb-2" style={{ scrollbarWidth: 'none' }}>
+                    {settings.businessPlans.map((plan, idx) => (
                         <button
-                            onClick={() => setViewIdea(null)}
-                            className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10 mb-6 active:scale-95 transition-all relative z-10"
+                            key={idx}
+                            onClick={() => setSelectedPlanIdx(idx)}
+                            className={`shrink-0 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${selectedPlanIdx === idx ? 'bg-[#5D38F0] text-white shadow-lg shadow-indigo-100' : 'bg-white text-slate-400 border border-slate-100'}`}
                         >
-                            <ChevronLeft size={20} />
+                            {plan.title.split(' ')[0]} {plan.duration.replace('/ ', '')}
                         </button>
+                    ))}
+                </div>
+            )}
 
-                        <div className="relative z-10">
-                            <span className="text-[10px] font-black text-blue-300 uppercase tracking-[0.3em] mb-2 block">Strategy Unlocked</span>
-                            <h1 className="text-2xl font-black tracking-tight leading-none uppercase">{viewIdea.title}</h1>
-                            <div className="flex items-center gap-3 mt-4">
-                                <div className="bg-emerald-500 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg shadow-emerald-950/20">
-                                    <TrendingUp size={12} className="text-white" />
-                                    <span className="text-[10px] font-black text-white uppercase tracking-wider">{viewIdea.potential}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto px-5 py-8 space-y-8 bg-[#F8FAFC] rounded-t-[2rem] -mt-6 relative z-10 shadow-2xl">
-                        <div className="space-y-1">
-                            <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] ml-1 mb-4">Success Roadmap</h2>
-                            <div className="space-y-4">
-                                {viewIdea.steps?.map((step, idx) => (
-                                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex gap-4 group">
-                                        <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-[12px] shadow-lg shrink-0">
-                                            {idx + 1}
-                                        </div>
-                                        <div className="space-y-1">
-                                            <h3 className="text-[14px] font-black text-slate-800 leading-tight">{step.title}</h3>
-                                            <p className="text-[11px] font-bold text-slate-400 leading-relaxed italic">{step.text}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+            <div className="px-6 mt-8">
+                {settings.businessPlans.length > 0 ? (
+                    <div className="bg-gradient-to-br from-[#5D38F0] to-[#8643FF] rounded-[3rem] p-8 text-white relative overflow-hidden shadow-2xl">
+                        <Crown size={32} className="text-[#FFE03D] mb-6" fill="#FFE03D" fillOpacity={0.4} />
+                        <h2 className="text-3xl font-black mb-2">{settings.businessPlans[selectedPlanIdx]?.title}</h2>
+                        <p className="text-white/80 font-bold text-sm">{settings.businessPlans[selectedPlanIdx]?.subtitle}</p>
+                        <div className="mt-8 flex items-baseline gap-2">
+                            <span className="text-4xl font-black">₹{settings.businessPlans[selectedPlanIdx]?.price}</span>
+                            <span className="text-white/60 font-bold text-sm">{settings.businessPlans[selectedPlanIdx]?.duration}</span>
                         </div>
 
-                        {/* YouTube Tutorial Section */}
-                        {viewIdea.youtubeLink && (
-                            <div className="space-y-3">
-                                <h2 className="text-[11px] font-black text-rose-500 uppercase tracking-[0.25em] ml-1">Video Tutorial</h2>
-                                <div className="bg-white border border-rose-100 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600 shadow-inner">
-                                            <ExternalLink size={24} />
-                                        </div>
-                                        <div>
-                                            <p className="text-[13px] font-black text-slate-800 tracking-tight leading-none mb-1">Watch Guide</p>
-                                            <p className="text-[10px] font-bold text-slate-400 truncate max-w-[140px] uppercase tracking-wider">YouTube Tutorial</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            copyToClipboard(viewIdea.youtubeLink);
-                                            window.open(viewIdea.youtubeLink, '_blank');
-                                        }}
-                                        className="bg-rose-600 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-rose-200 active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest"
-                                    >
-                                        Watch
-                                    </button>
-                                </div>
+                        {isSubscribed && timeRem && (
+                            <div className="mt-6 bg-white/20 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">Plan Active Until</p>
+                                <p className="text-lg font-black text-white">
+                                    {timeRem.days} Days {timeRem.hours} Hours <span className="text-[10px] font-bold text-white/50 lowercase ml-1">remaining</span>
+                                </p>
                             </div>
                         )}
+                    </div>
+                ) : (
+                    <div className="bg-indigo-50 rounded-[3rem] p-12 text-center">
+                        <p className="text-indigo-400 font-black text-xs uppercase tracking-widest">Loading Premium Plans...</p>
+                    </div>
+                )}
+            </div>
 
-                        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border border-emerald-100 flex items-center gap-4 shadow-sm">
-                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-emerald-500 shadow-sm shrink-0 border border-emerald-100">
-                                <CheckCircle2 size={24} />
+            <div className="px-6 mt-10 space-y-4">
+                <h3 className="text-lg font-black text-slate-900 ml-2">Premium Benefits</h3>
+                {settings.businessPlans.length > 0 && (settings.businessPlans[selectedPlanIdx]?.benefits?.length > 0 ? settings.businessPlans[selectedPlanIdx].benefits : [
+                    { title: '24/7 Expert Support', subtitle: 'Premium Benefit unlocked', iconType: 'support', colorType: 'emerald' },
+                    { title: 'Weekly Live Meetings', subtitle: 'Premium Benefit unlocked', iconType: 'meeting', colorType: 'indigo' },
+                    { title: 'Daily Strategies', subtitle: 'Premium Benefit unlocked', iconType: 'zap', colorType: 'amber' }
+                ]).map((benefit, i) => {
+                    const Icon = benefit.iconType === 'meeting' ? Users :
+                                 benefit.iconType === 'zap' ? Zap :
+                                 benefit.iconType === 'shield' ? ShieldCheck : MessageSquare;
+                    const colorClasses = benefit.colorType === 'indigo' ? 'text-indigo-500 bg-indigo-50' :
+                                         benefit.colorType === 'amber' ? 'text-amber-500 bg-amber-50' :
+                                         benefit.colorType === 'rose' ? 'text-rose-500 bg-rose-50' :
+                                         'text-emerald-500 bg-emerald-50';
+                    return (
+                        <div key={i} className="bg-white rounded-3xl p-5 flex items-start gap-4 border border-slate-50 shadow-sm">
+                            <div className={`w-12 h-12 ${colorClasses} rounded-2xl flex items-center justify-center shrink-0`}>
+                                <Icon size={22} />
                             </div>
-                            <div className="space-y-1">
-                                <p className="text-[13px] font-black text-slate-800 tracking-tight leading-none">Ready to Start?</p>
-                                <p className="text-[10px] font-bold text-emerald-600/80 leading-tight uppercase tracking-wider">Execute steps for growth.</p>
+                            <div>
+                                <h4 className="text-[14px] font-black text-slate-900 leading-tight">{benefit.title}</h4>
+                                <p className="text-[10px] font-bold text-slate-400 mt-1">{benefit.subtitle}</p>
                             </div>
+                            <ShieldCheck size={18} className="ml-auto text-emerald-500" />
                         </div>
+                    );
+                })}
+            </div>
+            <div className="fixed bottom-24 left-6 right-6 z-50 max-w-sm mx-auto">
+                <button 
+                    onClick={() => {
+                        if (isSubscribed) {
+                            navigate(`/user/business-ideas/${ideaId}/ecosystem`);
+                        } else {
+                            setShowPaymentModal(true);
+                        }
+                    }} 
+                    className="w-full bg-[#5D38F0] hover:bg-[#4C2CD9] text-white font-black py-4 rounded-2xl shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest border border-white/20"
+                >
+                    {isSubscribed ? 'Continue to Ecosystem' : 'Unlock Journey'} <ArrowRight size={20} />
+                </button>
+            </div>
+        </div>
+    );
 
-                        <button
-                            onClick={() => setViewIdea(null)}
-                            className="w-full bg-slate-900 text-white py-5 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 mt-4 active:scale-95 transition-all"
-                        >
-                            Got it
-                        </button>
-                        <div className="h-10"></div>
+    // --- SCREEN 3: ECOSYSTEM ---
+    const EcosystemScreen = () => {
+        // Redirection Guard: If not subscribed, go to subscription
+        useEffect(() => {
+            if (!isSubscribed) {
+                navigate(`/user/business-ideas/${ideaId}/subscription`, { replace: true });
+            }
+        }, [isSubscribed, ideaId]);
+
+        const ecoColors = [
+            { color: 'text-emerald-500', bg: 'bg-emerald-50', ring: 'ring-emerald-400', grad: 'from-emerald-50 to-white' },
+            { color: 'text-[#5D38F0]',  bg: 'bg-indigo-50',  ring: 'ring-indigo-400', grad: 'from-indigo-50 to-white' },
+            { color: 'text-blue-500',    bg: 'bg-blue-50',    ring: 'ring-blue-400', grad: 'from-blue-50 to-white' },
+            { color: 'text-amber-500',   bg: 'bg-amber-50',   ring: 'ring-amber-400', grad: 'from-amber-50 to-white' }
+        ];
+        const cards = selectedIdea?.ecosystemCards || [];
+
+        if (cards.length === 0 && !loading) {
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-6 gap-4">
+                    <Loader2 size={40} className="text-[#5D38F0] animate-spin" />
+                    <p className="text-slate-400 font-black text-xs uppercase tracking-widest text-center">Loading Ecosystem Content...</p>
+                </div>
+            );
+        }
+
+        return (
+            <div className="min-h-screen bg-[#F8FAFF] pb-40">
+                <style>{`
+                    @keyframes float {
+                        0%, 100% { transform: translateY(0); }
+                        50% { transform: translateY(-5px); }
+                    }
+                    .animate-float {
+                        animation: float 4s ease-in-out infinite;
+                    }
+                `}</style>
+                <div className="px-6 pt-12 pb-4 flex items-center justify-between bg-[#F8FAFF]/90 backdrop-blur-md sticky top-0 z-40">
+                    <button onClick={() => navigate(`/user/business-ideas/${ideaId}/subscription`)} className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-900 shadow-sm border border-slate-100 active:scale-90 transition-all"><ChevronLeft size={24} /></button>
+                    <h1 className="text-lg font-black text-slate-900 tracking-tight">Premium Hub</h1>
+                    <div className="w-10" />
+                </div>
+
+                {/* Progress Stepper */}
+                <div className="px-6 py-6 flex items-center justify-center">
+                    <div className="flex items-center w-full max-w-xs relative">
+                        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-200/50 -translate-y-1/2"></div>
+                        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-[#5D38F0] -translate-y-1/2"></div>
+                        { [
+                            { num: 1, label: 'Idea', active: true },
+                            { num: 2, label: 'Upgrade', active: true },
+                            { num: 3, label: 'Ecosystem', active: true }
+                        ].map((s, idx) => (
+                            <div key={idx} className="flex flex-col items-center gap-2 relative z-10 flex-1">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${s.active ? 'bg-[#5D38F0] text-white shadow-lg ring-4 ring-indigo-100' : 'bg-white border-2 border-slate-100 text-slate-300'}`}>
+                                    {s.active ? s.num : <LockIcon size={12} />}
+                                </div>
+                                <span className={`text-[8px] font-black uppercase tracking-widest ${s.active ? 'text-[#5D38F0]' : 'text-slate-300'}`}>{s.label}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
+
+                <div className="px-6 mt-8">
+                    <div className="flex items-center gap-3 mb-1">
+                        <Sparkles size={18} className="text-[#5D38F0]" />
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Strategy Ecosystem</h2>
+                    </div>
+                    <p className="text-[12px] font-bold text-slate-400">Unlock your business potential with these steps</p>
+                </div>
+
+                <div className="px-6 mt-10 grid grid-cols-2 gap-5">
+                    {cards.map((card, i) => {
+                        const c = ecoColors[i % ecoColors.length];
+                        
+                        // Icon mapping based on index or ID
+                        const getIcon = (idx) => {
+                            switch(idx) {
+                                case 0: return <TrendingUp size={20} />;
+                                case 1: return <Zap size={20} />;
+                                case 2: return <Briefcase size={20} />;
+                                case 3: return <Crown size={20} />;
+                                default: return <Sparkles size={20} />;
+                            }
+                        };
+
+                        return (
+                            <div
+                                key={card.id || i}
+                                onClick={() => { navigate(`/user/business-ideas/${ideaId}/ecosystem/${card.id}`); }}
+                                className={`group relative bg-white/70 backdrop-blur-sm border border-white rounded-[2.5rem] p-6 shadow-[0_12px_40px_rgb(0,0,0,0.06)] overflow-hidden transition-all duration-500 hover:shadow-[0_25px_60px_rgba(93,56,240,0.2)] hover:-translate-y-3 hover:ring-2 ${c.ring} cursor-pointer active:scale-95`}
+                                style={{ animationDelay: `${i * 0.15}s` }}
+                            >
+                                {/* Animated Glow Effect */}
+                                <div className={`absolute -top-10 -left-10 w-32 h-32 ${c.bg} opacity-30 blur-[40px] group-hover:opacity-60 transition-opacity duration-700`}></div>
+                                
+                                <div className="relative z-10 flex flex-col h-full">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className={`w-11 h-11 ${c.bg} rounded-2xl flex items-center justify-center shadow-inner transition-transform duration-700 group-hover:scale-125 group-hover:rotate-[15deg]`}>
+                                            <span className={`${c.color} transition-transform`}>{getIcon(i)}</span>
+                                        </div>
+                                        <span className={`text-[10px] font-black ${c.color} opacity-40`}>0{i+1}</span>
+                                    </div>
+                                    
+                                    <div className="flex-1">
+                                        <h4 className="text-[14px] font-black text-slate-800 leading-tight mb-2 group-hover:text-[#5D38F0] transition-colors">
+                                            {card.title}
+                                        </h4>
+                                        <div className={`h-1 w-8 ${c.bg} rounded-full mb-6 group-hover:w-16 transition-all duration-500`}></div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-600 transition-colors">View Details</span>
+                                        <div className={`w-8 h-8 rounded-full ${c.bg} flex items-center justify-center ${c.color} group-hover:bg-[#5D38F0] group-hover:text-white group-hover:translate-x-1 transition-all duration-300`}>
+                                            <ArrowRight size={14} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className="mx-6 mt-8 bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
+                    <h4 className="text-sm font-black text-slate-900 mb-2">मीटिंग जॉइन करें</h4>
+                    <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex items-center justify-between mb-4">
+                        <p className="text-[10px] font-bold text-slate-500 truncate">{selectedIdea?.meetingLink || "Link not set"}</p>
+                        <button 
+                            onClick={() => {
+                                const link = selectedIdea?.meetingLink;
+                                if (!link) return;
+                                try {
+                                    navigator.clipboard.writeText(link).then(() => {
+                                        alert('Link copied!');
+                                    }).catch(() => {
+                                        // Fallback for older browsers/http
+                                        const el = document.createElement('textarea');
+                                        el.value = link;
+                                        document.body.appendChild(el);
+                                        el.select();
+                                        document.execCommand('copy');
+                                        document.body.removeChild(el);
+                                        alert('Link copied!');
+                                    });
+                                } catch(e) {
+                                    alert('Could not copy: ' + link);
+                                }
+                            }}
+                            className="text-indigo-600 hover:text-indigo-800 active:scale-90 transition-all"
+                        >
+                            <Copy size={16} />
+                        </button>
+                    </div>
+                    <button 
+                        onClick={() => {
+                            const link = selectedIdea?.meetingLink;
+                            if (link) {
+                                window.open(link, '_blank', 'noopener,noreferrer');
+                            } else {
+                                alert('Meeting link not available yet.');
+                            }
+                        }}
+                        className="w-full bg-[#5D38F0] text-white py-4 rounded-xl font-black text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+                    >
+                        <Play size={16} fill="currentColor" /> जॉइन मीटिंग
+                    </button>
+                </div>
+                <div className="mx-6 mt-6 bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm relative overflow-hidden">
+                    <h4 className="text-sm font-black text-slate-900 mb-2">सपोर्ट चैट</h4>
+                    <p className="text-[10px] font-bold text-slate-400 mb-4">किसी भी समस्या के लिए हमसे चैट करें।</p>
+                    <button onClick={() => navigate('/user/chat-support')} className="bg-white border border-indigo-100 text-[#5D38F0] px-6 py-2 rounded-xl font-black text-[11px] flex items-center gap-2 hover:bg-indigo-50 transition-all"><MessageSquare size={14} /> चैट शुरू करें</button>
+                </div>
+            </div>
+        );
+    };
+
+    // --- SCREEN 4: ECO CARD DETAIL ---
+    const EcoCardDetailScreen = () => {
+        const card = selectedIdea?.ecosystemCards?.find(c => c.id === cardId);
+        const cardIdx = selectedIdea?.ecosystemCards?.findIndex(c => c.id === cardId);
+        
+        if (!card || cardIdx === undefined || cardIdx === -1) {
+            return (
+                <div className="min-h-screen bg-[#F8FAFF] flex flex-col items-center justify-center p-6 gap-4">
+                    <Loader2 size={40} className="text-[#5D38F0] animate-spin" />
+                    <p className="text-slate-400 font-black text-xs uppercase tracking-widest text-center">Loading Strategy Details...</p>
+                </div>
+            );
+        }
+
+        const ecoColors = [
+            { color: 'text-emerald-500', bg: 'bg-emerald-50', ring: 'ring-emerald-400', grad: 'from-emerald-500 to-emerald-400' },
+            { color: 'text-[#5D38F0]',  bg: 'bg-indigo-50',  ring: 'ring-indigo-400', grad: 'from-indigo-600 to-[#5D38F0]' },
+            { color: 'text-blue-500',    bg: 'bg-blue-50',    ring: 'ring-blue-400', grad: 'from-blue-600 to-blue-400' },
+            { color: 'text-amber-500',   bg: 'bg-amber-50',   ring: 'ring-amber-400', grad: 'from-amber-600 to-amber-400' }
+        ];
+        const c = ecoColors[cardIdx % ecoColors.length] || ecoColors[0];
+
+        const nextCard = selectedIdea?.ecosystemCards?.[(cardIdx + 1) % selectedIdea?.ecosystemCards?.length];
+
+        return (
+            <div className="min-h-screen bg-white pb-32">
+                {/* Hero Header */}
+                <div className={`relative h-64 overflow-hidden rounded-b-[3.5rem] bg-gradient-to-br ${c.grad}`}>
+                    <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-20">
+                        <button onClick={() => navigate(`/user/business-ideas/${ideaId}/ecosystem`)} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white active:scale-90 transition-all border border-white/20">
+                            <ChevronLeft size={24} />
+                        </button>
+                        <div className="flex flex-col items-end">
+                            <p className="text-[9px] font-black text-white/60 uppercase tracking-widest">Premium Strategy</p>
+                            <span className="text-white font-black text-xs">Phase 0{cardIdx + 1}</span>
+                        </div>
+                    </div>
+
+                    <div className="absolute bottom-10 left-8 right-8 z-20">
+                        <h1 className="text-3xl font-black text-white leading-tight mb-2">{card?.title}</h1>
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-1 bg-white/40 rounded-full"></div>
+                            <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest">Premium Strategy</p>
+                        </div>
+                    </div>
+
+                    {/* Decorative Elements */}
+                    <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+                    <div className="absolute -left-10 top-0 w-32 h-32 bg-black/5 rounded-full blur-2xl"></div>
+                </div>
+
+                <div className="px-6 -mt-6 relative z-30">
+                    <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-50 min-h-[400px]">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className={`w-10 h-10 ${c.bg} ${c.color} rounded-xl flex items-center justify-center shadow-inner`}>
+                                <Sparkles size={18} />
+                            </div>
+                            <h3 className="text-sm font-black text-slate-800">विस्तृत जानकारी</h3>
+                        </div>
+
+                        {card?.description ? (
+                            <div className="prose prose-sm max-w-none">
+                                {card.description.split('\n').map((line, i) => (
+                                    line.trim() ? (
+                                        <p key={i} className="text-[15px] font-medium text-slate-600 leading-relaxed mb-4">{line}</p>
+                                    ) : <div key={i} className="h-4" />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+                                <div className={`w-16 h-16 ${c.bg} rounded-full flex items-center justify-center`}>
+                                    <MessageSquare size={30} className={c.color} />
+                                </div>
+                                <p className="font-black text-slate-300 text-xs uppercase tracking-widest">Update In Progress</p>
+                                <p className="text-slate-400 text-[11px] max-w-[200px]">Admin team is refining this section. Please check back shortly.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Bottom Nav Area */}
+                <div className="sticky -bottom-4 px-6 z-50 pb-8">
+                    <button 
+                        onClick={() => {
+                            if (nextCard) {
+                                navigate(`/user/business-ideas/${ideaId}/ecosystem/${nextCard.id}`);
+                                window.scrollTo(0, 0);
+                            }
+                        }}
+                        className="w-full bg-[#1E293B] hover:bg-slate-800 text-white py-5 rounded-[2rem] font-black text-sm flex items-center justify-center gap-3 shadow-[0_15px_40px_rgba(0,0,0,0.3)] active:scale-95 transition-all border border-slate-700"
+                    >
+                        Next Strategy <ArrowRight size={18} />
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+    // --- SCREEN 5: INFO DETAIL (Step 1 Cards) ---
+    const InfoDetailScreen = () => {
+        const type = cardId; // e.g. howItWorks
+        const content = selectedIdea?.[type];
+
+        const config = {
+            howItWorks: { title: 'कैसे करें', icon: <Sparkles size={24} />, color: 'text-emerald-500', bg: 'bg-emerald-50', grad: 'from-emerald-600 to-emerald-400' },
+            investmentDetails: { title: 'इन्वेस्टमेंट', icon: <Briefcase size={24} />, color: 'text-amber-500', bg: 'bg-amber-50', grad: 'from-amber-600 to-amber-400' },
+            profitDetails: { title: 'प्रॉफिट', icon: <TrendingUp size={24} />, color: 'text-indigo-500', bg: 'bg-indigo-50', grad: 'from-indigo-600 to-[#5D38F0]' }
+        };
+
+        const c = config[type] || config.howItWorks;
+
+        if (refreshing && !content) {
+            return (
+                <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
+                    <Loader2 size={40} className="text-[#5D38F0] animate-spin" />
+                </div>
+            );
+        }
+
+        return (
+            <div className="min-h-screen bg-white pb-32">
+                {/* Hero Header */}
+                <div className={`relative h-64 overflow-hidden rounded-b-[3.5rem] bg-gradient-to-br ${c.grad}`}>
+                    <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-20">
+                        <button onClick={() => navigate(`/user/business-ideas/${ideaId}`)} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white active:scale-90 transition-all border border-white/20">
+                            <ChevronLeft size={24} />
+                        </button>
+                    </div>
+
+                    <div className="absolute bottom-10 left-8 right-8 z-20">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white">
+                                {c.icon}
+                            </div>
+                            <span className="text-white/60 font-black text-xs uppercase tracking-widest">Business Detail</span>
+                        </div>
+                        <h1 className="text-3xl font-black text-white leading-tight">{c.title}</h1>
+                    </div>
+                    
+                    {/* Decorative Elements */}
+                    <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+                </div>
+
+                <div className="px-6 -mt-6 relative z-30">
+                    <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_20px_50_rgba(0,0,0,0.05)] border border-slate-50 min-h-[400px]">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className={`w-10 h-10 ${c.bg} ${c.color} rounded-xl flex items-center justify-center shadow-inner`}>
+                                <Rocket size={18} />
+                            </div>
+                            <h3 className="text-sm font-black text-slate-800">विस्तृत जानकारी</h3>
+                        </div>
+
+                        {content ? (
+                            <div className="prose prose-sm max-w-none">
+                                {content.split('\n').map((line, i) => (
+                                    line.trim() ? (
+                                        <p key={i} className="text-[15px] font-medium text-slate-600 leading-relaxed mb-4">{line}</p>
+                                    ) : <div key={i} className="h-4" />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+                                <div className={`w-16 h-16 ${c.bg} rounded-full flex items-center justify-center`}>
+                                    <MessageSquare size={30} className={c.color} />
+                                </div>
+                                <p className="font-black text-slate-300 text-xs uppercase tracking-widest">Update In Progress</p>
+                                <p className="text-slate-400 text-[11px] max-w-[200px]">Admin team is refining this section. Please check back shortly.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Floating Bottom Nav */}
+                {/* Bottom Nav Area */}
+                <div className="sticky bottom-0 p-6 z-50 bg-white/80 backdrop-blur-md border-t border-slate-50">
+                    <button 
+                        onClick={() => navigate(`/user/business-ideas/${ideaId}`)}
+                        className="w-full bg-[#1E293B] hover:bg-slate-800 text-white py-5 rounded-[2rem] font-black text-sm shadow-xl active:scale-95 transition-all"
+                    >
+                        Got it! Back to Journey
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="max-w-md mx-auto bg-white min-h-screen font-inter shadow-xl relative overflow-x-hidden">
+            {step === -1 && <IntroScreen />}
+            {step === 0 && <ListingScreen />}
+            {step === 1 && <DetailsScreen />}
+            {step === 2 && <SubscriptionScreen />}
+            {step === 3 && <EcosystemScreen />}
+            {step === 4 && <EcoCardDetailScreen />}
+            {step === 5 && <InfoDetailScreen />}
+
+            {showPaymentModal && settings.businessPlans[selectedPlanIdx] && (
+                <PaymentModal
+                    isOpen={showPaymentModal}
+                    onClose={() => setShowPaymentModal(false)}
+                    plan={settings.businessPlans[selectedPlanIdx].title}
+                    amount={settings.businessPlans[selectedPlanIdx].price}
+                    type="BUSINESS_HUB_PLAN"
+                    itemId={ideaId}
+                    extraData={{
+                        planName: settings.businessPlans[selectedPlanIdx].title,
+                        planDuration: settings.businessPlans[selectedPlanIdx].duration
+                    }}
+                    onSuccess={() => {
+                        setShowPaymentModal(false);
+                        // refreshUserProfile is already called inside PaymentModal
+                    }}
+                />
             )}
         </div>
     );

@@ -121,6 +121,15 @@ const UserSchema = new mongoose.Schema({
     supportExpiry: {
         type: Date
     },
+    activeBusinessPlan: {
+        type: String,
+        default: 'Free'
+    },
+    businessPlanStatus: {
+        type: String,
+        enum: ['active', 'expired', 'none'],
+        default: 'none'
+    },
     fcmTokens: [String], // Web tokens
     fcmTokenMobile: [String], // Mobile tokens
     completedTasks: [{

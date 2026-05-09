@@ -12,8 +12,12 @@ const PaymentSchema = new mongoose.Schema({
     },
     paymentType: {
         type: String,
-        enum: ['PLATFORM_UNLOCK', 'BUSINESS_IDEA_UNLOCK', 'SUPPORT_CHAT_RENEWAL', 'SUPPORT_BOOSTER', 'TASK_BOOSTER'],
+        enum: ['PLATFORM_UNLOCK', 'BUSINESS_IDEA_UNLOCK', 'SUPPORT_CHAT_RENEWAL', 'SUPPORT_BOOSTER', 'TASK_BOOSTER', 'BUSINESS_HUB_PLAN'],
         default: 'PLATFORM_UNLOCK'
+    },
+    planDuration: {
+        type: String,
+        default: 'Monthly'
     },
     businessIdea: {
         type: mongoose.Schema.ObjectId,
