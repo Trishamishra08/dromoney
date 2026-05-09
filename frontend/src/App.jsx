@@ -109,14 +109,13 @@ const ProtectedAdminRoute = ({ children }) => {
 function App() {
   const [showSplash, setShowSplash] = React.useState(true);
 
-  if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
-  }
-
   return (
     <AdminProvider>
       <UserProvider>
-        <Router>
+        {showSplash ? (
+          <SplashScreen onComplete={() => setShowSplash(false)} />
+        ) : (
+          <Router>
           <Routes>
             {/* Redirecting root to login */}
             <Route path="/" element={<Navigate to="/user/auth/login" replace />} />
@@ -195,6 +194,7 @@ function App() {
             <Route path="*" element={<Navigate to="/user/auth/login" replace />} />
           </Routes>
         </Router>
+        )}
       </UserProvider>
     </AdminProvider>
   );
