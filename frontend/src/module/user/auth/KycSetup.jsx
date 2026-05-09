@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ShieldAlert, UploadCloud, Image as ImageIcon, ArrowLeft } from 'lucide-react';
+import { Loader2, ShieldCheck, UploadCloud, Camera, ArrowLeft, AlertCircle, Fingerprint, Lock } from 'lucide-react';
 import api from '../../shared/services/api';
 import { useUser } from '../context/UserContext';
 
@@ -11,6 +11,7 @@ const KycSetup = () => {
     const [aadhaar, setAadhaar] = useState('');
     const [aadhaarFile, setAadhaarFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
+    const [error, setError] = useState('');
     const fileInputRef = React.useRef(null);
 
     const kycStatus = (userData?.kycStatus || '').toLowerCase();
@@ -33,11 +34,14 @@ const KycSetup = () => {
         const objectUrl = URL.createObjectURL(aadhaarFile);
         setPreviewUrl(objectUrl);
 
-        // Cleanup the object URL when file changes or component unmounts
         return () => URL.revokeObjectURL(objectUrl);
     }, [aadhaarFile]);
 
-    if (userLoading) return <div className="min-h-screen bg-[#0B1221] flex items-center justify-center p-20 text-white"><Loader2 className="animate-spin text-amber-500" /></div>;
+    if (userLoading) return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <Loader2 className="animate-spin text-amber-500 w-8 h-8" />
+        </div>
+    );
 
     const triggerFileSelect = () => {
         if (fileInputRef.current) {
@@ -49,26 +53,26 @@ const KycSetup = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Front-end early validation of allowed image types to prevent stuck state
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
         const ext = file.name.split('.').pop().toLowerCase();
         const allowedExts = ['jpeg', 'jpg', 'png'];
+        
         if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
-            window.alert("Invalid Format!\n\nPlease select a valid image (JPEG, JPG, or PNG).");
+            setError("Incorrect image format! Please use PNG, JPEG or JPG.");
             addNotification("Invalid Format", "Please select a valid image (JPEG, JPG, or PNG)!", "error");
             e.target.value = '';
             return;
         }
 
-        // Limit to 5MB
         if (file.size > 5 * 1024 * 1024) {
-            window.alert("File Too Large!\n\nAadhaar photo must be under 5MB.");
+            setError("File too large! Max limit is 5MB.");
             addNotification("File Too Large", "Aadhaar photo must be under 5MB!", "error");
             e.target.value = '';
             return;
         }
 
         setAadhaarFile(file);
+        setError('');
     };
 
     const handleSubmit = async (e) => {
@@ -98,28 +102,146 @@ const KycSetup = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0B1221] text-white p-6 flex flex-col justify-center animate-in fade-in slide-in-from-bottom-4 duration-500 relative pt-16">
-            {/* Arrow Back Button */}
-            <div className="absolute left-6 top-6 z-50">
-                <button 
-                    onClick={() => navigate('/user/home')} 
-                    className="w-10 h-10 flex items-center justify-center bg-slate-900/90 border border-slate-800 rounded-2xl text-slate-300 hover:text-white hover:border-amber-500/50 active:scale-95 transition-all shadow-md backdrop-blur-md"
-                >
-                    <ArrowLeft size={20} />
-                </button>
+        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+            <style>
+                {`
+                    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap');
+                    .font-outfit { font-family: 'Outfit', sans-serif; }
+                `}
+            </style>
+
+            {/* Subtle Background Effects */}
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+                <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-amber-100 rounded-full blur-[100px] opacity-40"></div>
+                <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-100 rounded-full blur-[100px] opacity-40"></div>
             </div>
 
-            <div className="flex justify-center mb-6">
-                <div className="bg-amber-500/10 border border-amber-500/20 px-4 py-1.5 rounded-full flex items-center gap-2">
-                    <ShieldAlert size={12} className="text-amber-500" />
-                    <span className="text-[9px] font-bold text-amber-500 tracking-widest uppercase">Verification Required</span>
+            {/* Top Navigation */}
+            <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-50">
+                <button 
+                    onClick={() => navigate('/user/home')} 
+                    className="w-9 h-9 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 hover:border-slate-300 active:scale-95 transition-all shadow-sm group"
+                >
+                    <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
+                </button>
+                <div className="px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-full flex items-center gap-1.5 shadow-sm">
+                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
+                    <span className="text-[9px] font-black text-amber-600 tracking-widest uppercase font-outfit">Verification</span>
                 </div>
             </div>
 
-            <h1 className="text-[24px] font-black text-white text-center mb-2 tracking-tight">Complete KYC</h1>
-            <p className="text-slate-400 text-[11px] text-center mb-8 px-4 font-bold leading-relaxed">Provide your government IDs to verify identity and enable withdrawals.</p>
+            <div className="w-full max-w-[400px] relative z-10">
+                {/* Compact Header Section */}
+                <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 mb-3 shadow-lg shadow-amber-500/20">
+                        <Fingerprint size={24} className="text-white" />
+                    </div>
+                    <h1 className="text-2xl font-black text-slate-900 mb-1 tracking-tight font-outfit">Identity Setup</h1>
+                    <p className="text-slate-500 text-[11px] font-bold leading-relaxed">
+                        Secure your account and unlock withdrawals.
+                    </p>
+                </div>
 
-            {/* Hidden Input outside the clickable card to avoid any event bubbling recursion */}
+                {/* Operating Window Notice (Compact) */}
+                <div className="mb-4">
+                    <div className="bg-white border border-slate-200 px-4 py-2 rounded-xl flex items-center justify-between shadow-sm">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-outfit">Service Window</span>
+                        <span className="text-[10px] font-black text-amber-600 tabular-nums uppercase">07:00 AM — 07:00 PM</span>
+                    </div>
+                </div>
+
+                {/* Main Card (Compact) */}
+                <form 
+                    onSubmit={handleSubmit} 
+                    className="bg-white p-5 rounded-[24px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-slate-100 flex flex-col gap-5"
+                >
+                    {error && (
+                        <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-start gap-2.5">
+                            <AlertCircle size={14} className="text-rose-500 shrink-0 mt-0.5" />
+                            <p className="text-[10px] font-bold text-rose-500 leading-tight">{error}</p>
+                        </div>
+                    )}
+
+                    <div className="space-y-5">
+                        {/* Aadhaar Number Input */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-1.5 text-[9px] uppercase font-black tracking-widest text-slate-400 ml-1 font-outfit">
+                                <ShieldCheck size={10} className="text-amber-500" />
+                                Aadhaar Card Number
+                            </label>
+                            <input 
+                                type="text" 
+                                placeholder="0000 0000 0000"
+                                value={aadhaar}
+                                onChange={(e) => setAadhaar(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                                className="w-full bg-slate-50 text-slate-900 font-black tracking-[0.2em] px-4 py-3.5 rounded-xl border border-slate-200 focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/5 transition-all placeholder:text-slate-300 text-base font-outfit"
+                                required
+                            />
+                        </div>
+                        
+                        {/* Aadhaar Photo Upload (Compact) */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-1.5 text-[9px] uppercase font-black tracking-widest text-slate-400 ml-1 font-outfit">
+                                <UploadCloud size={10} className="text-amber-500" />
+                                Document Photo
+                            </label>
+                            <div 
+                                onClick={triggerFileSelect}
+                                className="relative border-2 border-dashed border-slate-100 hover:border-amber-500/40 rounded-2xl p-1.5 bg-slate-50/50 transition-all cursor-pointer group"
+                            >
+                                {!aadhaarFile ? (
+                                    <div className="py-6 flex flex-col items-center justify-center gap-2">
+                                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-300 group-hover:text-amber-500 transition-all shadow-sm">
+                                            <UploadCloud size={20} />
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-[10px] text-slate-600 font-black uppercase tracking-widest group-hover:text-slate-900 transition-colors">Select Photo</p>
+                                            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">PNG, JPEG (Max 5MB)</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="relative w-full h-32 rounded-xl overflow-hidden border border-slate-200">
+                                        <img 
+                                            src={previewUrl} 
+                                            alt="Preview" 
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-slate-900/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]">
+                                            <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-slate-950 shadow-xl">
+                                                <Camera size={20} />
+                                            </div>
+                                            <span className="text-[9px] text-white font-black uppercase tracking-widest mt-2">Change Image</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Security Footnote (Compact) */}
+                    <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl flex gap-2.5 items-center">
+                        <Lock size={12} className="text-emerald-500 shrink-0" />
+                        <p className="text-[9px] text-emerald-700 leading-snug font-bold">
+                            Encrypted Storage. Your data is private and secure.
+                        </p>
+                    </div>
+
+                    <button 
+                        type="submit"
+                        disabled={aadhaar.length < 12 || !aadhaarFile || loading}
+                        className="w-full bg-[#0F172A] hover:bg-slate-800 disabled:opacity-30 text-white font-black uppercase text-[11px] tracking-[0.15em] py-4 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-slate-200 font-outfit"
+                    >
+                        {loading ? <Loader2 size={16} className="animate-spin" /> : 'Finalize Verification'}
+                    </button>
+                </form>
+
+                {/* Compact Footer */}
+                <p className="text-center mt-6 text-[10px] font-bold text-slate-400">
+                    Questions? <button type="button" onClick={() => navigate('/user/help')} className="text-amber-600 hover:underline">Contact Support</button>
+                </p>
+            </div>
+
+            {/* Hidden Input */}
             <input 
                 type="file" 
                 ref={fileInputRef}
@@ -127,64 +249,6 @@ const KycSetup = () => {
                 className="hidden"
                 onChange={handleFileChange}
             />
-
-            <form onSubmit={handleSubmit} className="bg-slate-900/80 border border-amber-500/20 p-5 rounded-2xl flex flex-col gap-5 shadow-[0_4px_20px_rgba(245,158,11,0.05)]">
-                <div>
-                    <label className="block text-[10px] uppercase font-black tracking-widest text-slate-400 mb-2">Aadhaar Card Number</label>
-                    <input 
-                        type="text" 
-                        placeholder="XXXX XXXX XXXX"
-                        value={aadhaar}
-                        onChange={(e) => setAadhaar(e.target.value.replace(/\D/g, '').slice(0, 12))}
-                        className="w-full bg-slate-950 text-white font-black tracking-[0.2em] px-4 py-3.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all placeholder:text-slate-600 text-sm placeholder:tracking-normal placeholder:font-normal shadow-inner"
-                        required
-                    />
-                    
-                    {/* Aadhaar Photo Upload */}
-                    <div 
-                        onClick={triggerFileSelect}
-                        className="mt-3 relative border-2 border-dashed border-slate-700/50 hover:border-amber-500/50 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-950/30 transition-colors cursor-pointer group"
-                    >
-                        {!aadhaarFile ? (
-                            <>
-                                <UploadCloud size={20} className="text-slate-500 group-hover:text-amber-500 mb-2 transition-colors" />
-                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center mt-1">Tap to Upload Aadhaar</span>
-                                <span className="text-[8px] text-slate-600 mt-1 uppercase tracking-widest">PNG, JPEG, JPG up to 5MB</span>
-                            </>
-                        ) : (
-                            <div className="relative w-full h-28 rounded-lg overflow-hidden group-hover:opacity-80 transition-opacity border border-slate-700/50">
-                                <img 
-                                    src={previewUrl} 
-                                    alt="Aadhaar Preview" 
-                                    className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <ImageIcon size={20} className="text-white mb-1" />
-                                    <span className="text-[9px] text-emerald-400 font-bold truncate max-w-[200px] px-2">{aadhaarFile.name}</span>
-                                    <span className="text-[8px] text-slate-300 uppercase tracking-widest mt-1">Tap to change</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Removed PAN Card Section */}
-
-                <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl mt-2">
-                    <p className="text-[10px] text-slate-400 leading-relaxed font-bold text-center">
-                        <span className="text-emerald-400">Secure 256-bit Encryption.</span><br/>
-                        Documents are sent directly to the Admin Panel for manual verification. This maintains a safe and fraud-free platform.
-                    </p>
-                </div>
-
-                <button 
-                    type="submit"
-                    disabled={aadhaar.length < 12 || !aadhaarFile || loading}
-                    className="w-full bg-slate-800 hover:bg-amber-500 text-slate-300 hover:text-slate-950 disabled:opacity-50 disabled:bg-slate-900 disabled:text-slate-600 font-black uppercase text-[11px] tracking-[0.2em] py-4 rounded-xl transition-all flex items-center justify-center gap-2 mt-2 shadow-[0_4px_15px_rgba(245,158,11,0.1)]"
-                >
-                    {loading ? <Loader2 size={16} className="animate-spin" /> : 'Submit Document'}
-                </button>
-            </form>
         </div>
     );
 };

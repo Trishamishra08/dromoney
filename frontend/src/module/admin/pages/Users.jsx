@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, Ban, Edit2, CheckCircle, XCircle, User, Mail, Phone, Wallet, Users as UsersIcon, Calendar, ArrowRight, TrendingUp, Save } from 'lucide-react';
+import { Search, Eye, Ban, Edit2, CheckCircle, XCircle, User, Mail, Phone, Wallet, Users as UsersIcon, Calendar, ArrowRight, TrendingUp, Save, Trash2 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import StatusBadge from '../components/StatusBadge';
 import api from '../../shared/services/api';
@@ -66,6 +66,20 @@ const Users = () => {
             }
         } catch (err) {
             console.error("Toggle Status Error:", err);
+        }
+    };
+
+    const handleDeleteUser = async (id, name) => {
+        if (window.confirm(`Are you sure you want to permanently delete user "${name}" and all their associated data? This action cannot be undone.`)) {
+            try {
+                const response = await api.delete(`/admin/users/${id}`);
+                if (response.success) {
+                    fetchUsers(); // Refresh list
+                }
+            } catch (err) {
+                console.error("Delete User Error:", err);
+                alert("Failed to delete user. Please try again.");
+            }
         }
     };
 
@@ -176,6 +190,13 @@ const Users = () => {
                                                 ${user.status === 'Active' ? 'bg-rose-50 hover:bg-rose-500 hover:text-white text-rose-500 border-rose-100' : 'bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-500 border-emerald-100'}`}
                                             >
                                                 {user.status === 'Active' ? <Ban size={14} /> : <CheckCircle size={14} />}
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDeleteUser(user.id, user.name)}
+                                                title="Delete User" 
+                                                className="w-8 h-8 bg-slate-50 hover:bg-rose-600 hover:text-white text-slate-400 rounded-xl flex items-center justify-center transition-all active:scale-90 border border-slate-100"
+                                            >
+                                                <Trash2 size={14} />
                                             </button>
                                         </div>
                                     </td>

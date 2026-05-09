@@ -60,6 +60,7 @@ import ChatSupportPage from './module/user/pages/ChatSupportPage';
 import { AdminProvider, useAdmin } from './module/admin/context/AdminContext';
 
 import { UserProvider, useUser } from './module/user/context/UserContext';
+import SplashScreen from './module/user/auth/SplashScreen';
 
 import { Loader2 } from 'lucide-react';
 
@@ -106,6 +107,12 @@ const ProtectedAdminRoute = ({ children }) => {
 };
 
 function App() {
+  const [showSplash, setShowSplash] = React.useState(true);
+
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
+
   return (
     <AdminProvider>
       <UserProvider>

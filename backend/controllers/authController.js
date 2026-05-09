@@ -28,9 +28,17 @@ exports.register = async (req, res, next) => {
         if (otpRecord) await Otp.deleteOne({ _id: otpRecord._id });
 
         // Check if user already exists
-        const userExists = await User.findOne({ $or: [{ email }, { phone }] });
-        if (userExists) {
-            return next(new ErrorResponse('Email or Phone already registered', 400));
+        const trimmedPhone = phone ? phone.trim() : '';
+        const trimmedEmail = email ? email.trim().toLowerCase() : '';
+
+        const userWithPhone = (trimmedPhone && trimmedPhone !== '') ? await User.findOne({ phone: trimmedPhone }) : null;
+        if (userWithPhone) {
+            return next(new ErrorResponse('This phone number is already registered.', 400));
+        }
+
+        const userWithEmail = (trimmedEmail && trimmedEmail !== '') ? await User.findOne({ email: trimmedEmail }) : null;
+        if (userWithEmail) {
+            return next(new ErrorResponse('This email address is already registered.', 400));
         }
 
         // Check if referral code is valid and find referrer
@@ -105,9 +113,17 @@ exports.sendRegisterOtp = async (req, res, next) => {
         }
 
         // Check if phone or email already registered
-        const userExists = await User.findOne({ $or: [{ phone }, { email }] });
-        if (userExists) {
-            return next(new ErrorResponse('Phone or Email already registered', 400));
+        const trimmedPhone = phone ? phone.trim() : '';
+        const trimmedEmail = email ? email.trim().toLowerCase() : '';
+
+        const userWithPhone = (trimmedPhone && trimmedPhone !== '') ? await User.findOne({ phone: trimmedPhone }) : null;
+        if (userWithPhone) {
+            return next(new ErrorResponse('This phone number is already registered.', 400));
+        }
+
+        const userWithEmail = (trimmedEmail && trimmedEmail !== '') ? await User.findOne({ email: trimmedEmail }) : null;
+        if (userWithEmail) {
+            return next(new ErrorResponse('This email address is already registered.', 400));
         }
 
         // Generate a 6-digit OTP

@@ -14,11 +14,8 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    // Checkboxes for mandatory policies
-    const [agreePrivacy, setAgreePrivacy] = useState(false);
-    const [agreeTerms, setAgreeTerms] = useState(false);
-    const [agreeGuidelines, setAgreeGuidelines] = useState(false);
-    const [agreeRefund, setAgreeRefund] = useState(false);
+    // Checkbox for mandatory policies
+    const [agreeAll, setAgreeAll] = useState(false);
 
     // Redirect to home if user is already logged in
     useEffect(() => {
@@ -37,8 +34,8 @@ const Login = () => {
             return;
         }
 
-        // 2. Validate checkboxes are accepted
-        if (!agreePrivacy || !agreeTerms || !agreeGuidelines || !agreeRefund) {
+        // 2. Validate checkbox is accepted
+        if (!agreeAll) {
             setError('Please agree to all the mandatory legal policies before logging in.');
             return;
         }
@@ -141,51 +138,18 @@ const Login = () => {
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 block">Consent & Agreements</span>
                                 
                                 <div className="space-y-2 bg-slate-50/50 p-4 rounded-2xl border border-slate-100/80">
-                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                    <label className="flex items-start gap-3 cursor-pointer group">
                                         <input
                                             type="checkbox"
-                                            checked={agreePrivacy}
-                                            onChange={(e) => setAgreePrivacy(e.target.checked)}
-                                            className="w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500/20 accent-[#0f1d3a] cursor-pointer"
+                                            checked={agreeAll}
+                                            onChange={(e) => setAgreeAll(e.target.checked)}
+                                            className="mt-0.5 w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500/20 accent-[#0f1d3a] cursor-pointer"
                                         />
-                                        <span className="text-[11.5px] font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
-                                            I agree to the <Link to="/user/info/privacy" className="text-[#0f1d3a] font-bold hover:underline" target="_blank">Privacy Policy</Link>
-                                        </span>
-                                    </label>
-
-                                    <label className="flex items-center gap-3 cursor-pointer group">
-                                        <input
-                                            type="checkbox"
-                                            checked={agreeTerms}
-                                            onChange={(e) => setAgreeTerms(e.target.checked)}
-                                            className="w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500/20 accent-[#0f1d3a] cursor-pointer"
-                                        />
-                                        <span className="text-[11.5px] font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
-                                            I agree to the <Link to="/user/info/terms" className="text-[#0f1d3a] font-bold hover:underline" target="_blank">Terms & Conditions</Link>
-                                        </span>
-                                    </label>
-
-                                    <label className="flex items-center gap-3 cursor-pointer group">
-                                        <input
-                                            type="checkbox"
-                                            checked={agreeGuidelines}
-                                            onChange={(e) => setAgreeGuidelines(e.target.checked)}
-                                            className="w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500/20 accent-[#0f1d3a] cursor-pointer"
-                                        />
-                                        <span className="text-[11.5px] font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
-                                            I agree to the <Link to="/user/info/guidelines" className="text-[#0f1d3a] font-bold hover:underline" target="_blank">Community Guidelines</Link>
-                                        </span>
-                                    </label>
-
-                                    <label className="flex items-center gap-3 cursor-pointer group">
-                                        <input
-                                            type="checkbox"
-                                            checked={agreeRefund}
-                                            onChange={(e) => setAgreeRefund(e.target.checked)}
-                                            className="w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500/20 accent-[#0f1d3a] cursor-pointer"
-                                        />
-                                        <span className="text-[11.5px] font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
-                                            I agree to the <Link to="/user/info/refund-policy" className="text-[#0f1d3a] font-bold hover:underline" target="_blank">No Refund Policy</Link>
+                                        <span className="text-[11.5px] font-semibold text-slate-600 group-hover:text-slate-800 transition-colors leading-relaxed">
+                                            I agree to the <Link to="/user/info/privacy" className="text-[#0f1d3a] font-bold hover:underline" target="_blank">Privacy Policy</Link>, 
+                                            <Link to="/user/info/terms" className="text-[#0f1d3a] font-bold hover:underline mx-1" target="_blank">Terms & Conditions</Link>, 
+                                            <Link to="/user/info/guidelines" className="text-[#0f1d3a] font-bold hover:underline mx-1" target="_blank">Community Guidelines</Link> 
+                                            and <Link to="/user/info/refund-policy" className="text-[#0f1d3a] font-bold hover:underline ml-1" target="_blank">No Refund Policy</Link>.
                                         </span>
                                     </label>
                                 </div>
@@ -193,7 +157,7 @@ const Login = () => {
 
                             <button
                                 type="submit"
-                                disabled={phone.length < 10 || !agreePrivacy || !agreeTerms || !agreeGuidelines || !agreeRefund || loading}
+                                disabled={phone.length < 10 || !agreeAll || loading}
                                 className="w-full bg-[#0f1d3a] hover:bg-[#1a2c52] disabled:opacity-50 disabled:pointer-events-none text-white py-4 rounded-full font-bold text-[14px] transition-all shadow-xl shadow-slate-200 active:scale-[0.98] flex items-center justify-center gap-2 mt-2"
                             >
                                 {loading ? <Loader2 size={18} className="animate-spin" /> : 'Sign In'}
