@@ -6,7 +6,7 @@ const User = require('../models/User');
 // @access  Public
 exports.getPublicSettings = async (req, res) => {
     try {
-        const settings = await Settings.findOne().select('appName referralSystemEnabled referralCommission registrationFee minWithdrawal futureFundDailyTasksTarget futureFundWatchAdTarget futureFundEventsTarget futureFundBoostersTarget futureFundSalesTarget futureFundDaysTarget');
+        const settings = await Settings.findOne().select('appName referralSystemEnabled referralCommission registrationFee minWithdrawal futureFundDailyTasksTarget futureFundWatchAdTarget futureFundEventsTarget futureFundBoostersTarget futureFundSalesTarget futureFundDaysTarget businessPlans');
         
         res.status(200).json({
             success: true,
@@ -14,6 +14,19 @@ exports.getPublicSettings = async (req, res) => {
                 referralCommission: 200,
                 referralSystemEnabled: true,
                 registrationFee: 499,
+                businessPlans: [
+                    {
+                        title: 'Pro Membership',
+                        subtitle: 'अपना बिजनेस शुरू करें...',
+                        price: 499,
+                        duration: '/ Yearly',
+                        benefits: [
+                            { title: '24/7 Expert Support', subtitle: 'Premium Benefit unlocked', iconType: 'support', colorType: 'emerald' },
+                            { title: 'Weekly Live Meetings', subtitle: 'Premium Benefit unlocked', iconType: 'meeting', colorType: 'indigo' },
+                            { title: 'Daily Strategies', subtitle: 'Premium Benefit unlocked', iconType: 'zap', colorType: 'amber' }
+                        ]
+                    }
+                ],
                 futureFundDailyTasksTarget: 10,
                 futureFundWatchAdTarget: 5,
                 futureFundEventsTarget: 3,

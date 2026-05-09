@@ -18,7 +18,7 @@ const razorpay = new Razorpay({
 // @route   POST /api/user/data/razorpay/create-order
 // @access  Private
 exports.createOrder = asyncHandler(async (req, res, next) => {
-    const { amount, type, ideaId } = req.body; // amount in INR
+    const { amount, type, ideaId, planName: reqPlanName, planDuration: reqPlanDuration } = req.body; // amount in INR
     const user = await User.findById(req.user.id);
 
     let finalAmount = 499; // Default for platform unlock
@@ -49,6 +49,11 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
         finalAmount = originalPrice * 1.04; // adding 4% markup
         planName = booster ? booster.title : (boosterType === 'support' ? 'Support Booster' : 'Task Booster');
         pType = type;
+    } else if (type === 'BUSINESS_HUB_PLAN') {
+        const { planName: pName } = req.body;
+        finalAmount = amount;
+        planName = pName || 'Business Hub Plan';
+        pType = 'BUSINESS_HUB_PLAN';
     } else {
         if (user.isPaid) return next(new ErrorResponse('Platform already unlocked.', 400));
     }
@@ -70,6 +75,7 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
         user: req.user.id,
         plan: planName,
         paymentType: pType,
+        planDuration: reqPlanDuration || 'Monthly',
         businessIdea: ideaId || null,
         amount: finalAmount,
         method: 'Razorpay',
@@ -189,6 +195,22 @@ exports.verifyPayment = asyncHandler(async (req, res, next) => {
             // Set user isPaid = true (Platform Unlock)
             user.isPaid = true;
             user.unlockedAt = new Date();
+            
+            // If it's a Business Hub Plan, set supportExpiry
+            if (payment.paymentType === 'BUSINESS_HUB_PLAN') {
+                const planDuration = payment.planDuration || 'Monthly';
+                const daysToAdd = planDuration.toLowerCase().includes('year') ? 365 : 30;
+                
+                let currentExpiry = user.supportExpiry && new Date(user.supportExpiry) > new Date() 
+                    ? new Date(user.supportExpiry) 
+                    : new Date();
+                
+                currentExpiry.setDate(currentExpiry.getDate() + daysToAdd);
+                user.supportExpiry = currentExpiry;
+                user.activeBusinessPlan = payment.plan || 'Premium Plan';
+                user.businessPlanStatus = 'active';
+            }
+            
             await user.save();
         }
     }

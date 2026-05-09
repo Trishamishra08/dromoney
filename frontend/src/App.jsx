@@ -137,6 +137,7 @@ function App() {
               <Route path="wallet" element={<Wallet />} />
               <Route path="profile" element={<Profile />} />
               <Route path="business-ideas" element={<BusinessIdeas />} />
+              <Route path="business-ideas/:ideaId?/:section?/:cardId?" element={<BusinessIdeas />} />
               <Route path="watch" element={<WatchAndEarn />} />
               <Route path="help" element={<HelpCenter />} />
               <Route path="future-fund" element={<FutureFund />} />

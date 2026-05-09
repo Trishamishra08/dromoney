@@ -18,7 +18,7 @@ const loadRazorpayScript = () =>
         document.body.appendChild(script);
     });
 
-const PaymentModal = ({ isOpen, onClose, plan, amount, type = 'PLATFORM_UNLOCK', itemId = null, onSuccess }) => {
+const PaymentModal = ({ isOpen, onClose, plan, amount, type = 'PLATFORM_UNLOCK', itemId = null, onSuccess, extraData = {} }) => {
     const [status, setStatus] = useState('idle'); // idle | loading | processing | success | error
     const [errorMsg, setErrorMsg] = useState('');
     const { userData, refreshUserProfile } = useUser();
@@ -44,7 +44,9 @@ const PaymentModal = ({ isOpen, onClose, plan, amount, type = 'PLATFORM_UNLOCK',
             // 2. Create server-side order
             const orderRes = await api.post('/user/data/razorpay/create-order', {
                 type,
-                ideaId: itemId
+                ideaId: itemId,
+                amount,
+                ...extraData
             });
             if (!orderRes.success) throw new Error('Failed to create payment order.');
 

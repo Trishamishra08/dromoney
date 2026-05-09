@@ -5,46 +5,58 @@ const BusinessIdeaSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add a business title']
     },
+    hindiTitle: {
+        type: String,
+        default: ''
+    },
+    subtitle: {
+        type: String,
+        default: ''
+    },
     desc: {
         type: String,
         required: [true, 'Please add a description']
     },
-    potential: {
-        type: String,
-        required: [true, 'Please add earning potential (e.g., ₹10k - ₹30k/mo)']
-    },
-    icon: {
-        type: String,
-        default: 'Briefcase'
-    },
-    color: {
-        type: String,
-        default: 'text-emerald-500'
-    },
-    bg: {
-        type: String,
-        default: 'bg-emerald-50'
-    },
-    type: {
-        type: String,
-        enum: ['Free', 'Premium'],
-        default: 'Free'
-    },
-    price: {
-        type: Number,
-        default: 0 // For premium ideas
-    },
-    youtubeLink: {
+    bannerImage: {
         type: String,
         default: ''
     },
-    steps: [{
-        title: { type: String, required: true },
-        text: { type: String, required: true }
-    }],
+    potentialEarnings: {
+        type: String,
+        default: ''
+    },
+    badges: {
+        type: [String],
+        default: ['Trending']
+    },
+    videoUrl: {
+        type: String,
+        default: ''
+    },
+    meetingLink: {
+        type: String,
+        default: ''
+    },
+    isPremium: {
+        type: Boolean,
+        default: true
+    },
     isActive: {
         type: Boolean,
         default: true
+    },
+    ecosystemCards: {
+        type: [{
+            id: { type: String },           // 'daily-plan', 'new-updates', 'tools-contact', 'calculation'
+            title: { type: String },
+            description: { type: String, default: '' }
+        }],
+        default: [
+            { id: 'daily-plan',      title: 'डेली प्लान',        description: '' },
+            { id: 'new-updates',     title: 'न्यू अपडेट्स',       description: '' },
+            { id: 'tools-contact',   title: 'टूल्स एंड कांटेक्ट', description: '' },
+            { id: 'calculation',     title: 'कैलकुलेशन',          description: '' }
+        ]
     },
     createdAt: {
         type: Date,

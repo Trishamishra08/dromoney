@@ -12,25 +12,26 @@ exports.getBusinessIdeas = async (req, res, next) => {
         let unlockedIds = [];
         if (req.user) {
             const user = await User.findById(req.user.id);
-            unlockedIds = user.unlockedIdeas.map(id => id.toString());
+            unlockedIds = user.unlockedIdeas ? user.unlockedIdeas.map(id => id.toString()) : [];
         }
 
         const data = ideas.map(idea => {
-            const isPremium = idea.type === 'Premium';
-            const isUnlocked = !isPremium || unlockedIds.includes(idea._id.toString());
+            // Check if user has unlocked this specific idea or is it public
+            const isUnlocked = !idea.isPremium || unlockedIds.includes(idea._id.toString());
             
             return {
                 _id: idea._id,
                 title: idea.title,
+                hindiTitle: idea.hindiTitle,
+                subtitle: idea.subtitle,
                 desc: idea.desc,
-                potential: idea.potential,
-                icon: idea.icon,
-                color: idea.color,
-                bg: idea.bg,
-                type: idea.type,
-                price: idea.price,
-                steps: isUnlocked ? idea.steps : [], // Hide steps if locked
-                youtubeLink: isUnlocked ? idea.youtubeLink : '', // Hide link if locked
+                bannerImage: idea.bannerImage,
+                potentialEarnings: idea.potentialEarnings,
+                badges: idea.badges || [],
+                videoUrl: idea.videoUrl, // Public for marketing/info
+                meetingLink: isUnlocked ? idea.meetingLink : '',
+                ecosystemCards: isUnlocked ? (idea.ecosystemCards || []) : [],
+                isPremium: idea.isPremium,
                 isLocked: !isUnlocked
             };
         });
@@ -58,23 +59,20 @@ exports.unlockIdea = async (req, res, next) => {
 
         const user = await User.findById(req.user.id);
         
+        if (!user.unlockedIdeas) user.unlockedIdeas = [];
+        
         if (user.unlockedIdeas.includes(ideaId)) {
             return next(new ErrorResponse('Idea already unlocked', 400));
         }
 
-        if (user.wallet.balance < idea.price) {
-            return next(new ErrorResponse('Insufficient balance to unlock this strategy', 400));
-        }
-
-        // Deduct balance and unlock
-        user.wallet.balance -= idea.price;
+        // Logic for unlocking (can be based on subscription or points)
+        // For now, adding to unlocked list
         user.unlockedIdeas.push(ideaId);
         await user.save();
 
         res.status(200).json({
             success: true,
-            message: 'Strategy unlocked successfully',
-            data: { balance: user.wallet.balance }
+            message: 'Strategy unlocked successfully'
         });
     } catch (err) {
         next(err);

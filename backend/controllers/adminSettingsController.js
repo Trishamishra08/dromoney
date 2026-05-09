@@ -24,10 +24,15 @@ exports.getSettings = asyncHandler(async (req, res) => {
 exports.updateSettings = asyncHandler(async (req, res) => {
     let settings = await Settings.findOne();
 
+    const updateData = {
+        ...req.body,
+        businessPlans: req.body.businessPlans
+    };
+
     if (!settings) {
-        settings = await Settings.create(req.body);
+        settings = await Settings.create(updateData);
     } else {
-        settings = await Settings.findOneAndUpdate({}, req.body, {
+        settings = await Settings.findOneAndUpdate({}, { $set: updateData }, {
             new: true,
             runValidators: true
         });
