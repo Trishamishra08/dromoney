@@ -101,39 +101,40 @@ const BusinessIdeas = () => {
 
     // --- SCREEN -1: INTRO (Premium Rocket Welcome) ---
     const IntroScreen = () => (
-        <div className="min-h-screen bg-[#F8FAFF] flex flex-col items-center justify-center p-6">
+        <div className="min-h-screen bg-[#F8FAFF] pb-10">
             <style>
                 {`
                 @keyframes boost {
-                    0%, 100% { transform: translate(0, 0) rotate(-45deg); }
-                    25% { transform: translate(2px, -2px) rotate(-44deg); }
-                    50% { transform: translate(-1px, -4px) rotate(-46deg); }
-                    75% { transform: translate(1px, -2px) rotate(-45deg); }
+                    0%, 100% { transform: translateY(0) rotate(-45deg); }
+                    50% { transform: translateY(-10px) rotate(-45deg); }
                 }
                 @keyframes puff {
-                    0% { transform: scale(0.8) translate(0, 0); opacity: 0; }
-                    50% { transform: scale(1.2) translate(10px, 10px); opacity: 0.5; }
-                    100% { transform: scale(1.5) translate(20px, 20px); opacity: 0; }
+                    0% { transform: scale(0.8) opacity(0); }
+                    50% { transform: scale(1.2) opacity(0.5); }
+                    100% { transform: scale(1.5) opacity(0); }
                 }
                 .animate-boost {
-                    animation: boost 0.5s ease-in-out infinite;
+                    animation: boost 3s ease-in-out infinite;
                 }
                 .animate-puff {
-                    animation: puff 0.8s ease-out infinite;
+                    animation: puff 2s ease-out infinite;
                 }
                 `}
             </style>
-            <div className="absolute top-8 left-6 z-50">
-                <button onClick={() => navigate('/user/home')} className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 shadow-sm border border-slate-50 active:scale-90 transition-all">
+
+            {/* Sticky Header Row */}
+            <div className="bg-white/80 backdrop-blur-md px-6 py-4 flex items-center sticky top-0 z-40 border-b border-slate-100/50">
+                <button onClick={() => navigate('/user/home')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 active:scale-90 transition-all border border-slate-100">
                     <ChevronLeft size={22} />
                 </button>
             </div>
-            <div className="w-full max-w-sm flex flex-col items-center gap-8">
-                <div className="w-full aspect-[4/5] bg-gradient-to-br from-[#5D38F0] via-[#7C5DFF] to-[#A855F7] rounded-[4rem] shadow-[0_35px_60px_-15px_rgba(93,56,240,0.3)] flex flex-col items-center justify-center p-10 relative overflow-hidden group">
+
+            <div className="flex flex-col items-center justify-center p-6 pt-10">
+                <div className="w-full max-w-sm bg-gradient-to-br from-[#5D38F0] to-[#8643FF] rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden mb-12 flex flex-col items-center justify-center">
                     {/* Decorative Elements */}
-                    <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
-                    <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#FFE03D]/10 rounded-full -ml-20 -mb-20 blur-3xl" />
-                    
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/20 rounded-full -ml-16 -mb-16 blur-2xl" />
+
                     <div className="text-center space-y-2 relative z-10">
                         <div className="flex items-center justify-center gap-2 mb-1">
                             <Star size={14} className="text-[#FFE03D]" fill="#FFE03D" />
