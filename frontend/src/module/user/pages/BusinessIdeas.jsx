@@ -401,7 +401,7 @@ const BusinessIdeas = () => {
                             onClick={() => setSelectedPlanIdx(idx)}
                             className={`shrink-0 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${selectedPlanIdx === idx ? 'bg-[#5D38F0] text-white shadow-lg shadow-indigo-100' : 'bg-white text-slate-400 border border-slate-100'}`}
                         >
-                            {plan.title.split(' ')[0]} {plan.duration.replace('/ ', '')}
+                            {plan.title.split(' ')[0]} {plan.durationInDays ? `${plan.durationInDays} Days` : plan.duration.replace('/ ', '')}
                         </button>
                     ))}
                 </div>
@@ -415,7 +415,9 @@ const BusinessIdeas = () => {
                         <p className="text-white/80 font-bold text-sm">{settings.businessPlans[selectedPlanIdx]?.subtitle}</p>
                         <div className="mt-8 flex items-baseline gap-2">
                             <span className="text-4xl font-black">₹{settings.businessPlans[selectedPlanIdx]?.price}</span>
-                            <span className="text-white/60 font-bold text-sm">{settings.businessPlans[selectedPlanIdx]?.duration}</span>
+                            <span className="text-white/60 font-bold text-sm">
+                                {settings.businessPlans[selectedPlanIdx]?.durationInDays ? `(${settings.businessPlans[selectedPlanIdx].durationInDays} Days)` : settings.businessPlans[selectedPlanIdx]?.duration}
+                            </span>
                         </div>
 
                         {isSubscribed && timeRem && (
@@ -860,7 +862,8 @@ const BusinessIdeas = () => {
                     itemId={ideaId}
                     extraData={{
                         planName: settings.businessPlans[selectedPlanIdx].title,
-                        planDuration: settings.businessPlans[selectedPlanIdx].duration
+                        planDuration: settings.businessPlans[selectedPlanIdx].duration,
+                        durationInDays: settings.businessPlans[selectedPlanIdx].durationInDays || 30
                     }}
                     onSuccess={() => {
                         setShowPaymentModal(false);

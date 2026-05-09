@@ -19,6 +19,10 @@ const PaymentSchema = new mongoose.Schema({
         type: String,
         default: 'Monthly'
     },
+    durationInDays: {
+        type: Number,
+        default: 30
+    },
     businessIdea: {
         type: mongoose.Schema.ObjectId,
         ref: 'BusinessIdea'

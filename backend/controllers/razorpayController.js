@@ -18,12 +18,13 @@ const razorpay = new Razorpay({
 // @route   POST /api/user/data/razorpay/create-order
 // @access  Private
 exports.createOrder = asyncHandler(async (req, res, next) => {
-    const { amount, type, ideaId, planName: reqPlanName, planDuration: reqPlanDuration } = req.body; // amount in INR
+    const { amount, type, ideaId, planName: reqPlanName, planDuration: reqPlanDuration, durationInDays: reqDurationInDays } = req.body; // amount in INR
     const user = await User.findById(req.user.id);
 
     let finalAmount = 499; // Default for platform unlock
     let planName = 'Lifetime Access';
     let pType = 'PLATFORM_UNLOCK';
+    let durationDays = reqDurationInDays || 30;
 
     if (type === 'BUSINESS_IDEA_UNLOCK') {
         const idea = await BusinessIdea.findById(ideaId);
@@ -37,6 +38,7 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
         finalAmount = 150;
         planName = '3 Months Support Extension';
         pType = 'SUPPORT_CHAT_RENEWAL';
+        durationDays = 90;
     } else if (type === 'SUPPORT_BOOSTER' || type === 'TASK_BOOSTER') {
         if (user.isBoosterActive) {
             return next(new ErrorResponse('You already have an active booster.', 400));
@@ -49,13 +51,16 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
         finalAmount = originalPrice * 1.04; // adding 4% markup
         planName = booster ? booster.title : (boosterType === 'support' ? 'Support Booster' : 'Task Booster');
         pType = type;
+        durationDays = 30;
     } else if (type === 'BUSINESS_HUB_PLAN') {
         const { planName: pName } = req.body;
         finalAmount = amount;
         planName = pName || 'Business Hub Plan';
         pType = 'BUSINESS_HUB_PLAN';
+        durationDays = reqDurationInDays || 30;
     } else {
         if (user.isPaid) return next(new ErrorResponse('Platform already unlocked.', 400));
+        durationDays = 9999; // Lifetime
     }
 
     // Create order on Razorpay servers
@@ -67,6 +72,7 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
             userId: req.user.id.toString(),
             type: pType,
             ideaId: ideaId || '',
+            durationInDays: durationDays
         },
     });
 
@@ -76,6 +82,7 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
         plan: planName,
         paymentType: pType,
         planDuration: reqPlanDuration || 'Monthly',
+        durationInDays: durationDays,
         businessIdea: ideaId || null,
         amount: finalAmount,
         method: 'Razorpay',
@@ -198,8 +205,7 @@ exports.verifyPayment = asyncHandler(async (req, res, next) => {
             
             // If it's a Business Hub Plan, set supportExpiry
             if (payment.paymentType === 'BUSINESS_HUB_PLAN') {
-                const planDuration = payment.planDuration || 'Monthly';
-                const daysToAdd = planDuration.toLowerCase().includes('year') ? 365 : 30;
+                const daysToAdd = payment.durationInDays || 30;
                 
                 let currentExpiry = user.supportExpiry && new Date(user.supportExpiry) > new Date() 
                     ? new Date(user.supportExpiry) 

@@ -25,10 +25,7 @@ exports.sendMessage = asyncHandler(async (req, res, next) => {
     // If first time accessing Business Hub, set the date
     if (!user.businessHubFirstAccessedAt) {
         user.businessHubFirstAccessedAt = new Date();
-        // Set expiry to 3 months from now
-        const expiry = new Date();
-        expiry.setMonth(expiry.getMonth() + 3);
-        user.supportExpiry = expiry;
+        // Removed hardcoded 3-month grant to support dynamic plans
         await user.save();
     }
 
@@ -130,7 +127,8 @@ exports.renewSupport = asyncHandler(async (req, res, next) => {
     const baseDate = currentExpiry > now ? currentExpiry : now;
 
     const newExpiry = new Date(baseDate);
-    newExpiry.setMonth(newExpiry.getMonth() + 3);
+    // Standardizing to 30 days default for this specific legacy endpoint
+    newExpiry.setDate(newExpiry.getDate() + 30);
 
     user.supportExpiry = newExpiry;
     await user.save();

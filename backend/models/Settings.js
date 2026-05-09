@@ -39,8 +39,9 @@ const SettingsSchema = new mongoose.Schema({
         subtitle: { type: String, default: 'अपना बिजनेस शुरू करें...' },
         price: { type: Number, default: 499 },
         duration: { type: String, default: '/ Yearly' },
+        durationInDays: { type: Number, default: 30 },
         benefits: [{
-            title: { type: String, required: true },
+            title: { type: String, default: '' },
             subtitle: { type: String, default: 'Premium Benefit unlocked' },
             iconType: { type: String, default: 'support' },
             colorType: { type: String, default: 'emerald' }

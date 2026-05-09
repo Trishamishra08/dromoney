@@ -20,6 +20,7 @@ exports.getPublicSettings = async (req, res) => {
                         subtitle: 'अपना बिजनेस शुरू करें...',
                         price: 499,
                         duration: '/ Yearly',
+                        durationInDays: 30,
                         benefits: [
                             { title: '24/7 Expert Support', subtitle: 'Premium Benefit unlocked', iconType: 'support', colorType: 'emerald' },
                             { title: 'Weekly Live Meetings', subtitle: 'Premium Benefit unlocked', iconType: 'meeting', colorType: 'indigo' },

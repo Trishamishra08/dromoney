@@ -117,14 +117,22 @@ const BusinessContent = () => {
     const handleSaveSettings = async () => {
         setSubmitting(true);
         try {
-            const res = await api.put('/admin/settings', settingsData);
+            // Filter out empty benefits to keep data clean
+            const cleanedData = {
+                ...settingsData,
+                businessPlans: settingsData.businessPlans.map(plan => ({
+                    ...plan,
+                    benefits: plan.benefits.filter(b => b.title.trim() !== '')
+                }))
+            };
+            const res = await api.put('/admin/settings', cleanedData);
             if (res.success) {
                 alert("Subscription settings updated!");
                 fetchSettings();
                 setShowSettingsModal(false);
             }
         } catch (err) {
-            alert("Failed to update settings");
+            alert("Failed to update settings: " + (err.response?.data?.message || err.message));
         } finally {
             setSubmitting(false);
         }
@@ -202,7 +210,8 @@ const BusinessContent = () => {
             title: 'New Membership',
             subtitle: 'Plan description here...',
             price: 499,
-            duration: '/ Yearly',
+            duration: '/ Monthly',
+            durationInDays: 30,
             benefits: [{ title: '24/7 Support', subtitle: 'Premium Benefit unlocked', iconType: 'support', colorType: 'emerald' }]
         };
         setSettingsData(prev => ({
@@ -420,6 +429,10 @@ const BusinessContent = () => {
                                         <div className="space-y-1">
                                             <label className="text-[9px] font-black text-indigo-500 uppercase ml-1 italic">Plan Duration</label>
                                             <input type="text" value={settingsData.businessPlans[activePlanIdx].duration} onChange={(e) => updatePlanField(activePlanIdx, 'duration', e.target.value)} placeholder="e.g. / Yearly" className="w-full bg-indigo-50/30 border border-indigo-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-indigo-600" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] font-black text-emerald-500 uppercase ml-1">Duration (Days)</label>
+                                            <input type="number" value={settingsData.businessPlans[activePlanIdx].durationInDays || 30} onChange={(e) => updatePlanField(activePlanIdx, 'durationInDays', parseInt(e.target.value))} className="w-full bg-emerald-50/30 border border-emerald-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all text-emerald-600" />
                                         </div>
                                         <div className="md:col-span-3 space-y-1">
                                             <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Subheading</label>
