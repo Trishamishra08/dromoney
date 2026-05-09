@@ -2,7 +2,7 @@ const express = require('express');
 const { getContent, getBulkContent, getActiveBanners } = require('../controllers/contentController');
 const { getBoosters } = require('../controllers/adminBoosterController'); // Reusing controller but for public view (could filter isActive: true)
 const { getPublicNotifications } = require('../controllers/notificationController');
-const { getBusinessIdeas } = require('../controllers/businessIdeaController');
+const { getBusinessIdeas, getBusinessIdeaById } = require('../controllers/businessIdeaController');
 const { getAds, getAdById } = require('../controllers/adController');
 const { getEvents, getEvent } = require('../controllers/eventController');
 const { getTasks } = require('../controllers/adminContentController');
@@ -18,6 +18,7 @@ router.get('/banners', getActiveBanners);
 router.get('/boosters', getBoosters); // Public view of boosters
 router.get('/notifications', getPublicNotifications);
 router.get('/business-ideas', getOptionalUser, getBusinessIdeas);
+router.get('/business-ideas/:id', getOptionalUser, getBusinessIdeaById);
 router.get('/ads', getOptionalUser, getAds);
 router.get('/ads/:id', getOptionalUser, getAdById);
 router.get('/events', getOptionalUser, getEvents);

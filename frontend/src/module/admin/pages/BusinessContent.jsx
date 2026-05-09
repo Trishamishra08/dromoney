@@ -47,7 +47,7 @@ const BusinessContent = () => {
 
     const fetchIdeas = async () => {
         try {
-            const res = await api.get('/public/business-ideas');
+            const res = await api.get('/admin/business-ideas');
             if (res.success) setIdeas(res.data);
         } catch (err) {
             console.error("Fetch error:", err);
@@ -250,7 +250,10 @@ const BusinessContent = () => {
             desc: idea.desc || '',
             badges: idea.badges && idea.badges.length > 0 ? idea.badges : ['Trending'],
             videoUrl: idea.videoUrl || '',
-            meetingLink: idea.meetingLink || ''
+            meetingLink: idea.meetingLink || '',
+            howItWorks: idea.howItWorks || '',
+            investmentDetails: idea.investmentDetails || '',
+            profitDetails: idea.profitDetails || ''
         });
         setEditingId(idea._id);
         setShowModal(true);
@@ -551,6 +554,23 @@ const BusinessContent = () => {
                                         placeholder="https://meet.google.com/xxx-yyy-zzz"
                                         className="w-full bg-indigo-50/30 border border-indigo-100 rounded-xl px-4 py-3 text-sm font-bold outline-none text-indigo-600 placeholder:text-slate-300 focus:ring-2 focus:ring-indigo-500/20"
                                     />
+                                </div>
+                                <div className="md:col-span-2 p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 space-y-6">
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Business Card Details</h3>
+                                    <div className="space-y-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] font-black text-emerald-500 uppercase ml-1">How it Works (कैसे करें)</label>
+                                            <textarea value={formData.howItWorks} onChange={(e) => setFormData({...formData, howItWorks: e.target.value})} rows="4" className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-500/10 resize-none" placeholder="Explain the process step-by-step..." />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] font-black text-amber-500 uppercase ml-1">Investment Details (इन्वेस्टमेंट)</label>
+                                            <textarea value={formData.investmentDetails} onChange={(e) => setFormData({...formData, investmentDetails: e.target.value})} rows="4" className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-xs font-medium outline-none focus:ring-2 focus:ring-amber-500/10 resize-none" placeholder="Break down the costs..." />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] font-black text-indigo-500 uppercase ml-1">Profit Details (प्रॉफ़िट)</label>
+                                            <textarea value={formData.profitDetails} onChange={(e) => setFormData({...formData, profitDetails: e.target.value})} rows="4" className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-xs font-medium outline-none focus:ring-2 focus:ring-indigo-500/10 resize-none" placeholder="Explain the potential earnings..." />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <button type="submit" disabled={submitting || isUploading} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">

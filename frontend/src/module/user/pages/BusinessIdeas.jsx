@@ -4,7 +4,8 @@ import {
     Rocket, ChevronLeft, ArrowRight, 
     Sparkles, Briefcase, MessageSquare,
     Play, TrendingUp, Copy, Users,
-    Crown, ShieldCheck, Zap, Star, Video
+    Crown, ShieldCheck, Zap, Star, Video,
+    Lock as LockIcon, Loader2
 } from 'lucide-react';
 import api from '../../shared/services/api';
 import UniversalVideoPlayer from '../../shared/components/UniversalVideoPlayer';
@@ -24,6 +25,7 @@ const BusinessIdeas = () => {
         if (ideaId === 'all') return 0;   // Listing
         if (section === 'ecosystem' && cardId) return 4;
         if (section === 'ecosystem') return 3;
+        if (section === 'info' && cardId) return 5;
         if (section === 'subscription') return 2;
         return 1;                         // idea detail
     };
@@ -36,8 +38,17 @@ const BusinessIdeas = () => {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [selectedEcoCard, setSelectedEcoCard] = useState(null);
     const [settings, setSettings] = useState({ businessPlans: [] });
+    const [refreshing, setRefreshing] = useState(false);
+    const [detailType, setDetailType] = useState(null); // 'howItWorks', 'investmentDetails', 'profitDetails'
 
     const step = getStepFromUrl();
+
+    // Fetch single idea details when ideaId is present or step changes
+    useEffect(() => {
+        if (ideaId && step > 0) {
+            fetchIdeaDetails();
+        }
+    }, [ideaId, step]);
 
     useEffect(() => {
         fetchIdeas();
@@ -77,9 +88,28 @@ const BusinessIdeas = () => {
     const fetchIdeas = async () => {
         try {
             const res = await api.get('/public/business-ideas');
-            if (res.success) setIdeas(res.data);
+            if (res.success) {
+                setIdeas(res.data);
+                // Also update selectedIdea if it's already set to keep it in sync
+                if (ideaId) {
+                    const found = res.data.find(i => i._id === ideaId);
+                    if (found) setSelectedIdea(found);
+                }
+            }
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
+    };
+
+    const fetchIdeaDetails = async () => {
+        if (!ideaId) return;
+        setRefreshing(true);
+        try {
+            const res = await api.get(`/public/business-ideas/${ideaId}`);
+            if (res.success) {
+                setSelectedIdea(res.data);
+            }
+        } catch (err) { console.error('Fetch detail error:', err); }
+        finally { setRefreshing(false); }
     };
 
     const handleIdeaSelect = (idea) => {
@@ -262,15 +292,15 @@ const BusinessIdeas = () => {
             <div className="px-6 py-6 flex items-center justify-center">
                 <div className="flex items-center w-full max-w-sm relative">
                     <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-100 -translate-y-1/2 z-0"></div>
-                    <div className="absolute top-1/2 left-0 w-1/4 h-0.5 bg-[#5D38F0] -translate-y-1/2 z-0"></div>
                     {[
                         { num: 1, label: 'Idea', active: true },
                         { num: 2, label: 'Upgrade', active: false },
-                        { num: 3, label: 'Ecosystem', active: false },
-                        { num: 4, label: 'Finish', active: false }
+                        { num: 3, label: 'Ecosystem', active: false }
                     ].map((s, idx) => (
                         <div key={idx} className="flex flex-col items-center gap-2 relative z-10 flex-1">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${s.active ? 'bg-[#5D38F0] text-white shadow-lg' : 'bg-white border-2 border-slate-100 text-slate-300'}`}>{s.num}</div>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${s.active ? 'bg-[#5D38F0] text-white shadow-lg' : 'bg-slate-50 border-2 border-slate-100 text-slate-300'}`}>
+                                {s.active ? s.num : <LockIcon size={12} className="opacity-60" />}
+                            </div>
                             <span className={`text-[8px] font-black uppercase tracking-widest ${s.active ? 'text-[#5D38F0]' : 'text-slate-300'}`}>{s.label}</span>
                         </div>
                     ))}
@@ -291,17 +321,26 @@ const BusinessIdeas = () => {
             <div className="px-6 mt-10 space-y-6">
                 <h3 className="text-lg font-black text-slate-900">बिजनेस डिटेल्स</h3>
                 <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm">
+                    <div 
+                        onClick={() => navigate(`/user/business-ideas/${ideaId}/info/howItWorks`)}
+                        className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 hover:border-emerald-200 transition-all"
+                    >
                         <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-3"><Sparkles size={24} /></div>
                         <h4 className="text-[10px] font-black text-slate-900 leading-tight">कैसे करें<br/>(How it work 🤔)</h4>
                         <p className="text-[8px] font-bold text-slate-400 mt-2">स्टेप बाय स्टेप प्रोसेस से समझें।</p>
                     </div>
-                    <div className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm">
+                    <div 
+                        onClick={() => navigate(`/user/business-ideas/${ideaId}/info/investmentDetails`)}
+                        className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 hover:border-amber-200 transition-all"
+                    >
                         <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-3"><Briefcase size={24} /></div>
                         <h4 className="text-[10px] font-black text-slate-900 leading-tight">इन्वेस्टमेंट<br/>(खर्च)</h4>
                         <p className="text-[8px] font-bold text-slate-400 mt-2">शुरुआत करने में कुल कितना खर्च आएगा।</p>
                     </div>
-                    <div className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm">
+                    <div 
+                        onClick={() => navigate(`/user/business-ideas/${ideaId}/info/profitDetails`)}
+                        className="bg-white border border-slate-100 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 hover:border-indigo-200 transition-all"
+                    >
                         <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-3"><TrendingUp size={24} /></div>
                         <h4 className="text-[10px] font-black text-slate-900 leading-tight">प्रॉफिट</h4>
                         <p className="text-[8px] font-bold text-slate-400 mt-2">आपकी कमाई कितनी होगी जानें।</p>
@@ -450,56 +489,112 @@ const BusinessIdeas = () => {
         }, [isSubscribed, ideaId]);
 
         const ecoColors = [
-            { color: 'text-emerald-500', bg: 'bg-emerald-50', ring: 'ring-emerald-200' },
-            { color: 'text-indigo-500',  bg: 'bg-indigo-50',  ring: 'ring-indigo-200' },
-            { color: 'text-blue-500',    bg: 'bg-blue-50',    ring: 'ring-blue-200' },
-            { color: 'text-amber-500',   bg: 'bg-amber-50',   ring: 'ring-amber-200' }
+            { color: 'text-emerald-500', bg: 'bg-emerald-50', ring: 'ring-emerald-400', grad: 'from-emerald-50 to-white' },
+            { color: 'text-[#5D38F0]',  bg: 'bg-indigo-50',  ring: 'ring-indigo-400', grad: 'from-indigo-50 to-white' },
+            { color: 'text-blue-500',    bg: 'bg-blue-50',    ring: 'ring-blue-400', grad: 'from-blue-50 to-white' },
+            { color: 'text-amber-500',   bg: 'bg-amber-50',   ring: 'ring-amber-400', grad: 'from-amber-50 to-white' }
         ];
-        const cards = selectedIdea?.ecosystemCards?.length > 0
-            ? selectedIdea.ecosystemCards
-            : [
-                { id: 'daily-plan',    title: 'डेली प्लान' },
-                { id: 'new-updates',   title: 'न्यू अपडेट्स' },
-                { id: 'tools-contact', title: 'टूल्स एंड कांटेक्ट' },
-                { id: 'calculation',   title: 'कैलकुलेशन' }
-            ];
+        const cards = selectedIdea?.ecosystemCards || [];
+
+        if (cards.length === 0 && !loading) {
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-6 gap-4">
+                    <Loader2 size={40} className="text-[#5D38F0] animate-spin" />
+                    <p className="text-slate-400 font-black text-xs uppercase tracking-widest text-center">Loading Ecosystem Content...</p>
+                </div>
+            );
+        }
 
         return (
-            <div className="min-h-screen bg-white pb-40">
-                <div className="px-6 pt-12 pb-4 flex items-center justify-between bg-white sticky top-0 z-40">
-                    <button onClick={() => navigate(`/user/business-ideas/${ideaId}/subscription`)} className="w-10 h-10 flex items-center justify-center text-slate-900"><ChevronLeft size={24} /></button>
-                    <h1 className="text-lg font-black text-slate-900">Premium Access</h1>
+            <div className="min-h-screen bg-[#F8FAFF] pb-40">
+                <style>{`
+                    @keyframes float {
+                        0%, 100% { transform: translateY(0); }
+                        50% { transform: translateY(-5px); }
+                    }
+                    .animate-float {
+                        animation: float 4s ease-in-out infinite;
+                    }
+                `}</style>
+                <div className="px-6 pt-12 pb-4 flex items-center justify-between bg-[#F8FAFF]/90 backdrop-blur-md sticky top-0 z-40">
+                    <button onClick={() => navigate(`/user/business-ideas/${ideaId}/subscription`)} className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-900 shadow-sm border border-slate-100 active:scale-90 transition-all"><ChevronLeft size={24} /></button>
+                    <h1 className="text-lg font-black text-slate-900 tracking-tight">Premium Hub</h1>
                     <div className="w-10" />
                 </div>
+
+                {/* Progress Stepper */}
                 <div className="px-6 py-6 flex items-center justify-center">
-                    <div className="flex items-center w-full max-sm relative">
-                        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-100 -translate-y-1/2"></div>
+                    <div className="flex items-center w-full max-w-xs relative">
+                        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-200/50 -translate-y-1/2"></div>
                         <div className="absolute top-1/2 left-0 w-full h-0.5 bg-[#5D38F0] -translate-y-1/2"></div>
-                        {[1, 2, 3, 4].map((n) => (
-                            <div key={n} className="flex flex-col items-center gap-2 relative z-10 flex-1">
-                                <div className="w-8 h-8 rounded-full bg-[#5D38F0] text-white flex items-center justify-center font-bold text-xs">{n}</div>
+                        { [
+                            { num: 1, label: 'Idea', active: true },
+                            { num: 2, label: 'Upgrade', active: true },
+                            { num: 3, label: 'Ecosystem', active: true }
+                        ].map((s, idx) => (
+                            <div key={idx} className="flex flex-col items-center gap-2 relative z-10 flex-1">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${s.active ? 'bg-[#5D38F0] text-white shadow-lg ring-4 ring-indigo-100' : 'bg-white border-2 border-slate-100 text-slate-300'}`}>
+                                    {s.active ? s.num : <LockIcon size={12} />}
+                                </div>
+                                <span className={`text-[8px] font-black uppercase tracking-widest ${s.active ? 'text-[#5D38F0]' : 'text-slate-300'}`}>{s.label}</span>
                             </div>
                         ))}
                     </div>
                 </div>
-                <div className="px-6 mt-6">
-                    <h2 className="text-2xl font-black text-[#1E293B]">अपने बिजनेस को आगे बढ़ाएं</h2>
-                    <p className="text-[12px] font-bold text-slate-400">सभी जरूरी जानकारी और सपोर्ट यहां पाएं</p>
+
+                <div className="px-6 mt-8">
+                    <div className="flex items-center gap-3 mb-1">
+                        <Sparkles size={18} className="text-[#5D38F0]" />
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Strategy Ecosystem</h2>
+                    </div>
+                    <p className="text-[12px] font-bold text-slate-400">Unlock your business potential with these steps</p>
                 </div>
-                <div className="px-6 mt-8 grid grid-cols-2 gap-4">
+
+                <div className="px-6 mt-10 grid grid-cols-2 gap-5">
                     {cards.map((card, i) => {
                         const c = ecoColors[i % ecoColors.length];
+                        
+                        // Icon mapping based on index or ID
+                        const getIcon = (idx) => {
+                            switch(idx) {
+                                case 0: return <TrendingUp size={20} />;
+                                case 1: return <Zap size={20} />;
+                                case 2: return <Briefcase size={20} />;
+                                case 3: return <Crown size={20} />;
+                                default: return <Sparkles size={20} />;
+                            }
+                        };
+
                         return (
                             <div
                                 key={card.id || i}
-                                onClick={() => { setSelectedEcoCard({ ...card, colorStyle: c }); navigate(`/user/business-ideas/${ideaId}/ecosystem/${card.id}`); }}
-                                className={`bg-white border border-slate-100 rounded-[2rem] p-5 shadow-sm group hover:shadow-xl hover:ring-2 ${c.ring} transition-all cursor-pointer active:scale-95`}
+                                onClick={() => { navigate(`/user/business-ideas/${ideaId}/ecosystem/${card.id}`); }}
+                                className={`group relative bg-white/70 backdrop-blur-sm border border-white rounded-[2.5rem] p-6 shadow-[0_12px_40px_rgb(0,0,0,0.06)] overflow-hidden transition-all duration-500 hover:shadow-[0_25px_60px_rgba(93,56,240,0.2)] hover:-translate-y-3 hover:ring-2 ${c.ring} cursor-pointer active:scale-95`}
+                                style={{ animationDelay: `${i * 0.15}s` }}
                             >
-                                <span className={`text-[10px] font-black ${c.bg} ${c.color} px-2 py-0.5 rounded-lg`}>0{i+1}</span>
-                                <h4 className={`text-[13px] font-black ${c.color} mt-4 leading-snug`}>{card.title}</h4>
-                                <div className="mt-4 flex justify-end">
-                                    <div className={`w-8 h-8 rounded-full ${c.bg} flex items-center justify-center ${c.color} group-hover:bg-[#5D38F0] group-hover:text-white transition-all`}>
-                                        <ArrowRight size={16} />
+                                {/* Animated Glow Effect */}
+                                <div className={`absolute -top-10 -left-10 w-32 h-32 ${c.bg} opacity-30 blur-[40px] group-hover:opacity-60 transition-opacity duration-700`}></div>
+                                
+                                <div className="relative z-10 flex flex-col h-full">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className={`w-11 h-11 ${c.bg} rounded-2xl flex items-center justify-center shadow-inner transition-transform duration-700 group-hover:scale-125 group-hover:rotate-[15deg]`}>
+                                            <span className={`${c.color} transition-transform`}>{getIcon(i)}</span>
+                                        </div>
+                                        <span className={`text-[10px] font-black ${c.color} opacity-40`}>0{i+1}</span>
+                                    </div>
+                                    
+                                    <div className="flex-1">
+                                        <h4 className="text-[14px] font-black text-slate-800 leading-tight mb-2 group-hover:text-[#5D38F0] transition-colors">
+                                            {card.title}
+                                        </h4>
+                                        <div className={`h-1 w-8 ${c.bg} rounded-full mb-6 group-hover:w-16 transition-all duration-500`}></div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-600 transition-colors">View Details</span>
+                                        <div className={`w-8 h-8 rounded-full ${c.bg} flex items-center justify-center ${c.color} group-hover:bg-[#5D38F0] group-hover:text-white group-hover:translate-x-1 transition-all duration-300`}>
+                                            <ArrowRight size={14} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -561,49 +656,185 @@ const BusinessIdeas = () => {
 
     // --- SCREEN 4: ECO CARD DETAIL ---
     const EcoCardDetailScreen = () => {
-        const c = selectedEcoCard?.colorStyle || { color: 'text-indigo-500', bg: 'bg-indigo-50' };
+        const card = selectedIdea?.ecosystemCards?.find(c => c.id === cardId);
+        const cardIdx = selectedIdea?.ecosystemCards?.findIndex(c => c.id === cardId);
+        
+        if (!card || cardIdx === undefined || cardIdx === -1) {
+            return (
+                <div className="min-h-screen bg-[#F8FAFF] flex flex-col items-center justify-center p-6 gap-4">
+                    <Loader2 size={40} className="text-[#5D38F0] animate-spin" />
+                    <p className="text-slate-400 font-black text-xs uppercase tracking-widest text-center">Loading Strategy Details...</p>
+                </div>
+            );
+        }
+
+        const ecoColors = [
+            { color: 'text-emerald-500', bg: 'bg-emerald-50', ring: 'ring-emerald-400', grad: 'from-emerald-500 to-emerald-400' },
+            { color: 'text-[#5D38F0]',  bg: 'bg-indigo-50',  ring: 'ring-indigo-400', grad: 'from-indigo-600 to-[#5D38F0]' },
+            { color: 'text-blue-500',    bg: 'bg-blue-50',    ring: 'ring-blue-400', grad: 'from-blue-600 to-blue-400' },
+            { color: 'text-amber-500',   bg: 'bg-amber-50',   ring: 'ring-amber-400', grad: 'from-amber-600 to-amber-400' }
+        ];
+        const c = ecoColors[cardIdx % ecoColors.length] || ecoColors[0];
+
+        const nextCard = selectedIdea?.ecosystemCards?.[(cardIdx + 1) % selectedIdea?.ecosystemCards?.length];
+
         return (
-            <div className="min-h-screen bg-[#F8FAFF] pb-24">
-                <div className="px-6 pt-12 pb-4 flex items-center gap-4 bg-[#F8FAFF]/90 backdrop-blur-md sticky top-0 z-40">
-                    <button onClick={() => navigate(`/user/business-ideas/${ideaId}/ecosystem`)} className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100"><ChevronLeft size={22} /></button>
-                    <div className="flex-1">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{selectedIdea?.title}</p>
-                        <h1 className="text-lg font-black text-slate-900 leading-tight">{selectedEcoCard?.title}</h1>
-                    </div>
-                </div>
-
-                <div className="px-6 mt-4">
-                    <div className={`${c.bg} rounded-[2.5rem] p-6 flex items-center gap-4`}>
-                        <div className={`w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm`}>
-                            <span className={`text-2xl font-black ${c.color}`}>📋</span>
-                        </div>
-                        <div>
-                            <p className={`text-xs font-black ${c.color} uppercase tracking-widest`}>Premium Content</p>
-                            <h2 className="text-xl font-black text-slate-900 mt-0.5">{selectedEcoCard?.title}</h2>
+            <div className="min-h-screen bg-white pb-32">
+                {/* Hero Header */}
+                <div className={`relative h-64 overflow-hidden rounded-b-[3.5rem] bg-gradient-to-br ${c.grad}`}>
+                    <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-20">
+                        <button onClick={() => navigate(`/user/business-ideas/${ideaId}/ecosystem`)} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white active:scale-90 transition-all border border-white/20">
+                            <ChevronLeft size={24} />
+                        </button>
+                        <div className="flex flex-col items-end">
+                            <p className="text-[9px] font-black text-white/60 uppercase tracking-widest">Premium Strategy</p>
+                            <span className="text-white font-black text-xs">Phase 0{cardIdx + 1}</span>
                         </div>
                     </div>
+
+                    <div className="absolute bottom-10 left-8 right-8 z-20">
+                        <h1 className="text-3xl font-black text-white leading-tight mb-2">{card?.title}</h1>
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-1 bg-white/40 rounded-full"></div>
+                            <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest">Premium Strategy</p>
+                        </div>
+                    </div>
+
+                    {/* Decorative Elements */}
+                    <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+                    <div className="absolute -left-10 top-0 w-32 h-32 bg-black/5 rounded-full blur-2xl"></div>
                 </div>
 
-                <div className="px-6 mt-6">
-                    <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-50 min-h-[300px]">
-                        {selectedEcoCard?.description ? (
+                <div className="px-6 -mt-6 relative z-30">
+                    <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-50 min-h-[400px]">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className={`w-10 h-10 ${c.bg} ${c.color} rounded-xl flex items-center justify-center shadow-inner`}>
+                                <Sparkles size={18} />
+                            </div>
+                            <h3 className="text-sm font-black text-slate-800">विस्तृत जानकारी</h3>
+                        </div>
+
+                        {card?.description ? (
                             <div className="prose prose-sm max-w-none">
-                                {selectedEcoCard.description.split('\n').map((line, i) => (
+                                {card.description.split('\n').map((line, i) => (
                                     line.trim() ? (
-                                        <p key={i} className="text-[14px] font-medium text-slate-700 leading-relaxed mb-4">{line}</p>
-                                    ) : <br key={i} />
+                                        <p key={i} className="text-[15px] font-medium text-slate-600 leading-relaxed mb-4">{line}</p>
+                                    ) : <div key={i} className="h-4" />
                                 ))}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+                            <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
                                 <div className={`w-16 h-16 ${c.bg} rounded-full flex items-center justify-center`}>
-                                    <span className="text-3xl">📝</span>
+                                    <MessageSquare size={30} className={c.color} />
                                 </div>
-                                <p className="font-black text-slate-300 text-xs uppercase tracking-widest">Content Coming Soon</p>
-                                <p className="text-slate-300 text-[11px]">Admin is updating this section...</p>
+                                <p className="font-black text-slate-300 text-xs uppercase tracking-widest">Update In Progress</p>
+                                <p className="text-slate-400 text-[11px] max-w-[200px]">Admin team is refining this section. Please check back shortly.</p>
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Bottom Nav Area */}
+                <div className="sticky -bottom-4 px-6 z-50 pb-8">
+                    <button 
+                        onClick={() => {
+                            if (nextCard) {
+                                navigate(`/user/business-ideas/${ideaId}/ecosystem/${nextCard.id}`);
+                                window.scrollTo(0, 0);
+                            }
+                        }}
+                        className="w-full bg-[#1E293B] hover:bg-slate-800 text-white py-5 rounded-[2rem] font-black text-sm flex items-center justify-center gap-3 shadow-[0_15px_40px_rgba(0,0,0,0.3)] active:scale-95 transition-all border border-slate-700"
+                    >
+                        Next Strategy <ArrowRight size={18} />
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+    // --- SCREEN 5: INFO DETAIL (Step 1 Cards) ---
+    const InfoDetailScreen = () => {
+        const type = cardId; // e.g. howItWorks
+        const content = selectedIdea?.[type];
+
+        const config = {
+            howItWorks: { title: 'कैसे करें', icon: <Sparkles size={24} />, color: 'text-emerald-500', bg: 'bg-emerald-50', grad: 'from-emerald-600 to-emerald-400' },
+            investmentDetails: { title: 'इन्वेस्टमेंट', icon: <Briefcase size={24} />, color: 'text-amber-500', bg: 'bg-amber-50', grad: 'from-amber-600 to-amber-400' },
+            profitDetails: { title: 'प्रॉफिट', icon: <TrendingUp size={24} />, color: 'text-indigo-500', bg: 'bg-indigo-50', grad: 'from-indigo-600 to-[#5D38F0]' }
+        };
+
+        const c = config[type] || config.howItWorks;
+
+        if (refreshing && !content) {
+            return (
+                <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
+                    <Loader2 size={40} className="text-[#5D38F0] animate-spin" />
+                </div>
+            );
+        }
+
+        return (
+            <div className="min-h-screen bg-white pb-32">
+                {/* Hero Header */}
+                <div className={`relative h-64 overflow-hidden rounded-b-[3.5rem] bg-gradient-to-br ${c.grad}`}>
+                    <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between z-20">
+                        <button onClick={() => navigate(`/user/business-ideas/${ideaId}`)} className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white active:scale-90 transition-all border border-white/20">
+                            <ChevronLeft size={24} />
+                        </button>
+                    </div>
+
+                    <div className="absolute bottom-10 left-8 right-8 z-20">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white">
+                                {c.icon}
+                            </div>
+                            <span className="text-white/60 font-black text-xs uppercase tracking-widest">Business Detail</span>
+                        </div>
+                        <h1 className="text-3xl font-black text-white leading-tight">{c.title}</h1>
+                    </div>
+                    
+                    {/* Decorative Elements */}
+                    <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+                </div>
+
+                <div className="px-6 -mt-6 relative z-30">
+                    <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_20px_50_rgba(0,0,0,0.05)] border border-slate-50 min-h-[400px]">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className={`w-10 h-10 ${c.bg} ${c.color} rounded-xl flex items-center justify-center shadow-inner`}>
+                                <Rocket size={18} />
+                            </div>
+                            <h3 className="text-sm font-black text-slate-800">विस्तृत जानकारी</h3>
+                        </div>
+
+                        {content ? (
+                            <div className="prose prose-sm max-w-none">
+                                {content.split('\n').map((line, i) => (
+                                    line.trim() ? (
+                                        <p key={i} className="text-[15px] font-medium text-slate-600 leading-relaxed mb-4">{line}</p>
+                                    ) : <div key={i} className="h-4" />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+                                <div className={`w-16 h-16 ${c.bg} rounded-full flex items-center justify-center`}>
+                                    <MessageSquare size={30} className={c.color} />
+                                </div>
+                                <p className="font-black text-slate-300 text-xs uppercase tracking-widest">Update In Progress</p>
+                                <p className="text-slate-400 text-[11px] max-w-[200px]">Admin team is refining this section. Please check back shortly.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Floating Bottom Nav */}
+                {/* Bottom Nav Area */}
+                <div className="sticky bottom-0 p-6 z-50 bg-white/80 backdrop-blur-md border-t border-slate-50">
+                    <button 
+                        onClick={() => navigate(`/user/business-ideas/${ideaId}`)}
+                        className="w-full bg-[#1E293B] hover:bg-slate-800 text-white py-5 rounded-[2rem] font-black text-sm shadow-xl active:scale-95 transition-all"
+                    >
+                        Got it! Back to Journey
+                    </button>
                 </div>
             </div>
         );
@@ -617,6 +848,7 @@ const BusinessIdeas = () => {
             {step === 2 && <SubscriptionScreen />}
             {step === 3 && <EcosystemScreen />}
             {step === 4 && <EcoCardDetailScreen />}
+            {step === 5 && <InfoDetailScreen />}
 
             {showPaymentModal && settings.businessPlans[selectedPlanIdx] && (
                 <PaymentModal

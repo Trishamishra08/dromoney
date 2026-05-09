@@ -58,6 +58,10 @@ const BusinessIdeaSchema = new mongoose.Schema({
             { id: 'calculation',     title: 'कैलकुलेशन',          description: '' }
         ]
     },
+    // New fields for the 3 Business Details cards
+    howItWorks: { type: String, default: '' },
+    investmentDetails: { type: String, default: '' },
+    profitDetails: { type: String, default: '' },
     createdAt: {
         type: Date,
         default: Date.now

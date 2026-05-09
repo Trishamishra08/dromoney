@@ -10,14 +10,16 @@ exports.getBusinessIdeas = async (req, res, next) => {
         const ideas = await BusinessIdea.find({ isActive: true }).sort('createdAt');
         
         let unlockedIds = [];
+        let isSubscribed = false;
         if (req.user) {
             const user = await User.findById(req.user.id);
             unlockedIds = user.unlockedIdeas ? user.unlockedIdeas.map(id => id.toString()) : [];
+            isSubscribed = user.supportExpiry && new Date(user.supportExpiry).getTime() > new Date().getTime();
         }
 
         const data = ideas.map(idea => {
-            // Check if user has unlocked this specific idea or is it public
-            const isUnlocked = !idea.isPremium || unlockedIds.includes(idea._id.toString());
+            // Check if user has unlocked this specific idea or is it public or user has active business sub
+            const isUnlocked = !idea.isPremium || unlockedIds.includes(idea._id.toString()) || isSubscribed;
             
             return {
                 _id: idea._id,
@@ -30,9 +32,16 @@ exports.getBusinessIdeas = async (req, res, next) => {
                 badges: idea.badges || [],
                 videoUrl: idea.videoUrl, // Public for marketing/info
                 meetingLink: isUnlocked ? idea.meetingLink : '',
-                ecosystemCards: isUnlocked ? (idea.ecosystemCards || []) : [],
+                ecosystemCards: (idea.ecosystemCards || []).map(card => ({
+                    id: card.id,
+                    title: card.title,
+                    description: isUnlocked ? card.description : ''
+                })),
                 isPremium: idea.isPremium,
-                isLocked: !isUnlocked
+                isLocked: !isUnlocked,
+                howItWorks: idea.howItWorks || '',
+                investmentDetails: idea.investmentDetails || '',
+                profitDetails: idea.profitDetails || ''
             };
         });
 
@@ -128,6 +137,58 @@ exports.updateBusinessIdea = async (req, res, next) => {
         res.status(200).json({
             success: true,
             data: idea
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// @desc    Get single business idea by ID
+// @route   GET /api/public/business-ideas/:id
+// @access  Public (Partial) / Private (User)
+exports.getBusinessIdeaById = async (req, res, next) => {
+    try {
+        const idea = await BusinessIdea.findById(req.params.id);
+        if (!idea) {
+            return next(new ErrorResponse('Idea not found', 404));
+        }
+
+        let isUnlocked = !idea.isPremium;
+        if (req.user) {
+            const user = await User.findById(req.user.id);
+            if (user) {
+                const unlockedIds = user.unlockedIdeas ? user.unlockedIdeas.map(id => id.toString()) : [];
+                const isSubscribed = user.supportExpiry && new Date(user.supportExpiry).getTime() > new Date().getTime();
+                isUnlocked = isUnlocked || unlockedIds.includes(idea._id.toString()) || isSubscribed;
+            }
+        }
+
+        const data = {
+            _id: idea._id,
+            title: idea.title,
+            hindiTitle: idea.hindiTitle,
+            subtitle: idea.subtitle,
+            desc: idea.desc,
+            bannerImage: idea.bannerImage,
+            potentialEarnings: idea.potentialEarnings,
+            badges: idea.badges || [],
+            videoUrl: idea.videoUrl,
+            meetingLink: isUnlocked ? idea.meetingLink : '',
+            ecosystemCards: (idea.ecosystemCards || []).map(card => ({
+                id: card.id,
+                title: card.title,
+                description: isUnlocked ? card.description : ''
+            })),
+            isPremium: idea.isPremium,
+            isLocked: !isUnlocked,
+            howItWorks: idea.howItWorks || '',
+            investmentDetails: idea.investmentDetails || '',
+            profitDetails: idea.profitDetails || ''
+        };
+
+        res.status(200).json({
+            success: true,
+            data
         });
     } catch (err) {
         next(err);
