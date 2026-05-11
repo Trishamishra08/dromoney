@@ -9,12 +9,14 @@ const {
     unlockFutureFund,
     getReferrals
 } = require('../controllers/userController');
+const { submitTask } = require('../controllers/taskSubmissionController');
 const { unlockIdea } = require('../controllers/businessIdeaController');
 const { createOrder, verifyPayment } = require('../controllers/razorpayController');
 const { rewardUserForAd } = require('../controllers/adController');
 const { joinEvent, submitResult } = require('../controllers/eventController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/upload');
+const { uploadToCloud, uploadMiddleware } = require('../controllers/adminUploadController');
 
 const router = express.Router();
 
@@ -41,6 +43,8 @@ router.post('/events/:id/submit', submitResult);
 // Razorpay Routes
 router.post('/razorpay/create-order', createOrder);
 router.post('/razorpay/verify', verifyPayment);
+router.post('/tasks/submit', submitTask);
+router.post('/upload', uploadMiddleware, uploadToCloud);
 
 module.exports = router;
 

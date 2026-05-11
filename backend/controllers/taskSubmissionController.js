@@ -1,0 +1,149 @@
+const TaskSubmission = require('../models/TaskSubmission');
+const Task = require('../models/Task');
+const User = require('../models/User');
+const ErrorResponse = require('../utils/errorResponse');
+const asyncHandler = require('../middleware/async');
+
+// @desc    Submit task proof
+// @route   POST /api/user/tasks/submit
+// @access  Private
+exports.submitTask = asyncHandler(async (req, res, next) => {
+    const { taskId, proofImage, coinsReward } = req.body;
+
+    if (!taskId || !proofImage) {
+        return next(new ErrorResponse('Please provide taskId and proofImage', 400));
+    }
+
+    const task = await Task.findById(taskId);
+    if (!task) {
+        return next(new ErrorResponse('Task not found', 404));
+    }
+
+    // Check if already submitted today (if daily) or ever (if one-time)
+    const user = await User.findById(req.user.id);
+    
+    if (task.isDaily) {
+        const today = new Date().setHours(0, 0, 0, 0);
+        const alreadySubmittedToday = await TaskSubmission.findOne({
+            user: req.user.id,
+            task: taskId,
+            createdAt: { $gte: today }
+        });
+        if (alreadySubmittedToday) {
+            return next(new ErrorResponse('You have already submitted proof for this task today', 400));
+        }
+    } else {
+        const alreadySubmitted = await TaskSubmission.findOne({
+            user: req.user.id,
+            task: taskId
+        });
+        if (alreadySubmitted) {
+            return next(new ErrorResponse('You have already submitted proof for this task', 400));
+        }
+    }
+
+    const submission = await TaskSubmission.create({
+        user: req.user.id,
+        task: taskId,
+        proofImage,
+        coinsReward: coinsReward || task.coinsReward,
+        status: 'Pending'
+    });
+
+    res.status(201).json({
+        success: true,
+        data: submission,
+        message: 'Proof submitted successfully. Coins will be added after admin approval.'
+    });
+});
+
+// @desc    Get all task submissions for admin
+// @route   GET /api/admin/tasks/submissions
+// @access  Private/Admin
+exports.getAdminSubmissions = asyncHandler(async (req, res, next) => {
+    const submissions = await TaskSubmission.find()
+        .populate('user', 'name email phone')
+        .populate('task', 'title type coinsReward')
+        .sort('-createdAt');
+
+    res.status(200).json({
+        success: true,
+        data: submissions
+    });
+});
+
+// @desc    Approve task submission
+// @route   PUT /api/admin/tasks/submissions/:id/approve
+// @access  Private/Admin
+exports.approveSubmission = asyncHandler(async (req, res, next) => {
+    const submission = await TaskSubmission.findById(req.params.id);
+
+    if (!submission) {
+        return next(new ErrorResponse('Submission not found', 404));
+    }
+
+    if (submission.status !== 'Pending') {
+        return next(new ErrorResponse('Submission is already processed', 400));
+    }
+
+    const user = await User.findById(submission.user);
+    if (!user) {
+        return next(new ErrorResponse('User not found', 404));
+    }
+
+    const task = await Task.findById(submission.task);
+    if (!task) {
+        return next(new ErrorResponse('Task not found', 404));
+    }
+
+    // Add coins to user
+    const coinsToAdd = submission.coinsReward;
+    user.coins.balance += coinsToAdd;
+    user.coins.lifetimeCoins += coinsToAdd;
+
+    // Track completion
+    if (task.isDaily) {
+        user.dailyTaskCompletions.push({
+            taskId: task._id,
+            completedAt: new Date()
+        });
+    } else {
+        user.completedTasks.push(task._id);
+    }
+
+    await user.save();
+
+    // Update submission status
+    submission.status = 'Approved';
+    await submission.save();
+
+    res.status(200).json({
+        success: true,
+        message: 'Submission approved and coins added to user'
+    });
+});
+
+// @desc    Reject task submission
+// @route   PUT /api/admin/tasks/submissions/:id/reject
+// @access  Private/Admin
+exports.rejectSubmission = asyncHandler(async (req, res, next) => {
+    const { reason } = req.body;
+    const submission = await TaskSubmission.findById(req.params.id);
+
+    if (!submission) {
+        return next(new ErrorResponse('Submission not found', 404));
+    }
+
+    if (submission.status !== 'Pending') {
+        return next(new ErrorResponse('Submission is already processed', 400));
+    }
+
+    submission.status = 'Rejected';
+    submission.rejectionReason = reason || 'Proof invalid or incomplete';
+    await submission.save();
+
+    res.status(200).json({
+        success: true,
+        message: 'Submission rejected'
+    });
+});

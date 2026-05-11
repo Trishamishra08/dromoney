@@ -20,6 +20,7 @@ const CoinsAndTasks = () => {
         reward: 1,
         category: 'Instagram',
         link: '',
+        isDaily: false,
         config: {} 
     });
 
@@ -58,6 +59,7 @@ const CoinsAndTasks = () => {
             reward: task.coinsReward,
             category: task.category,
             link: task.link,
+            isDaily: task.isDaily || false,
             config: task.config || {}
         });
         setIsAddModalOpen(true);
@@ -66,7 +68,7 @@ const CoinsAndTasks = () => {
     const openAddModal = () => {
         setEditingTaskId(null);
         setNewTaskType('Social');
-        setNewTaskData({ title: '', description: '', reward: 1, category: 'Instagram', link: '', config: {} });
+        setNewTaskData({ title: '', description: '', reward: 1, category: 'Instagram', link: '', isDaily: false, config: {} });
         setIsAddModalOpen(true);
     };
 
@@ -80,6 +82,7 @@ const CoinsAndTasks = () => {
             description: newTaskData.description,
             coinsReward: Number(newTaskData.reward),
             link: newTaskData.link,
+            isDaily: newTaskData.isDaily,
             config: newTaskData.config
         };
 
@@ -135,6 +138,11 @@ const CoinsAndTasks = () => {
                                             <span className={`text-[9px] font-black px-2 py-0.5 rounded-md ${task.status === 'Active' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
                                                 {task.status || 'Active'}
                                             </span>
+                                            {task.isDaily && (
+                                                <span className="text-[9px] font-black px-2 py-0.5 rounded-md bg-purple-100 text-purple-600 uppercase">
+                                                    Daily
+                                                </span>
+                                            )}
                                         </h3>
                                         <p className="text-[11px] text-slate-500 font-medium mt-0.5">{task.description}</p>
                                         {/* Task Config Badges for Admin to see what's inside */}
@@ -204,11 +212,11 @@ const CoinsAndTasks = () => {
                             <div>
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">1. Select Task Type</label>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                    {['Social', 'Survey', 'Watch', 'Join', 'Bonus'].map(type => (
+                                    {['Social', 'Survey', 'Watch', 'Join', 'Bonus', 'Sponsored', 'Video', 'Web', 'Quiz', 'Spin', 'Scratch', 'Tapper', 'Treasure'].map(type => (
                                         <button 
                                             key={type}
                                             onClick={() => { setNewTaskType(type); setNewTaskData({...newTaskData, config: {}}); }}
-                                            className={`py-2 px-3 rounded-xl text-xs font-black transition-all border ${newTaskType === type ? 'bg-sky-50 text-sky-600 border-sky-200 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
+                                            className={`py-2 px-3 rounded-xl text-[10px] font-black transition-all border ${newTaskType === type ? 'bg-sky-50 text-sky-600 border-sky-200 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
                                         >
                                             {type}
                                         </button>
@@ -241,13 +249,13 @@ const CoinsAndTasks = () => {
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-bold text-slate-600 block mb-1">Direct Link <span className="text-rose-500">*</span></label>
-                                    <input type="text" placeholder="e.g. https://instagram.com/dromoney" value={newTaskData.link} onChange={e => setNewTaskData({...newTaskData, link: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 placeholder-slate-300 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
-                                </div>
-                                
-                                <div>
                                     <label className="text-xs font-bold text-slate-600 block mb-1">Short Description</label>
                                     <input type="text" placeholder="Describe what the user has to do" value={newTaskData.description} onChange={e => setNewTaskData({...newTaskData, description: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 placeholder-slate-300 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-bold text-slate-600 block mb-1">Direct Link <span className="text-rose-500">*</span></label>
+                                    <input type="text" placeholder="e.g. https://instagram.com/dromoney" value={newTaskData.link} onChange={e => setNewTaskData({...newTaskData, link: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 placeholder-slate-300 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
                                 </div>
 
                                 <div>
@@ -255,6 +263,20 @@ const CoinsAndTasks = () => {
                                     <div className="relative">
                                         <Coins size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500" />
                                         <input type="number" min="1" value={newTaskData.reward} onChange={e => setNewTaskData({...newTaskData, reward: e.target.value})} className="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm font-black text-slate-800 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                    <input 
+                                        type="checkbox" 
+                                        id="isDaily"
+                                        checked={newTaskData.isDaily} 
+                                        onChange={e => setNewTaskData({...newTaskData, isDaily: e.target.checked})}
+                                        className="w-5 h-5 rounded-lg border-slate-300 text-sky-600 focus:ring-sky-500"
+                                    />
+                                    <div>
+                                        <label htmlFor="isDaily" className="text-sm font-black text-slate-700 block leading-none mb-1">Daily Task</label>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">User can repeat this daily</p>
                                     </div>
                                 </div>
                             </div>
@@ -323,11 +345,19 @@ const CoinsAndTasks = () => {
                                     </div>
                                 )}
 
-                                {/* Proof */}
-                                {newTaskType === 'Proof' && (
+                                {/* Sponsored / Proof / Download */}
+                                {(newTaskType === 'Sponsored' || newTaskType === 'Proof' || newTaskType === 'Download') && (
                                     <div>
-                                        <label className="text-xs font-bold text-slate-600 block mb-1">Verification Instructions for User</label>
-                                        <textarea placeholder="e.g. Please upload screenshot after following us on Instagram" rows="3" value={newTaskData.config?.instructions || ''} onChange={e => setNewTaskData({...newTaskData, config: {...newTaskData.config, instructions: e.target.value}})} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-sky-500 resize-none"></textarea>
+                                        <label className="text-xs font-bold text-slate-600 block mb-1">
+                                            Verification/Download Instructions for User
+                                        </label>
+                                        <textarea 
+                                            placeholder="e.g. Download the app and upload home screen screenshot, or upload screenshot after following us on Instagram" 
+                                            rows="3" 
+                                            value={newTaskData.config?.instructions || ''} 
+                                            onChange={e => setNewTaskData({...newTaskData, config: {...newTaskData.config, instructions: e.target.value}})} 
+                                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-sky-500 resize-none"
+                                        ></textarea>
                                     </div>
                                 )}
 

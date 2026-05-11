@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const Withdrawal = require('../models/Withdrawal');
 const Settings = require('../models/Settings');
+const Task = require('../models/Task');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 
@@ -44,6 +45,27 @@ exports.addCoins = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('User not found', 404));
     }
 
+    // Check if already completed
+    if (taskId) {
+        const task = await Task.findById(taskId);
+        if (task) {
+            if (task.isDaily) {
+                const today = new Date().setHours(0, 0, 0, 0);
+                const alreadyDoneToday = user.dailyTaskCompletions?.some(c => 
+                    String(c.taskId) === String(taskId) && 
+                    new Date(c.completedAt).setHours(0, 0, 0, 0) === today
+                );
+                if (alreadyDoneToday) {
+                    return next(new ErrorResponse('Task already completed today', 400));
+                }
+            } else {
+                if (user.completedTasks && user.completedTasks.includes(taskId)) {
+                    return next(new ErrorResponse('Task already completed', 400));
+                }
+            }
+        }
+    }
+
     // Booster logic (3x if active)
     const factor = user.isBoosterActive ? 3 : 1;
     const totalAwardedCoins = amount * factor;
@@ -61,11 +83,24 @@ exports.addCoins = asyncHandler(async (req, res, next) => {
 
     // Track completed tasks dynamically in database
     if (taskId) {
-        if (!user.completedTasks) {
-            user.completedTasks = [];
-        }
-        if (!user.completedTasks.includes(taskId)) {
-            user.completedTasks.push(taskId);
+        const task = await Task.findById(taskId);
+        if (task && task.isDaily) {
+            // Add to daily completions
+            if (!user.dailyTaskCompletions) {
+                user.dailyTaskCompletions = [];
+            }
+            user.dailyTaskCompletions.push({
+                taskId: taskId,
+                completedAt: new Date()
+            });
+        } else {
+            // Add to one-time completed tasks
+            if (!user.completedTasks) {
+                user.completedTasks = [];
+            }
+            if (!user.completedTasks.includes(taskId)) {
+                user.completedTasks.push(taskId);
+            }
         }
     }
 

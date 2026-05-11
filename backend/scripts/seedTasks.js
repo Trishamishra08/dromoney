@@ -122,13 +122,14 @@ const tasks = [
     },
     {
         title: 'Like & Follow Task',
-        description: 'Follow our page and upload proof.',
+        description: 'Daily Story & Comment: Post a story, add a comment and upload proof.',
         coinsReward: 1,
-        type: 'Social',
+        type: 'Sponsored',
         category: 'Instagram',
         link: 'https://instagram.com/dromoney',
         icon: 'Camera',
-        status: 'Active'
+        status: 'Active',
+        isDaily: true
     },
     {
         title: 'Watch and Earn Video',
@@ -145,14 +146,15 @@ const tasks = [
         }
     },
     {
-        title: 'WhatsApp Channel & Comment',
-        description: 'Follow our official WhatsApp Channel & Comment on our latest video to earn coins.',
+        title: 'Sponsored Task',
+        description: 'Download this app daily and upload proof of install/comment.',
         coinsReward: 1,
-        type: 'Social',
-        category: 'WhatsApp',
+        type: 'Sponsored',
+        category: 'Other',
         link: 'https://whatsapp.com/channel/0029Va9P1725bV8j2g1u4p3u',
-        icon: 'WhatsApp',
-        status: 'Active'
+        icon: 'Monitor',
+        status: 'Active',
+        isDaily: true
     }
 ];
 

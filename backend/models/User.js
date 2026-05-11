@@ -150,6 +150,16 @@ const UserSchema = new mongoose.Schema({
     completedTasks: [{
         type: mongoose.Schema.ObjectId,
         ref: 'Task'
+    }],
+    dailyTaskCompletions: [{
+        taskId: {
+            type: mongoose.Schema.ObjectId,
+            ref: 'Task'
+        },
+        completedAt: {
+            type: Date,
+            default: Date.now
+        }
     }]
 
 }, {

@@ -146,17 +146,87 @@ exports.unlockPlatform = asyncHandler(async (req, res, next) => {
 exports.submitPromotion = asyncHandler(async (req, res, next) => {
     const { name, brandName, mobile, whatsapp, category, link, brandLink, budget, usersRequired, description } = req.body;
 
+    if (!mobile || mobile.replace(/\D/g, '').length !== 10) {
+        return next(new ErrorResponse('Please provide a valid 10-digit mobile number', 400));
+    }
+
+    const Task = require('../models/Task');
+
     const promotion = await Promotion.create({
         user: req.user.id,
         brandName: brandName || name,
         brandLink: brandLink || link,
-        mobile,
+        mobile: mobile.replace(/\D/g, ''),
         whatsapp,
         category: category || 'Custom Task',
         budget,
         usersRequired: usersRequired || 0,
-        description
+        description,
+        status: 'Approved' // Automatically approve to make it instantly active
     });
+
+    // Determine which existing Task card to update
+    let targetTitle = 'Sponsored Task';
+    let taskType = 'Sponsored';
+    let taskCategory = 'Other';
+    let taskIcon = 'Monitor';
+    let taskConfig = {};
+
+    const cat = promotion.category || 'Custom Task';
+    if (cat === 'Instagram Follow') {
+        targetTitle = 'Like & Follow Task';
+        taskType = 'Sponsored';
+        taskCategory = 'Instagram';
+        taskIcon = 'Camera';
+    } else if (cat === 'YouTube Subscribe') {
+        targetTitle = 'Like & Follow Task';
+        taskType = 'Sponsored';
+        taskCategory = 'YouTube';
+        taskIcon = 'Youtube';
+    } else if (cat === 'Video Watch') {
+        targetTitle = 'Watch and Earn Video';
+        taskType = 'Video';
+        taskCategory = 'YouTube';
+        taskIcon = 'Youtube';
+        taskConfig = { timer: '30' };
+    } else if (cat === 'Website Visit') {
+        targetTitle = 'Sponsored Task';
+        taskType = 'Sponsored';
+        taskCategory = 'Other';
+        taskIcon = 'Monitor';
+    } else if (cat === 'App Download') {
+        targetTitle = 'Sponsored Task';
+        taskType = 'Sponsored';
+        taskCategory = 'Other';
+        taskIcon = 'Monitor';
+    } else if (cat === 'Custom Task') {
+        targetTitle = 'Like & Follow Task';
+        taskType = 'Sponsored';
+        taskCategory = 'Other';
+        taskIcon = 'Camera';
+    }
+
+    let existingTask = await Task.findOne({ title: targetTitle });
+    if (existingTask) {
+        existingTask.description = promotion.description || `Complete this ${cat} task to earn coins.`;
+        existingTask.link = promotion.brandLink;
+        existingTask.category = taskCategory;
+        existingTask.icon = taskIcon;
+        existingTask.config = taskConfig;
+        await existingTask.save();
+    } else {
+        await Task.create({
+            title: targetTitle,
+            description: promotion.description || `Complete this ${cat} task to earn coins.`,
+            coinsReward: 1,
+            type: taskType,
+            category: taskCategory,
+            link: promotion.brandLink,
+            icon: taskIcon,
+            config: taskConfig,
+            status: 'Active'
+        });
+    }
 
     res.status(201).json({
         success: true,

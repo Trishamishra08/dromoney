@@ -324,14 +324,18 @@ const Home = () => {
         if (isTargetService) {
             const kycStr = (userData?.kycStatus || 'Not Started').toLowerCase();
             if (kycStr === 'verified' || kycStr === 'approved') {
-                navigate('/user/marketing', { state: { showReferral: true } });
+                navigate('/user/marketing', { state: { showReferral: false } });
             } else if (kycStr === 'pending' || kycStr === 'rejected') {
                 navigate('/user/auth/pending');
             } else {
                 navigate('/user/auth/kyc');
             }
         } else {
-            navigate(path);
+            if (path === '/user/marketing') {
+                navigate('/user/marketing', { state: { showReferral: true } });
+            } else {
+                navigate(path);
+            }
         }
     };
 

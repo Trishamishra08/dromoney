@@ -123,7 +123,41 @@ const TaskRunner = () => {
         }
     };
 
-    const submitTask = () => {
+    const submitTask = async () => {
+        if ((task.type === 'Proof' || task.type === 'Download' || task.type === 'Sponsored') && screenshotFile) {
+            setStatus('completed');
+            try {
+                // 1. Upload the image
+                const formData = new FormData();
+                formData.append('file', screenshotFile);
+                
+                // We use the new user upload route
+                const uploadRes = await api.post('/user/data/upload', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+
+                if (uploadRes.success) {
+                    // 2. Submit the task with the uploaded image URL
+                    const submissionRes = await api.post('/user/data/tasks/submit', {
+                        taskId: task._id || task.id,
+                        proofImage: uploadRes.url,
+                        coinsReward: task.coinsReward || task.reward || 0
+                    });
+
+                    if (submissionRes.success) {
+                        // Success state
+                        taskStorage.markComplete(task._id || task.id);
+                        setTimeout(() => navigate('/user/earn'), 2500);
+                    }
+                }
+            } catch (err) {
+                console.error("Task submission error:", err);
+                alert(err.message || "Failed to submit task proof");
+                setStatus('verify');
+            }
+            return;
+        }
+
         setStatus('completed');
         const rewardAmount = task.coinsReward || task.reward || 0;
         addCoins(rewardAmount, task.title);
@@ -286,30 +320,78 @@ const TaskRunner = () => {
                     </div>
                 )}
 
-                {/* PROOF TASK (Formerly Social) */}
-                {task.type === 'Proof' && (
-                    <div className="flex-1 flex flex-col gap-5 justify-center">
-                       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-lg relative overflow-hidden">
-                            {/* Decorative blur blob */}
-                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-pink-500/20 rounded-full blur-[40px] pointer-events-none"></div>
+                {/* PROOF / DOWNLOAD / SPONSORED TASK */}
+                {(task.type === 'Proof' || task.type === 'Download' || task.type === 'Sponsored') && (() => {
+                    const isDownload = task.type === 'Download' || 
+                        String(task.title || '').toLowerCase().includes('app') || 
+                        String(task.description || '').toLowerCase().includes('download');
+                    const isVideo = String(task.link || task.config?.url || '').toLowerCase().includes('youtube.com') || 
+                        String(task.link || task.config?.url || '').toLowerCase().includes('youtu.be');
 
-                            <div className="w-20 h-20 bg-gradient-to-tr from-amber-400 via-rose-500 to-fuchsia-600 rounded-[1.5rem] mx-auto flex items-center justify-center mb-5 shadow-xl shadow-rose-500/20">
-                               <Camera size={32} className="text-white" />
-                            </div>
-                            <h2 className="text-white font-black text-xl mb-2 tracking-tight">Proof Required</h2>
-                            <p className="text-[11px] text-slate-400 font-bold mb-8 px-4 leading-relaxed tracking-wide">
-                                {task.config?.instructions || "Complete the task manually and upload proof."}
-                            </p>
-                            
-                            <button className="w-full bg-slate-950 border border-slate-800 text-white hover:text-sky-400 hover:border-sky-500/50 font-black uppercase tracking-widest py-4 rounded-xl hover:bg-slate-900 transition-all text-xs flex justify-center items-center gap-2" onClick={() => setStatus('verify')}>
-                                Open in App <LinkIcon size={14} />
-                            </button>
-                       </div>
+                    let titleText = 'Proof Required';
+                    let descText = task.description || 'Complete the task manually and upload proof.';
+                    let btnText = 'Open Link';
+                    let step2Text = 'Upload Screenshot of completed task';
+
+                    if (isDownload) {
+                        titleText = 'Download & Install';
+                        descText = task.description || 'Download the app from the link below and upload screenshot of home screen.';
+                        btnText = 'Download App';
+                        step2Text = 'Upload Screenshot of installed app';
+                    } else if (isVideo) {
+                        titleText = 'Watch Video & Earn';
+                        descText = task.description || 'Watch the full video below and upload a screenshot as proof of watching.';
+                        btnText = 'Open YouTube';
+                        step2Text = 'Upload Screenshot of completed video';
+                    }
+
+                    return (
+                        <div className="flex-1 flex flex-col gap-5 justify-center">
+                           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-lg relative overflow-hidden">
+                                {/* Decorative blur blob */}
+                                <div className="absolute -top-10 -right-10 w-32 h-32 bg-pink-500/20 rounded-full blur-[40px] pointer-events-none"></div>
+
+                                {isVideo ? (
+                                    <div className="w-full bg-slate-950 rounded-2xl overflow-hidden aspect-video relative border border-slate-800 shadow-xl flex flex-col justify-center items-center mb-5">
+                                        <iframe 
+                                            src={formatVideoUrl(task.link || task.config?.url)} 
+                                            className="w-full h-full border-0"
+                                            title="Sponsor Video"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        ></iframe>
+                                    </div>
+                                ) : (
+                                    <div className="w-20 h-20 bg-gradient-to-tr from-amber-400 via-rose-500 to-fuchsia-600 rounded-[1.5rem] mx-auto flex items-center justify-center mb-5 shadow-xl shadow-rose-500/20">
+                                       {isDownload ? <UploadCloud size={32} className="text-white" /> : <Camera size={32} className="text-white" />}
+                                    </div>
+                                )}
+
+                                <h2 className="text-white font-black text-xl mb-2 tracking-tight">
+                                    {titleText}
+                                </h2>
+                                <p className="text-[11px] text-slate-400 font-bold mb-8 px-4 leading-relaxed tracking-wide">
+                                    {descText}
+                                </p>
+                                
+                                <button 
+                                    className="w-full bg-slate-950 border border-slate-800 text-white hover:text-sky-400 hover:border-sky-500/50 font-black uppercase tracking-widest py-4 rounded-xl hover:bg-slate-900 transition-all text-xs flex justify-center items-center gap-2" 
+                                    onClick={() => {
+                                        if (task.link) window.open(task.link, '_blank');
+                                        setStatus('verify');
+                                    }}
+                                >
+                                    {btnText} <LinkIcon size={14} />
+                                </button>
+                           </div>
+
 
                        {status === 'verify' && (
                            <div className="bg-slate-900/50 border border-amber-500/30 rounded-3xl p-6 animate-in slide-in-from-bottom-4 shadow-[0_0_20px_rgba(245,158,11,0.05)] text-center relative overflow-hidden">
                                <h3 className="text-amber-400 font-black text-xs mb-1.5 uppercase tracking-widest">Step 2: Verification</h3>
-                               <p className="text-[10px] text-slate-400 font-bold mb-4 uppercase tracking-wider">Upload Screenshot of following account.</p>
+                               <p className="text-[10px] text-slate-400 font-bold mb-4 uppercase tracking-wider">
+                                   {step2Text}
+                               </p>
                                
                                <div className="relative border-2 border-dashed border-slate-700/50 hover:border-amber-500/60 rounded-2xl p-6 flex flex-col items-center justify-center bg-slate-950/50 transition-colors cursor-pointer group h-32">
                                     <input 
@@ -337,7 +419,8 @@ const TaskRunner = () => {
                            </div>
                        )}
                     </div>
-                )}
+                    );
+                })()}
                 {/* SHARE TASK */}
                 {task.type === 'Share' && (
                     <div className="flex-1 flex flex-col gap-5 justify-center py-10">
@@ -393,7 +476,7 @@ const TaskRunner = () => {
                  <div className="p-4 bg-slate-950 border-t border-slate-800 shrink-0">
                     <button 
                         onClick={submitTask}
-                        disabled={status !== 'verify' || (task.type === 'Proof' && !screenshotFile) || status === 'completed'}
+                        disabled={status !== 'verify' || ((task.type === 'Proof' || task.type === 'Download' || task.type === 'Sponsored') && !screenshotFile) || status === 'completed'}
                         className="w-full bg-sky-500 hover:bg-sky-400 active:scale-[0.98] disabled:opacity-50 disabled:bg-slate-900 disabled:text-slate-600 text-slate-950 font-black uppercase tracking-[0.2em] py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(14,165,233,0.2)] disabled:shadow-none flex justify-center items-center gap-2 text-[11px]"
                     >
                         {status === 'completed' && <Loader2 className="animate-spin" size={16} />}

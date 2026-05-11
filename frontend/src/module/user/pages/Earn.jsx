@@ -78,7 +78,17 @@ const Earn = () => {
     })();
 
     const totalCount = tasks.length;
-    const completedCount = completedTasks.length;
+    const completedCount = tasks.filter(task => {
+        const taskId = task._id || task.id;
+        if (task.isDaily) {
+            const today = new Date().setHours(0, 0, 0, 0);
+            return userData.dailyTaskCompletions?.some(c => 
+                String(c.taskId) === String(taskId) && 
+                new Date(c.completedAt).setHours(0, 0, 0, 0) === today
+            );
+        }
+        return completedTasks.includes(String(taskId));
+    }).length;
     const remainingCount = Math.max(0, totalCount - completedCount);
 
     const handleTaskClick = (task) => {
@@ -87,7 +97,19 @@ const Earn = () => {
             setIsUnlockOpen(true);
             return;
         }
-        if (completedTasks.includes(taskId)) {
+
+        let isCompleted = false;
+        if (task.isDaily) {
+            const today = new Date().setHours(0, 0, 0, 0);
+            isCompleted = userData.dailyTaskCompletions?.some(c => 
+                String(c.taskId) === String(taskId) && 
+                new Date(c.completedAt).setHours(0, 0, 0, 0) === today
+            );
+        } else {
+            isCompleted = completedTasks.includes(String(taskId));
+        }
+
+        if (isCompleted) {
             // Do not open if already completed
             return;
         }
@@ -168,7 +190,17 @@ const Earn = () => {
                         const taskId = task._id || task.id;
                         const iconConfig = ICON_MAP[task.icon] || ICON_MAP[task.category] || ICON_MAP['Monitor'];
                         const IconEl = iconConfig.el;
-                        const isCompleted = completedTasks.includes(taskId);
+                        
+                        let isCompleted = false;
+                        if (task.isDaily) {
+                            const today = new Date().setHours(0, 0, 0, 0);
+                            isCompleted = userData.dailyTaskCompletions?.some(c => 
+                                String(c.taskId) === String(taskId) && 
+                                new Date(c.completedAt).setHours(0, 0, 0, 0) === today
+                            );
+                        } else {
+                            isCompleted = completedTasks.includes(String(taskId));
+                        }
 
                         return (
                             <div
@@ -205,7 +237,7 @@ const Earn = () => {
                                     
                                     {!isCompleted ? (
                                         <button className="px-3.5 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-[10px] font-extrabold uppercase tracking-wider rounded-xl shadow-sm transition-all duration-200 active:scale-95 leading-none min-w-[76px] text-center">
-                                            {task.type === 'Spin' ? 'Spin Now >' : task.type === 'Proof' ? 'Upload' : 'Complete'}
+                                            {task.type === 'Spin' ? 'Spin Now >' : (task.type === 'Proof' || task.type === 'Download' || task.type === 'Sponsored') ? 'Upload' : 'Complete'}
                                         </button>
                                     ) : (
                                         <span className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-100">

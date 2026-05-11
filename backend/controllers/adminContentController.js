@@ -15,7 +15,27 @@ exports.createTask = async (req, res, next) => {
 exports.getTasks = async (req, res, next) => {
     try {
         const tasks = await Task.find().sort('-createdAt');
-        res.status(200).json({ success: true, data: tasks });
+        
+        const topTitles = [
+            "Like & Follow Task",
+            "Watch and Earn Video",
+            "Sponsored Task"
+        ];
+
+        const sortedTasks = [...tasks].sort((a, b) => {
+            const indexA = topTitles.indexOf(a.title);
+            const indexB = topTitles.indexOf(b.title);
+
+            if (indexA !== -1 && indexB !== -1) {
+                return indexA - indexB;
+            }
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+
+            return 0;
+        });
+
+        res.status(200).json({ success: true, data: sortedTasks });
     } catch (err) { next(err); }
 };
 

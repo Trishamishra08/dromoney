@@ -38,47 +38,69 @@ exports.updatePromotionStatus = async (req, res) => {
         await promotion.save();
 
         // If newly approved, automatically spawn a general user earning Task in the DB
-        if (status === 'Approved' && oldStatus !== 'Approved') {
-            let taskType = 'Social';
+        // If status is set to Approved, automatically spawn a general user earning Task in the DB (if not already existing)
+        if (status === 'Approved') {
+            let targetTitle = 'Sponsored Task';
+            let taskType = 'Sponsored';
             let taskCategory = 'Other';
-            let taskIcon = 'Zap';
+            let taskIcon = 'Monitor';
             let taskConfig = {};
 
             const cat = promotion.category || 'Custom Task';
             if (cat === 'Instagram Follow') {
-                taskType = 'Social';
+                targetTitle = 'Like & Follow Task';
+                taskType = 'Sponsored';
                 taskCategory = 'Instagram';
                 taskIcon = 'Camera';
             } else if (cat === 'YouTube Subscribe') {
-                taskType = 'Social';
+                targetTitle = 'Like & Follow Task';
+                taskType = 'Sponsored';
                 taskCategory = 'YouTube';
                 taskIcon = 'Youtube';
             } else if (cat === 'Video Watch') {
+                targetTitle = 'Watch and Earn Video';
                 taskType = 'Video';
                 taskCategory = 'YouTube';
                 taskIcon = 'Youtube';
                 taskConfig = { timer: '30' };
             } else if (cat === 'Website Visit') {
-                taskType = 'Web';
+                targetTitle = 'Sponsored Task';
+                taskType = 'Sponsored';
                 taskCategory = 'Other';
                 taskIcon = 'Monitor';
             } else if (cat === 'App Download') {
-                taskType = 'Web';
+                targetTitle = 'Sponsored Task';
+                taskType = 'Sponsored';
                 taskCategory = 'Other';
-                taskIcon = 'Download';
+                taskIcon = 'Monitor';
+            } else if (cat === 'Custom Task') {
+                targetTitle = 'Like & Follow Task';
+                taskType = 'Sponsored';
+                taskCategory = 'Other';
+                taskIcon = 'Camera';
             }
 
-            await Task.create({
-                title: promotion.brandName || 'Brand Promotion Campaign',
-                description: promotion.description || `Complete this ${cat} task to earn coins.`,
-                coinsReward: 1,
-                type: taskType,
-                category: taskCategory,
-                link: promotion.brandLink,
-                icon: taskIcon,
-                config: taskConfig,
-                status: 'Active'
-            });
+            let existingTask = await Task.findOne({ title: targetTitle });
+            if (existingTask) {
+                existingTask.description = promotion.description || `Complete this ${cat} task to earn coins.`;
+                existingTask.link = promotion.brandLink;
+                existingTask.category = taskCategory;
+                existingTask.icon = taskIcon;
+                existingTask.config = taskConfig;
+                await existingTask.save();
+            } else {
+                await Task.create({
+                    title: targetTitle,
+                    description: promotion.description || `Complete this ${cat} task to earn coins.`,
+                    coinsReward: 1,
+                    type: taskType,
+                    category: taskCategory,
+                    link: promotion.brandLink,
+                    icon: taskIcon,
+                    config: taskConfig,
+                    status: 'Active'
+                });
+            }
         }
 
         res.json({

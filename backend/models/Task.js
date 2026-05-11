@@ -15,7 +15,7 @@ const TaskSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['Social', 'Survey', 'Watch', 'Join', 'Bonus', 'Video', 'Web', 'Quiz', 'Spin', 'Memory', 'Scratch', 'Tapper', 'Treasure', 'Proof'],
+        enum: ['Social', 'Survey', 'Watch', 'Join', 'Bonus', 'Video', 'Web', 'Quiz', 'Spin', 'Memory', 'Scratch', 'Tapper', 'Treasure', 'Proof', 'Download', 'Sponsored'],
         default: 'Social'
     },
     category: {
@@ -44,6 +44,10 @@ const TaskSchema = new mongoose.Schema({
     priority: {
         type: Number,
         default: 0
+    },
+    isDaily: {
+        type: Boolean,
+        default: false
     },
     createdAt: {
         type: Date,

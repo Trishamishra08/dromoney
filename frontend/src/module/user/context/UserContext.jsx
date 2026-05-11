@@ -173,7 +173,8 @@ export const UserProvider = ({ children }) => {
             activeBusinessPlan: dbUser.activeBusinessPlan || 'Free',
             businessPlanStatus: dbUser.businessPlanStatus || 'none',
             businessHubFirstAccessedAt: dbUser.businessHubFirstAccessedAt,
-            completedTasks: dbUser.completedTasks || []
+            completedTasks: dbUser.completedTasks || [],
+            dailyTaskCompletions: dbUser.dailyTaskCompletions || []
         });
     };
 

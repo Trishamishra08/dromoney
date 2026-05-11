@@ -56,6 +56,7 @@ import WatchAndEarnAdmin from './module/admin/pages/WatchAndEarnAdmin';
 import LayoutManager from './module/admin/pages/LayoutManager';
 import MarketingManager from './module/admin/pages/MarketingManager';
 import AdminChatSupport from './module/admin/pages/ChatSupport';
+import TaskApprovals from './module/admin/pages/TaskApprovals';
 import ChatSupportPage from './module/user/pages/ChatSupportPage';
 import { AdminProvider, useAdmin } from './module/admin/context/AdminContext';
 
@@ -176,6 +177,7 @@ function App() {
               <Route path="payments" element={<Payments />} />
               <Route path="affiliates" element={<Affiliates />} />
               <Route path="tasks" element={<CoinsAndTasks />} />
+              <Route path="task-approvals" element={<TaskApprovals />} />
               <Route path="future-fund" element={<FutureFundAdmin />} />
               <Route path="events" element={<EventsAdmin />} />
               <Route path="business-content" element={<BusinessContent />} />

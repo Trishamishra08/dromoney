@@ -242,7 +242,14 @@ const UserLayout = () => {
                             ].map((item, idx) => (
                                 <button 
                                     key={idx}
-                                    onClick={() => { navigate(item.path); setIsMenuOpen(false); }}
+                                    onClick={() => { 
+                                        if (item.path === '/user/marketing') {
+                                            navigate(item.path, { state: { showReferral: true } });
+                                        } else {
+                                            navigate(item.path);
+                                        }
+                                        setIsMenuOpen(false); 
+                                    }}
                                     className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-white/[0.03] rounded-xl transition-all group"
                                 >
                                     <item.icon size={18} className="text-slate-500 group-hover:text-emerald-400 group-hover:scale-105 transition-all" />

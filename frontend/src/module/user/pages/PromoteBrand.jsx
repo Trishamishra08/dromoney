@@ -77,6 +77,12 @@ const PromoteBrand = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (formData.mobile.length !== 10) {
+            alert("Mobile number must be exactly 10 digits");
+            return;
+        }
+
         setLoading(true);
         
         try {
@@ -273,9 +279,10 @@ const PromoteBrand = () => {
                                     required
                                     type="tel"
                                     placeholder="Mobile"
+                                    maxLength={10}
                                     className="flex-1 h-full px-3 text-xs font-bold text-slate-700 bg-transparent outline-none placeholder:text-slate-300"
                                     value={formData.mobile}
-                                    onChange={(e) => setFormData({...formData, mobile: e.target.value})}
+                                    onChange={(e) => setFormData({...formData, mobile: e.target.value.replace(/\D/g, '').slice(0, 10)})}
                                 />
                             </div>
                         </div>

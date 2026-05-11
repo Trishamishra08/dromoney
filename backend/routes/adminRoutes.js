@@ -23,8 +23,9 @@ const {
     updateBusinessIdea, 
     deleteBusinessIdea 
 } = require('../controllers/businessIdeaController');
-const { createEvent, updateEvent, deleteEvent, getEvents, getEventParticipants, updateParticipantStatus } = require('../controllers/eventController');
+const { getEvents, getEventParticipants, updateParticipantStatus, createEvent, updateEvent, deleteEvent } = require('../controllers/eventController');
 const { getSettings, updateSettings } = require('../controllers/adminSettingsController');
+const { getAdminSubmissions, approveSubmission, rejectSubmission } = require('../controllers/taskSubmissionController');
 
 const { protectAdmin } = require('../middleware/authMiddleware');
 
@@ -59,6 +60,9 @@ router.get('/affiliates', protectAdmin, getAffiliateStats);
 
 router.route('/tasks').post(protectAdmin, createTask).get(protectAdmin, getTasks);
 router.route('/tasks/:id').put(protectAdmin, updateTask);
+router.get('/tasks/submissions', protectAdmin, getAdminSubmissions);
+router.put('/tasks/submissions/:id/approve', protectAdmin, approveSubmission);
+router.put('/tasks/submissions/:id/reject', protectAdmin, rejectSubmission);
 router.route('/ads')
     .post(protectAdmin, createAd)
     .get(protectAdmin, getAdminAds);
