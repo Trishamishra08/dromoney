@@ -19,9 +19,11 @@ const KycModal = ({ isOpen, onClose }) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const isImage = file.type.startsWith('image/');
-        const ext = file.name.split('.').pop().toLowerCase();
-        const allowedExts = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'heic', 'heif', 'svg', 'bmp', 'tiff', 'jfif', 'pjpeg', 'pjp', 'avif'];
+        // On mobile, file.type can be empty or application/octet-stream for HEIC/HEIF files
+        const isImage = !file.type || file.type.startsWith('image/') || file.type === 'application/octet-stream';
+        const ext = file.name ? file.name.split('.').pop().toLowerCase() : '';
+        const allowedExts = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'heic', 'heif', 'svg', 'bmp', 'tiff', 'jfif', 'pjpeg', 'pjp', 'avif', ''];
+
         if (!isImage && !allowedExts.includes(ext)) {
             window.alert("Invalid Format!\n\nPlease select a valid image file (All image formats like JPEG, PNG, WEBP, HEIC, HEIF, etc. are accepted).");
             addNotification("Invalid Format", "Please select a valid image (All image formats are accepted)!", "error");

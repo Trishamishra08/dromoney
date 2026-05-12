@@ -54,9 +54,10 @@ const KycSetup = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const isImage = file.type.startsWith('image/');
-        const ext = file.name.split('.').pop().toLowerCase();
-        const allowedExts = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'heic', 'heif', 'svg', 'bmp', 'tiff', 'jfif', 'pjpeg', 'pjp', 'avif'];
+        // On mobile, file.type can be empty or application/octet-stream for HEIC/HEIF files
+        const isImage = !file.type || file.type.startsWith('image/') || file.type === 'application/octet-stream';
+        const ext = file.name ? file.name.split('.').pop().toLowerCase() : '';
+        const allowedExts = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'heic', 'heif', 'svg', 'bmp', 'tiff', 'jfif', 'pjpeg', 'pjp', 'avif', ''];
         
         if (!isImage && !allowedExts.includes(ext)) {
             setError("Note: Incorrect image format! Please upload a valid image file (All image formats like JPEG, PNG, WEBP, HEIC, HEIF, etc. are accepted).");
