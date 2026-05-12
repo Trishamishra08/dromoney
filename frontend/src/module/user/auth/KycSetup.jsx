@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, ShieldCheck, UploadCloud, Camera, ArrowLeft, Info, Fingerprint, Lock, BadgeCheck } from 'lucide-react';
 import api from '../../shared/services/api';
@@ -54,12 +54,12 @@ const KycSetup = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        const isImage = file.type.startsWith('image/');
         const ext = file.name.split('.').pop().toLowerCase();
-        const allowedExts = ['jpeg', 'jpg', 'png'];
+        const allowedExts = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'heic', 'heif', 'svg', 'bmp', 'tiff', 'jfif', 'pjpeg', 'pjp', 'avif'];
         
-        if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
-            setError("Note: Incorrect image format! Please use PNG, JPEG or JPG only.");
+        if (!isImage && !allowedExts.includes(ext)) {
+            setError("Note: Incorrect image format! Please upload a valid image file (All image formats like JPEG, PNG, WEBP, HEIC, HEIF, etc. are accepted).");
             setShowErrorModal(true);
             e.target.value = '';
             setAadhaarFile(null);
@@ -222,7 +222,7 @@ const KycSetup = () => {
                                         </div>
                                         <div className="text-center">
                                             <p className="text-[10px] text-slate-600 font-black uppercase tracking-widest">Select Image</p>
-                                            <p className="text-[8px] text-slate-400 font-bold">PNG/JPG (Max 5MB)</p>
+                                            <p className="text-[8px] text-slate-400 font-bold">All Image Formats (Max 5MB)</p>
                                         </div>
                                     </div>
                                 ) : (
@@ -277,7 +277,7 @@ const KycSetup = () => {
             <input 
                 type="file" 
                 ref={fileInputRef}
-                accept="image/png, image/jpeg, image/jpg" 
+                accept="image/*" 
                 className="hidden"
                 onChange={handleFileChange}
             />

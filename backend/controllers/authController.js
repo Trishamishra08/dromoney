@@ -132,9 +132,16 @@ exports.sendRegisterOtp = async (req, res, next) => {
         // Save to DB
         await Otp.create({ phone, code: otp });
 
+        console.log(`[OTP] Registration OTP generated for ${phone}: ${otp}`);
+
         // Skip SMS for testing number
         if (phone !== '9999999999') {
-            await sendOtpSMS(phone, otp);
+            try {
+                await sendOtpSMS(phone, otp);
+            } catch (smsErr) {
+                console.error(`[SMS Service Error] Failed to send registration OTP to ${phone}:`, smsErr.message);
+                // Gracefully continue so that registration is not blocked by SMS gateway failures
+            }
         }
 
         res.status(200).json({
@@ -180,9 +187,16 @@ exports.sendLoginOtp = async (req, res, next) => {
         // Save to DB
         await Otp.create({ phone, code: otp });
 
+        console.log(`[OTP] Login OTP generated for ${phone}: ${otp}`);
+
         // Skip SMS for testing number
         if (phone !== '9999999999') {
-            await sendOtpSMS(phone, otp);
+            try {
+                await sendOtpSMS(phone, otp);
+            } catch (smsErr) {
+                console.error(`[SMS Service Error] Failed to send login OTP to ${phone}:`, smsErr.message);
+                // Gracefully continue so that login is not blocked by SMS gateway failures
+            }
         }
 
         res.status(200).json({

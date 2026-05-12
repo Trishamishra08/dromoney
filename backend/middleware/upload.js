@@ -7,14 +7,14 @@ const storage = multer.memoryStorage();
 
 // Check file type
 function checkFileType(file, cb) {
-  const filetypes = /jpeg|jpg|png|gif|webp/;
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = filetypes.test(file.mimetype);
+  const isImageMime = file.mimetype && file.mimetype.startsWith('image/');
+  const imageExtensions = /\.(jpg|jpeg|png|gif|webp|heic|heif|svg|bmp|tiff|jfif|pjpeg|pjp|avif)$/i;
+  const isImageExt = imageExtensions.test(path.extname(file.originalname).toLowerCase());
 
-  if (mimetype && extname) {
+  if (isImageMime || isImageExt) {
     return cb(null, true);
   } else {
-    cb(new ErrorResponse('Error: Images Only! (jpeg, jpg, png, gif, webp)', 400));
+    cb(new ErrorResponse('Error: Please upload a valid image file (JPEG, JPG, PNG, GIF, WEBP, HEIC, HEIF, AVIF, SVG, BMP, JFIF, etc.)', 400));
   }
 }
 

@@ -54,7 +54,8 @@ exports.updateKyc = asyncHandler(async (req, res, next) => {
                 const stream = cloudinary.uploader.upload_stream(
                     {
                         folder: 'dromoney/kyc',
-                        resource_type: 'auto',
+                        resource_type: 'image',
+                        format: 'jpg',
                         public_id: `aadhaar_${user._id}_${Date.now()}`
                     },
                     (error, result) => {
@@ -262,7 +263,8 @@ exports.updateProfilePhoto = asyncHandler(async (req, res, next) => {
                 const stream = cloudinary.uploader.upload_stream(
                     {
                         folder: 'dromoney/profile_pics',
-                        resource_type: 'auto',
+                        resource_type: 'image',
+                        format: 'jpg',
                         public_id: `user_${req.user.id}_${Date.now()}`,
                         transformation: [{ width: 500, height: 500, crop: 'limit' }]
                     },

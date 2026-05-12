@@ -19,12 +19,12 @@ const KycModal = ({ isOpen, onClose }) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        const isImage = file.type.startsWith('image/');
         const ext = file.name.split('.').pop().toLowerCase();
-        const allowedExts = ['jpeg', 'jpg', 'png'];
-        if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
-            window.alert("Invalid Format!\n\nPlease select a valid image (JPEG, JPG, or PNG).");
-            addNotification("Invalid Format", "Please select a valid image (JPEG, JPG, or PNG)!", "error");
+        const allowedExts = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'heic', 'heif', 'svg', 'bmp', 'tiff', 'jfif', 'pjpeg', 'pjp', 'avif'];
+        if (!isImage && !allowedExts.includes(ext)) {
+            window.alert("Invalid Format!\n\nPlease select a valid image file (All image formats like JPEG, PNG, WEBP, HEIC, HEIF, etc. are accepted).");
+            addNotification("Invalid Format", "Please select a valid image (All image formats are accepted)!", "error");
             e.target.value = '';
             return;
         }
