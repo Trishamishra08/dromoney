@@ -104,7 +104,7 @@ const Users = () => {
                 }
             } catch (err) {
                 console.error("Delete User Error:", err);
-                alert("Failed to delete user. Please try again.");
+                alert(`Failed to delete user: ${err.message || "Please try again."}`);
             }
         }
     };

@@ -3,6 +3,8 @@ const Transaction = require('../models/Transaction');
 const Payment = require('../models/Payment');
 const Withdrawal = require('../models/Withdrawal');
 const ReferralTransaction = require('../models/ReferralTransaction');
+const TaskSubmission = require('../models/TaskSubmission');
+const EventParticipant = require('../models/EventParticipant');
 const ErrorResponse = require('../utils/errorResponse');
 
 // @desc    Get all users
@@ -126,20 +128,36 @@ exports.deleteUser = async (req, res, next) => {
             return next(new ErrorResponse('User not found', 404));
         }
 
-        // Cleanup related data
+        console.log(`Starting cascade deletion for user: ${user.name} (${user._id})`);
+
+        // Clean up all related collections to ensure zero orphaned data and 100% database consistency
         await Promise.all([
             Transaction.deleteMany({ user: user._id }),
             Payment.deleteMany({ user: user._id }),
             Withdrawal.deleteMany({ user: user._id }),
-            ReferralTransaction.deleteMany({ $or: [{ referrer: user._id }, { referee: user._id }] }),
+            TaskSubmission.deleteMany({ user: user._id }),
+            EventParticipant.deleteMany({ user: user._id }),
+            ReferralTransaction.deleteMany({ 
+                $or: [
+                    { referrer: user._id }, 
+                    { referredUser: user._id },
+                    { referee: user._id } // compatibility fallback
+                ] 
+            }),
             User.findByIdAndDelete(req.params.id)
         ]);
+
+        console.log(`Cascade deletion completed successfully for user ID: ${user._id}`);
 
         res.status(200).json({
             success: true,
             message: 'User and associated data deleted successfully'
         });
     } catch (err) {
-        next(err);
+        console.error('Cascade delete error:', err);
+        res.status(500).json({
+            success: false,
+            error: err.message || 'Server Error during cascade user deletion'
+        });
     }
 };
