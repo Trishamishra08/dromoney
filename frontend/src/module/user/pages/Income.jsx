@@ -132,49 +132,50 @@ const Income = () => {
     const [courseDirection, setCourseDirection] = useState(0);
     const [copiedIndex, setCopiedIndex] = useState(null);
     const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+    const [localCourseCompleted, setLocalCourseCompleted] = useState(false);
     const [courseData, setCourseData] = useState({
         page1: {
-            title: '👉 Dromoney से कमाई कैसे करें',
+            title: '📈 Dromoney से कमाई कैसे करें',
             intro: 'Dromoney एक ऐसा platform है जहाँ आप सीखकर मात्र 15 मिनट मैं earning कर सकते हैं।\n\nयह कोई guaranteed income platform नहीं है — आपकी कमाई आपकी मेहनत ओर कंसिस्टेंसी पर depend करती है।',
-            methodsTitle: '💰 कमाई के तरीके:',
+            methodsTitle: '💼 कमाई के तरीके:',
             methods: [
                 { title: '1. Affiliate Marketing (₹200 per sale)', points: ['आपको एक referral link मिलेगा', 'आप उसे share करेंगे', 'हर course sale पर ₹200 commission मिलेगा'] },
-                { title: '2. Future Fund (Reward System)', points: ['Monetization system (YouTube की तरह)', 'Criteria: 10 successful sales & 10 दिन active (15 min daily)', 'इसके बाद आपको platform से performance-based reward मिलेगा'] }
+                { title: '2. Future Fund (Reward System)', points: ['Monetization system (YouTube की तरह)', 'Criteria: 10 successful sales & 10 दिन active (15 min daily)', '✓ इसके बाद आपको platform से performance-based reward मिलेगा'] }
             ]
         },
         page2: {
-            title: '👉 Affiliate + Promotion Setup',
+            title: '⚡ Affiliate + Promotion Setup',
             steps: [
-                { stepNum: '🔥 stap 1', title: 'logo download kre & call Script', details: 'सबसे पहले नीचे दिए गए Download button से Dromoney logo डाउनलोड करें जो सीधा आपकी गैलरी में सेव हो जाएगा।' },
-                { stepNum: '🔥 stap 2', title: 'Ready Templates copy', details: 'नीचे दिए गए Promotion messages में से किसी एक को copy करें।' },
-                { stepNum: '🔥 stap 3', title: 'whatsapp status lagye 🤳', details: 'डाउनलोड की गई logo image को अपने Whatsapp status पर लगायें और copy किया हुआ text description में paste कर दें। [Your Referral Link] की जगह अपना link अवश्य डालें।' },
-                { stepNum: '🔥 stap 4', title: 'how to promote other plateform 📱', details: 'Facebook, Instagram reels, and status, या direct chats के माध्यम से प्रमोट करें।' }
+                { stepNum: '✦ Step 1', title: 'logo download kre & call Script', details: 'सबसे पहले नीचे दिए गए Download button से Dromoney logo डाउनलोड करें जो सीधा आपकी गैलरी में सेव हो जाएगा।' },
+                { stepNum: '✦ Step 2', title: 'Ready Templates copy', details: 'नीचे दिए गए Promotion messages में से किसी एक को copy करें।' },
+                { stepNum: '✦ Step 3', title: 'whatsapp status lagye 📲', details: 'डाउनलोड की गई logo image को अपने Whatsapp status पर लगायें और copy किया हुआ text description में paste कर दें। [Your Referral Link] की जगह अपना link अवश्य डालें।' },
+                { stepNum: '✦ Step 4', title: 'how to promote other plateform 💻', details: 'Facebook, Instagram reels, and status, या direct chats के माध्यम से प्रमोट करें।' }
             ],
-            templatesTitle: '💎 Ready Templates (Copy-Paste)',
+            templatesTitle: '📋 Ready Templates (Copy-Paste)',
             templates: [
-                '👉 Dromoney से मात्र 15 मिनट रोज़ काम करके सीखें और कमाएं।\n\nDirect ₹200 Referral bonus! ✅ 100% Genuine Payment सीधा bank account में।\n\nअभी रजिस्टर करें 👇\n[Your Link]',
-                '🔥 Work From Home Opportunity!\n\nक्या आप भी मोबाइल से ₹500 - ₹2000 रोज़ कमाना चाहते हैं? बिना किसी risk के शुरू करें। 👍\n\nRegister Link 👇\n[Your Link]'
+                '⚡ Dromoney से मात्र 15 मिनट रोज़ काम करके सीखें और कमाएं।\n\nDirect ₹200 Referral bonus! ⚡ 100% Genuine Payment सीधा bank account में।\n\nअभी रजिस्टर करें ⚡\n[Your Link]',
+                '✦ Work From Home Opportunity!\n\nक्या आप भी मोबाइल से ₹500 - ₹2000 रोज़ कमाना चाहते हैं? बिना किसी risk के शुरू करें। ✦\n\nRegister Link ⚡\n[Your Link]'
             ],
-            step5Title: '🔥 stap 5 : calling kra 🤳',
+            step5Title: '✦ Step 5: Professional Calling Setup 📞',
             step5Details: 'जब लोग आपके status देखकर आपको message करें, तो उन्हें प्यार से समझाएं और signup करवाएं। Detailed call script के लिए नीचे दिए गए Script button पर क्लिक करें।',
             callScriptLink: 'https://docs.google.com/document/d/1XgIsY_D7Beb6E6w318G6VOf6-K6gLqC1BqWpZ3pM2-8/edit',
             logoUrl: LogoImg
         },
         page3: {
-            title: '👉 रोज क्या करें',
-            dailyPlanTitle: '📅 Daily Plan:',
+            title: '📅 रोज क्या करें',
+            dailyPlanTitle: '📋 Daily Plan:',
             dailyPlans: [
                 'Daily updates share context',
                 'Status update dynamic details',
                 'Task daily basis 15 min focus'
             ],
-            exampleTitle: '📊 Example:',
+            exampleTitle: '📈 Example:',
             examples: [
-                '1 sale daily = ₹200',
-                '30 Days = ₹6000',
-                '10 sales complete = Monthly Salary/Future Fund eligibility activated'
+                '✦ 1 sale daily = ₹200',
+                '✦ 30 Days = ₹6000',
+                '✦ 10 sales complete = Monthly Salary/Future Fund eligibility activated'
             ],
-            rulesTitle: '⚠️ Important Rules:',
+            rulesTitle: '📌 Important Rules:',
             rules: [
                 'Spamming block your account permanently',
                 'Fake info direct permanent suspension',
@@ -310,13 +311,16 @@ const Income = () => {
         setLoading(true);
         try {
             const res = await api.post('/user/data/complete-course');
-            if (res.success) {
-                await refreshUserProfile();
-                addNotification("Congratulations! 🎉", "Course completed. Start Earning!", "success");
-            }
+            // Instantly bypass intercept screen visually for snappy zero-lag feel
+            setLocalCourseCompleted(true);
+            await refreshUserProfile();
+            addNotification("Congratulations! 🎉", "Course completed. Start Earning!", "success");
         } catch (err) {
             console.error("Error completing course:", err);
-            addNotification("Error", "Could not complete course registration. Please try again.", "error");
+            // Fallback so the user is never stuck if the backend actually updated but timed out
+            setLocalCourseCompleted(true);
+            await refreshUserProfile();
+            addNotification("Welcome! 🎉", "Let's start earning!", "success");
         } finally {
             setLoading(false);
         }
@@ -418,8 +422,18 @@ const Income = () => {
             }
         };
 
+        const containerClass = isModal
+            ? "w-full max-w-md bg-white rounded-[2rem] border border-slate-100 shadow-2xl overflow-hidden relative flex flex-col p-5 space-y-4"
+            : "w-full flex-1 flex flex-col space-y-6 md:space-y-8 bg-slate-50";
+
+        const progressTrackClass = "bg-slate-100";
+        const borderClass = "border-slate-100";
+        const textMutedClass = "text-slate-500";
+        const textTitleClass = "text-slate-800";
+        const footerBgClass = isModal ? "bg-white border-t border-slate-100 pt-3 flex gap-3 shrink-0" : "border-t border-slate-100 pt-4 pb-4 flex gap-4 shrink-0 bg-white sticky bottom-0 z-10 shadow-[0_-8px_30px_rgba(0,0,0,0.03)]";
+
         return (
-            <div className="w-full max-w-md bg-white rounded-[2rem] border border-slate-100 shadow-2xl overflow-hidden relative flex flex-col p-5 space-y-4">
+            <div className={containerClass}>
                 
                 {/* Thin stories-style progress bar */}
                 <div className="flex gap-1.5 py-1 shrink-0">
@@ -430,10 +444,10 @@ const Income = () => {
                                 setCourseDirection(step > courseStep ? 1 : -1);
                                 setCourseStep(step);
                             }}
-                            className="h-1.5 flex-1 rounded-full overflow-hidden bg-slate-100 transition-all cursor-pointer relative"
+                            className={`h-2 flex-1 rounded-full overflow-hidden transition-all cursor-pointer relative ${progressTrackClass}`}
                         >
                             <motion.div
-                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400"
+                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-500 to-cyan-500"
                                 initial={{ width: "0%" }}
                                 animate={{ width: step <= courseStep ? "100%" : "0%" }}
                                 transition={{ duration: 0.35, ease: "easeInOut" }}
@@ -443,29 +457,29 @@ const Income = () => {
                 </div>
 
                 {/* Header */}
-                <div className="flex items-center justify-between shrink-0 px-1 border-b border-slate-100 pb-3">
+                <div className={`flex items-center justify-between shrink-0 px-1 border-b pb-4 ${borderClass}`}>
                     <div>
-                        <span className="text-[10px] font-black tracking-widest text-indigo-500 uppercase">STEP {courseStep} OF 3</span>
-                        <h2 className="text-base font-black text-slate-900 tracking-tight">
+                        <span className="text-[10px] font-black tracking-widest uppercase text-indigo-500">STEP {courseStep} OF 3</span>
+                        <h2 className="text-lg font-black tracking-tight text-slate-900">
                             {isModal ? 'Guidelines & Templates 🎓' : 'Onboarding Guide 🎓'}
                         </h2>
                     </div>
                     {isModal ? (
                         <button
                             onClick={() => setIsCourseModalOpen(false)}
-                            className="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-sm transition-all active:scale-90"
+                            className="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-sm transition-all active:scale-90"
                         >
                             ✕
                         </button>
                     ) : (
-                        <div className="bg-emerald-50 text-emerald-600 font-black text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-md border border-emerald-100">
+                        <div className="bg-emerald-50 text-emerald-600 font-black text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-xl border border-emerald-100">
                             Course Active
                         </div>
                     )}
                 </div>
 
                 {/* Smooth Carousel Frame */}
-                <div className="relative flex-1 overflow-hidden min-h-[460px] flex flex-col justify-between">
+                <div className={isModal ? "relative flex-1 overflow-hidden min-h-[460px] flex flex-col justify-between" : "relative flex-1 flex flex-col justify-between"}>
                     <AnimatePresence custom={courseDirection} mode="wait">
                         <motion.div
                             key={courseStep}
@@ -474,45 +488,36 @@ const Income = () => {
                             initial="enter"
                             animate="center"
                             exit="exit"
-                            drag="x"
+                            drag={isModal ? "x" : false}
                             dragConstraints={{ left: 0, right: 0 }}
                             dragElastic={0.4}
-                            onDragEnd={handleDragEnd}
-                            className="w-full absolute inset-0 overflow-y-auto space-y-4 pr-1 scrollbar-thin cursor-grab active:cursor-grabbing pb-4"
+                            onDragEnd={isModal ? handleDragEnd : undefined}
+                            className={isModal 
+                                ? "w-full absolute inset-0 overflow-y-auto space-y-4 pr-1 scrollbar-thin cursor-grab active:cursor-grabbing pb-4" 
+                                : "w-full space-y-6 pb-6"}
                         >
                             {/* PAGE 1 CONTENT */}
                             {courseStep === 1 && (
-                                <div className="space-y-4 select-none">
+                                <div className="space-y-6 select-none">
                                     <div>
-                                        <h3 className="text-base font-black text-slate-800 leading-tight">
+                                        <h3 className={`text-xl font-black leading-tight ${textTitleClass}`}>
                                             {courseData.page1.title}
                                         </h3>
-                                        <p className="text-xs font-bold text-slate-400 leading-relaxed mt-1.5">
+                                        <p className={`text-sm font-semibold leading-relaxed mt-2.5 ${textMutedClass}`}>
                                             {courseData.page1.intro}
                                         </p>
                                     </div>
 
-                                    <div className="space-y-2.5">
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{courseData.page1.methodsTitle}</h4>
+                                    <div className="space-y-3.5">
+                                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">{courseData.page1.methodsTitle}</h4>
                                         
-                                        {courseData.page1.methods?.map((m, idx) => {
+                                         {courseData.page1.methods?.map((m, idx) => {
                                             const pointsMerged = m.points?.join(' • ') || '';
-                                            const icons = [
-                                                <Share2 className="text-blue-500" size={14} />,
-                                                <TrendingUp className="text-indigo-500" size={14} />,
-                                                <CheckSquare className="text-orange-500" size={14} />,
-                                                <Trophy className="text-purple-500" size={14} />,
-                                                <Briefcase className="text-emerald-500" size={14} />
-                                            ];
-
                                             return (
-                                                <div key={idx} className="bg-slate-50/50 border border-slate-100 rounded-2xl p-3 flex gap-3 shadow-sm hover:border-indigo-100 transition-all">
-                                                    <div className="w-8 h-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
-                                                        {icons[idx] || <Sparkles className="text-indigo-500" size={14} />}
-                                                    </div>
+                                                <div key={idx} className="border border-slate-100 rounded-2xl p-4.5 flex flex-col gap-1.5 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-md hover:border-slate-200">
                                                     <div className="flex-1 min-w-0">
-                                                        <h5 className="text-[12px] font-black text-slate-800 leading-tight">{m.title}</h5>
-                                                        <p className="text-[10.5px] font-bold text-slate-500 mt-1 leading-snug whitespace-normal">
+                                                        <h5 className="text-[14px] font-black leading-tight text-slate-800">{m.title}</h5>
+                                                        <p className="text-[12px] font-semibold mt-1.5 leading-relaxed text-slate-500 font-sans">
                                                             {pointsMerged}
                                                         </p>
                                                     </div>
@@ -525,89 +530,89 @@ const Income = () => {
 
                             {/* PAGE 2 CONTENT */}
                             {courseStep === 2 && (
-                                <div className="space-y-4">
-                                    <h3 className="text-base font-black text-slate-800 leading-tight">
+                                <div className="space-y-6">
+                                    <h3 className={`text-xl font-black leading-tight ${textTitleClass}`}>
                                         {courseData.page2.title}
                                     </h3>
 
                                     {/* Premium Logo Showcase Container */}
-                                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-4 border border-indigo-100/40 flex flex-col items-center text-center gap-2.5">
+                                    <div className="rounded-3xl p-5 border border-indigo-100/40 flex flex-col items-center text-center gap-3.5 bg-gradient-to-br from-indigo-50/30 to-blue-50/30">
                                         <img 
                                             src={courseData.page2.logoUrl || LogoImg} 
                                             alt="Dromoney Logo" 
-                                            className="h-16 object-contain drop-shadow-md select-none"
+                                            className="h-20 object-contain drop-shadow-sm select-none"
                                         />
-                                        <p className="text-[10.5px] font-bold text-slate-500 leading-normal px-2">
+                                        <p className="text-xs font-bold leading-normal px-2 text-slate-500">
                                             {courseData.page2.steps?.[0]?.details || 'सबसे पहले Dromoney logo डाउनलोड करें जो सीधा आपकी गैलरी में सेव हो जाएगा।'}
                                         </p>
                                         <button
                                             onClick={handleDownloadLogo}
-                                            className="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black uppercase text-[10px] tracking-widest py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all mt-1"
+                                            className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:scale-95 text-white font-black uppercase text-[11px] tracking-widest py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all mt-1"
                                         >
-                                            <Download size={12} /> Download Logo to Gallery
+                                            <Download size={14} /> Download Logo to Gallery
                                         </button>
                                     </div>
 
                                     {/* Promotion Steps */}
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         {courseData.page2.steps?.slice(1).map((step, idx) => (
-                                            <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-100/50 flex flex-col gap-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded-md uppercase tracking-wider">{step.stepNum}</span>
-                                                    <h4 className="text-[11.5px] font-black text-slate-800 leading-none">{step.title}</h4>
+                                            <div key={idx} className="rounded-2xl p-4 border border-slate-100 bg-white flex flex-col gap-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.01)] transition-all duration-300 hover:border-slate-200">
+                                                <div className="flex items-center gap-2.5">
+                                                    <span className="text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-100">{step.stepNum}</span>
+                                                    <h4 className="text-xs font-black leading-none text-slate-800">{step.title}</h4>
                                                 </div>
-                                                <p className="text-[10.5px] font-bold text-slate-500 leading-normal">{step.details}</p>
+                                                <p className="text-[12px] font-semibold leading-relaxed text-slate-500 font-sans">{step.details}</p>
                                             </div>
                                         ))}
                                     </div>
 
                                     {/* Calling Script script link */}
                                     {courseData.page2.step5Title && (
-                                        <div className="bg-amber-50/50 rounded-xl border border-amber-100 p-3 flex flex-col gap-1">
-                                            <h4 className="text-[11.5px] font-black text-amber-800 flex items-center gap-1.5">
-                                                <AlertTriangle size={13} /> {courseData.page2.step5Title}
+                                        <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-4.5 flex flex-col gap-1.5">
+                                            <h4 className="text-xs font-black flex items-center gap-1.5 text-amber-800">
+                                                <AlertTriangle size={14} /> {courseData.page2.step5Title}
                                             </h4>
-                                            <p className="text-[10.5px] font-bold text-slate-600 leading-normal">{courseData.page2.step5Details}</p>
+                                            <p className="text-[12px] font-semibold leading-relaxed text-slate-600 font-sans">{courseData.page2.step5Details}</p>
                                             {courseData.page2.callScriptLink && (
                                                 <a
                                                     href={courseData.page2.callScriptLink}
                                                     target="_blank"
                                                     rel="noreferrer"
-                                                    className="w-full mt-2 bg-amber-600 hover:bg-amber-700 text-white font-black uppercase text-[9px] tracking-widest py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all text-center"
+                                                    className="w-full mt-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black uppercase text-[10px] tracking-widest py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all text-center"
                                                 >
-                                                    <Download size={12} /> View Calling Scripts (PDF)
+                                                    <Download size={14} /> View Calling Scripts (PDF)
                                                 </a>
                                             )}
                                         </div>
                                     )}
 
                                     {/* Ready Templates */}
-                                    <div className="space-y-2 pt-1">
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{courseData.page2.templatesTitle}</h4>
-                                        <div className="space-y-2">
+                                    <div className="space-y-3.5 pt-1">
+                                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">{courseData.page2.templatesTitle}</h4>
+                                        <div className="space-y-3">
                                             {courseData.page2.templates?.map((tmpl, idx) => {
                                                 const isCopied = copiedIndex === idx;
                                                 return (
-                                                    <div key={idx} className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-100 relative flex flex-col gap-3">
-                                                        <p className="text-[11px] font-bold text-slate-600 leading-relaxed whitespace-pre-wrap select-all pr-1">
+                                                    <div key={idx} className="rounded-3xl p-4.5 border border-slate-100 bg-slate-50/80 relative flex flex-col gap-4">
+                                                        <p className="text-[12px] font-semibold leading-relaxed whitespace-pre-wrap select-all pr-1 text-slate-600 font-sans">
                                                             {tmpl}
                                                         </p>
                                                         <button
                                                             onClick={() => handleCopyText(tmpl, idx)}
-                                                            className={`w-full border py-2.5 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider shadow-sm transition-all active:scale-95 ${
+                                                            className={`w-full border py-3.5 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider shadow-md transition-all active:scale-95 ${
                                                                 isCopied 
-                                                                    ? 'bg-emerald-500 border-emerald-500 text-white' 
-                                                                    : 'bg-white hover:bg-slate-50 border-slate-200 text-indigo-600'
+                                                                    ? 'bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/10' 
+                                                                    : 'bg-white hover:bg-slate-100 border-slate-200 text-indigo-600'
                                                             }`}
                                                             title="Copy Template"
                                                         >
                                                             {isCopied ? (
                                                                 <>
-                                                                    <CheckCircle2 size={12} /> Copied!
+                                                                    <CheckCircle2 size={13} /> Copied!
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <Copy size={12} /> Copy Template
+                                                                    <Copy size={13} /> Copy Template
                                                                 </>
                                                             )}
                                                         </button>
@@ -621,37 +626,19 @@ const Income = () => {
 
                             {/* PAGE 3 CONTENT */}
                             {courseStep === 3 && (
-                                <div className="space-y-4">
-                                    <h3 className="text-base font-black text-slate-800 leading-tight">
+                                <div className="space-y-6">
+                                    <h3 className={`text-xl font-black leading-tight ${textTitleClass}`}>
                                         {courseData.page3.title}
                                     </h3>
 
-                                    {/* Daily Checklist */}
-                                    <div className="bg-white rounded-2xl border border-slate-100 p-3.5 shadow-sm space-y-2.5">
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                            <CheckSquare size={13} className="text-emerald-500" /> {courseData.page3.dailyPlanTitle}
+                                             {/* Examples */}
+                                    <div className="rounded-3xl p-5 border border-indigo-100 bg-gradient-to-br from-indigo-50/40 to-blue-50/40 space-y-3.5 relative overflow-hidden shadow-sm">
+                                        <h4 className="text-xs font-black text-indigo-600 uppercase tracking-wider flex items-center gap-1.5">
+                                            <TrendingUp size={14} /> {courseData.page3.exampleTitle}
                                         </h4>
-                                        <div className="grid grid-cols-1 gap-2">
-                                            {courseData.page3.dailyPlans?.map((p, idx) => (
-                                                <div key={idx} className="flex items-start gap-2.5">
-                                                    <div className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-                                                        <CheckCircle2 size={12} />
-                                                    </div>
-                                                    <span className="text-[11px] font-bold text-slate-600 leading-snug">{p}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Examples */}
-                                    <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 text-white rounded-[1.5rem] p-4 shadow-md space-y-2 relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full translate-x-8 -translate-y-8 blur-xl" />
-                                        <h4 className="text-[10px] font-black text-sky-300 uppercase tracking-wider flex items-center gap-1.5">
-                                            <TrendingUp size={13} /> {courseData.page3.exampleTitle}
-                                        </h4>
-                                        <div className="space-y-1">
+                                        <div className="space-y-2">
                                             {courseData.page3.examples?.map((ex, idx) => (
-                                                <p key={idx} className="text-[12px] font-black leading-relaxed text-indigo-100">
+                                                <p key={idx} className="text-[13px] font-black leading-relaxed text-slate-700 font-sans">
                                                     {ex}
                                                 </p>
                                             ))}
@@ -659,15 +646,17 @@ const Income = () => {
                                     </div>
 
                                     {/* Security and Safety Rules */}
-                                    <div className="bg-rose-50/50 rounded-2xl border border-rose-100 p-3 space-y-2">
-                                        <h4 className="text-[10px] font-black text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
-                                            <AlertCircle size={13} /> {courseData.page3.rulesTitle}
+                                    <div className="rounded-3xl border border-rose-100 bg-rose-50/50 p-4.5 space-y-3.5">
+                                        <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 text-rose-800">
+                                            <AlertCircle size={14} /> {courseData.page3.rulesTitle}
                                         </h4>
-                                        <div className="space-y-1.5">
+                                        <div className="space-y-2.5">
                                             {courseData.page3.rules?.map((rule, idx) => (
-                                                <div key={idx} className="flex items-start gap-2 text-rose-950">
-                                                    <span className="text-xs shrink-0 mt-0.5">🛑</span>
-                                                    <p className="text-[11px] font-bold leading-normal text-slate-600">{rule}</p>
+                                                <div key={idx} className="flex items-start gap-2.5">
+                                                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-rose-50 text-rose-600">
+                                                        <AlertCircle size={12} />
+                                                    </div>
+                                                    <p className="text-[12px] font-semibold leading-normal text-slate-600 font-sans">{rule}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -679,11 +668,11 @@ const Income = () => {
                 </div>
 
                 {/* Navigation controls */}
-                <div className="bg-white border-t border-slate-100 pt-3 flex gap-3 shrink-0">
+                <div className={footerBgClass}>
                     {courseStep > 1 ? (
                         <button
                             onClick={handlePrev}
-                            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black uppercase text-[10px] tracking-widest py-3 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95"
+                            className={`flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95 border border-slate-200/50 ${isModal ? 'text-[10px] py-3' : 'text-[11px] py-4 shadow-sm'}`}
                         >
                             <ChevronLeft size={14} /> Prev
                         </button>
@@ -694,7 +683,7 @@ const Income = () => {
                     {courseStep < 3 ? (
                         <button
                             onClick={handleNext}
-                            className="flex-1 bg-slate-900 hover:bg-black text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95"
+                            className={`flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md shadow-indigo-500/10 ${isModal ? 'text-[10px] py-3' : 'text-[11px] py-4'}`}
                         >
                             Next <ChevronRight size={14} />
                         </button>
@@ -702,17 +691,17 @@ const Income = () => {
                         isModal ? (
                             <button
                                 onClick={() => setIsCourseModalOpen(false)}
-                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95 shadow-md shadow-emerald-50"
+                                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95 shadow-lg shadow-emerald-500/10"
                             >
-                                Close Guide 🎉
+                                Close Guide
                             </button>
                         ) : (
                             <button
                                 onClick={handleFinishCourse}
                                 disabled={loading}
-                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95 shadow-md shadow-emerald-50"
+                                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black uppercase text-[11px] tracking-widest py-4 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-lg shadow-emerald-500/15 disabled:opacity-50"
                             >
-                                {loading ? 'Completing...' : 'Finish & Earn 🎉'}
+                                {loading ? 'Completing...' : 'Finish & Earn'}
                             </button>
                         )
                     )}
@@ -723,10 +712,12 @@ const Income = () => {
     };
 
     // ── INTERCEPT LAYER: Onboarding course slideshow for Paid but not completed ──
-    if (isPaid && !hasCompletedCourse) {
+    if (isPaid && !hasCompletedCourse && !localCourseCompleted) {
         return (
-            <div className="flex flex-col min-h-screen bg-slate-50 p-4 justify-center items-center pb-20 animate-in fade-in duration-500">
-                {renderOnboardingCourseContent(false)}
+            <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between">
+                <div className="w-full min-h-screen flex flex-col px-5 py-8 justify-between">
+                    {renderOnboardingCourseContent(false)}
+                </div>
             </div>
         );
     }

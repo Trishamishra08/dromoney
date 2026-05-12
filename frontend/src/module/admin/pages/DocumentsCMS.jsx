@@ -160,19 +160,19 @@ const DocumentsCMS = () => {
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Page Title (Hindi)</label>
                                     <input value={courseData.page1.title || ''} onChange={(e) => {
-                                        const nd = { ...courseData }; nd.page1.title = e.target.value; setCourseData(nd);
+                                        const nd = JSON.parse(JSON.stringify(courseData)); nd.page1.title = e.target.value; setCourseData(nd);
                                     }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Introductory Text (Hindi)</label>
                                     <textarea value={courseData.page1.intro || ''} onChange={(e) => {
-                                        const nd = { ...courseData }; nd.page1.intro = e.target.value; setCourseData(nd);
+                                        const nd = JSON.parse(JSON.stringify(courseData)); nd.page1.intro = e.target.value; setCourseData(nd);
                                     }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] font-bold text-slate-500 h-28 outline-none focus:ring-2 focus:ring-sky-500 resize-none" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Methods Section Heading (Hindi)</label>
                                     <input value={courseData.page1.methodsTitle || ''} onChange={(e) => {
-                                        const nd = { ...courseData }; nd.page1.methodsTitle = e.target.value; setCourseData(nd);
+                                        const nd = JSON.parse(JSON.stringify(courseData)); nd.page1.methodsTitle = e.target.value; setCourseData(nd);
                                     }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none" />
                                 </div>
 
@@ -182,25 +182,11 @@ const DocumentsCMS = () => {
                                     {courseData.page1.methods?.map((method, mIdx) => (
                                         <div key={mIdx} className="bg-slate-50 rounded-3xl p-5 border border-slate-100 relative space-y-3">
                                             <button onClick={() => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page1: {
-                                                        ...courseData.page1,
-                                                        methods: courseData.page1.methods.filter((_, idx) => idx !== mIdx)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page1.methods.splice(mIdx, 1); setCourseData(nd);
                                             }} className="absolute top-4 right-4 text-rose-400 hover:text-rose-600"><Trash2 size={16} /></button>
                                             
                                             <input value={method.title} onChange={(e) => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page1: {
-                                                        ...courseData.page1,
-                                                        methods: courseData.page1.methods.map((m, idx) => idx === mIdx ? { ...m, title: e.target.value } : m)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page1.methods[mIdx].title = e.target.value; setCourseData(nd);
                                             }} className="w-[85%] bg-white border border-slate-200 px-3 py-2 text-[13px] font-black text-slate-700 outline-none rounded-xl" placeholder="Method Title" />
                                             
                                             {/* Bullet points under this method */}
@@ -209,57 +195,26 @@ const DocumentsCMS = () => {
                                                 {method.points?.map((point, pIdx) => (
                                                     <div key={pIdx} className="flex gap-2">
                                                         <input value={point} onChange={(e) => {
-                                                            const nd = {
-                                                                ...courseData,
-                                                                page1: {
-                                                                    ...courseData.page1,
-                                                                    methods: courseData.page1.methods.map((m, idx) => idx === mIdx ? {
-                                                                        ...m,
-                                                                        points: m.points.map((p, pidx) => pidx === pIdx ? e.target.value : p)
-                                                                    } : m)
-                                                                }
-                                                            };
-                                                            setCourseData(nd);
+                                                            const nd = JSON.parse(JSON.stringify(courseData)); nd.page1.methods[mIdx].points[pIdx] = e.target.value; setCourseData(nd);
                                                         }} className="flex-1 bg-white border border-slate-200 px-3 py-1.5 text-[12px] font-bold text-slate-500 outline-none rounded-lg" />
                                                         <button onClick={() => {
-                                                            const nd = {
-                                                                ...courseData,
-                                                                page1: {
-                                                                    ...courseData.page1,
-                                                                    methods: courseData.page1.methods.map((m, idx) => idx === mIdx ? {
-                                                                        ...m,
-                                                                        points: m.points.filter((_, pidx) => pidx !== pIdx)
-                                                                    } : m)
-                                                                }
-                                                            };
-                                                            setCourseData(nd);
+                                                            const nd = JSON.parse(JSON.stringify(courseData)); nd.page1.methods[mIdx].points.splice(pIdx, 1); setCourseData(nd);
                                                         }} className="text-rose-400 hover:text-rose-600"><Trash2 size={14} /></button>
                                                     </div>
                                                 ))}
                                                 <button onClick={() => {
-                                                    const nd = {
-                                                        ...courseData,
-                                                        page1: {
-                                                            ...courseData.page1,
-                                                            methods: courseData.page1.methods.map((m, idx) => idx === mIdx ? {
-                                                                ...m,
-                                                                points: [...(m.points || []), 'New Point text...']
-                                                            } : m)
-                                                        }
-                                                    };
+                                                    const nd = JSON.parse(JSON.stringify(courseData));
+                                                    if (!nd.page1.methods[mIdx].points) nd.page1.methods[mIdx].points = [];
+                                                    nd.page1.methods[mIdx].points.push('New Point text...');
                                                     setCourseData(nd);
                                                 }} className="text-[10px] text-sky-500 font-black uppercase tracking-widest">+ Add Point</button>
                                             </div>
                                         </div>
                                     ))}
                                     <button onClick={() => {
-                                        const nd = {
-                                            ...courseData,
-                                            page1: {
-                                                ...courseData.page1,
-                                                methods: [...(courseData.page1.methods || []), { title: 'New Method Title', points: ['Point 1 details...'] }]
-                                            }
-                                        };
+                                        const nd = JSON.parse(JSON.stringify(courseData));
+                                        if (!nd.page1.methods) nd.page1.methods = [];
+                                        nd.page1.methods.push({ title: 'New Method Title', points: ['Point 1 details...'] });
                                         setCourseData(nd);
                                     }} className="w-full py-3.5 border-2 border-dashed border-slate-200 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-all">+ Add Earning Method</button>
                                 </div>
@@ -272,7 +227,7 @@ const DocumentsCMS = () => {
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Page Title (Hindi)</label>
                                     <input value={courseData.page2.title || ''} onChange={(e) => {
-                                        const nd = { ...courseData }; nd.page2.title = e.target.value; setCourseData(nd);
+                                        const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.title = e.target.value; setCourseData(nd);
                                     }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none" />
                                 </div>
 
@@ -289,14 +244,7 @@ const DocumentsCMS = () => {
                                         </div>
                                         
                                         <input value={courseData.page2.logoUrl || ''} onChange={(e) => {
-                                            const nd = {
-                                                ...courseData,
-                                                page2: {
-                                                    ...courseData.page2,
-                                                    logoUrl: e.target.value
-                                                }
-                                            };
-                                            setCourseData(nd);
+                                            const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.logoUrl = e.target.value; setCourseData(nd);
                                         }} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-[11px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500" placeholder="https://res.cloudinary.com/..." />
                                         
                                         {/* File upload trigger */}
@@ -327,14 +275,7 @@ const DocumentsCMS = () => {
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Call Script Doc Link</label>
                                         <input value={courseData.page2.callScriptLink || ''} onChange={(e) => {
-                                            const nd = {
-                                                ...courseData,
-                                                page2: {
-                                                    ...courseData.page2,
-                                                    callScriptLink: e.target.value
-                                                }
-                                            };
-                                            setCourseData(nd);
+                                            const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.callScriptLink = e.target.value; setCourseData(nd);
                                         }} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-[11px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-500" placeholder="https://docs.google.com/..." />
                                         <p className="text-[9px] font-bold text-slate-400 leading-normal pl-1">
                                             Enter the full URL (Google Doc, PDF, etc.) that users will be redirected to when they click "View Calling Scripts" in Page 2.
@@ -348,58 +289,26 @@ const DocumentsCMS = () => {
                                     {courseData.page2.steps?.map((step, sIdx) => (
                                         <div key={sIdx} className="bg-slate-50 rounded-3xl p-5 border border-slate-100 relative space-y-3">
                                             <button onClick={() => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page2: {
-                                                        ...courseData.page2,
-                                                        steps: courseData.page2.steps.filter((_, idx) => idx !== sIdx)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.steps.splice(sIdx, 1); setCourseData(nd);
                                             }} className="absolute top-4 right-4 text-rose-400 hover:text-rose-600"><Trash2 size={16} /></button>
                                             
                                             <div className="grid grid-cols-3 gap-2">
                                                 <input value={step.stepNum} onChange={(e) => {
-                                                    const nd = {
-                                                        ...courseData,
-                                                        page2: {
-                                                            ...courseData.page2,
-                                                            steps: courseData.page2.steps.map((s, idx) => idx === sIdx ? { ...s, stepNum: e.target.value } : s)
-                                                        }
-                                                    };
-                                                    setCourseData(nd);
+                                                    const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.steps[sIdx].stepNum = e.target.value; setCourseData(nd);
                                                 }} className="bg-white border border-slate-200 px-3 py-2 text-[12px] font-black text-orange-600 outline-none rounded-xl" placeholder="Step Num" />
                                                 <input value={step.title} onChange={(e) => {
-                                                    const nd = {
-                                                        ...courseData,
-                                                        page2: {
-                                                            ...courseData.page2,
-                                                            steps: courseData.page2.steps.map((s, idx) => idx === sIdx ? { ...s, title: e.target.value } : s)
-                                                        }
-                                                    };
-                                                    setCourseData(nd);
+                                                    const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.steps[sIdx].title = e.target.value; setCourseData(nd);
                                                 }} className="col-span-2 bg-white border border-slate-200 px-3 py-2 text-[12px] font-black text-slate-800 outline-none rounded-xl" placeholder="Step Title" />
                                             </div>
                                             <textarea value={step.details} onChange={(e) => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page2: {
-                                                        ...courseData.page2,
-                                                        steps: courseData.page2.steps.map((s, idx) => idx === sIdx ? { ...s, details: e.target.value } : s)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.steps[sIdx].details = e.target.value; setCourseData(nd);
                                             }} className="w-full bg-white border border-slate-200 px-3 py-2 text-[11px] font-bold text-slate-500 h-16 outline-none rounded-xl resize-none" placeholder="Step description/Hindi guidelines" />
                                         </div>
                                     ))}
                                     <button onClick={() => {
-                                        const nd = {
-                                            ...courseData,
-                                            page2: {
-                                                ...courseData.page2,
-                                                steps: [...(courseData.page2.steps || []), { stepNum: `🔥 stap ${(courseData.page2.steps || []).length + 1}`, title: 'New Promotion Setup Step', details: 'Details...' }]
-                                            }
-                                        };
+                                        const nd = JSON.parse(JSON.stringify(courseData));
+                                        if (!nd.page2.steps) nd.page2.steps = [];
+                                        nd.page2.steps.push({ stepNum: `🔥 stap ${nd.page2.steps.length + 1}`, title: 'New Promotion Setup Step', details: 'Details...' });
                                         setCourseData(nd);
                                     }} className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-all">+ Add Setup Step</button>
                                 </div>
@@ -407,48 +316,23 @@ const DocumentsCMS = () => {
                                 {/* Ready templates list */}
                                 <div className="space-y-4 pt-4 border-t border-slate-50">
                                     <input value={courseData.page2.templatesTitle || ''} onChange={(e) => {
-                                        const nd = {
-                                            ...courseData,
-                                            page2: {
-                                                ...courseData.page2,
-                                                templatesTitle: e.target.value
-                                            }
-                                        };
-                                        setCourseData(nd);
+                                        const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.templatesTitle = e.target.value; setCourseData(nd);
                                     }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] font-black text-slate-800 outline-none focus:ring-2 focus:ring-sky-500" />
                                     
                                     {courseData.page2.templates?.map((template, tIdx) => (
                                         <div key={tIdx} className="flex gap-2">
                                             <textarea value={template} onChange={(e) => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page2: {
-                                                        ...courseData.page2,
-                                                        templates: courseData.page2.templates.map((t, idx) => idx === tIdx ? e.target.value : t)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.templates[tIdx] = e.target.value; setCourseData(nd);
                                             }} className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[12px] font-bold text-slate-600 outline-none focus:ring-2 focus:ring-sky-500 h-24 resize-none" />
                                             <button onClick={() => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page2: {
-                                                        ...courseData.page2,
-                                                        templates: courseData.page2.templates.filter((_, idx) => idx !== tIdx)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.templates.splice(tIdx, 1); setCourseData(nd);
                                             }} className="text-rose-400 hover:text-rose-600"><Trash2 size={16} /></button>
                                         </div>
                                     ))}
                                     <button onClick={() => {
-                                        const nd = {
-                                            ...courseData,
-                                            page2: {
-                                                ...courseData.page2,
-                                                templates: [...(courseData.page2.templates || []), '🔥 New Template Description here...\n\nLink: [Your Link]']
-                                            }
-                                        };
+                                        const nd = JSON.parse(JSON.stringify(courseData));
+                                        if (!nd.page2.templates) nd.page2.templates = [];
+                                        nd.page2.templates.push('🔥 New Template Description here...\n\nLink: [Your Link]');
                                         setCourseData(nd);
                                     }} className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-all">+ Add Ready Template</button>
                                 </div>
@@ -457,24 +341,10 @@ const DocumentsCMS = () => {
                                 <div className="space-y-4 pt-4 border-t border-slate-50 p-5 bg-orange-50/20 rounded-3xl border border-orange-100/50">
                                     <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest ml-1">Step 5: Calling Script block</label>
                                     <input value={courseData.page2.step5Title || ''} onChange={(e) => {
-                                        const nd = {
-                                            ...courseData,
-                                            page2: {
-                                                ...courseData.page2,
-                                                step5Title: e.target.value
-                                            }
-                                        };
-                                        setCourseData(nd);
+                                        const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.step5Title = e.target.value; setCourseData(nd);
                                     }} className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-[13px] font-black text-slate-800 outline-none" />
                                     <textarea value={courseData.page2.step5Details || ''} onChange={(e) => {
-                                        const nd = {
-                                            ...courseData,
-                                            page2: {
-                                                ...courseData.page2,
-                                                step5Details: e.target.value
-                                            }
-                                        };
-                                        setCourseData(nd);
+                                        const nd = JSON.parse(JSON.stringify(courseData)); nd.page2.step5Details = e.target.value; setCourseData(nd);
                                     }} className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 text-[12px] font-bold text-slate-500 h-20 outline-none resize-none" />
                                 </div>
                             </div>
@@ -486,62 +356,30 @@ const DocumentsCMS = () => {
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Page Title (Hindi)</label>
                                     <input value={courseData.page3.title || ''} onChange={(e) => {
-                                        const nd = {
-                                            ...courseData,
-                                            page3: {
-                                                ...courseData.page3,
-                                                title: e.target.value
-                                            }
-                                        };
-                                        setCourseData(nd);
+                                        const nd = JSON.parse(JSON.stringify(courseData)); nd.page3.title = e.target.value; setCourseData(nd);
                                     }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-bold text-slate-800 focus:ring-2 focus:ring-sky-500 outline-none" />
                                 </div>
 
                                 {/* Daily Plan List */}
                                 <div className="space-y-4 pt-4 border-t border-slate-50">
                                     <input value={courseData.page3.dailyPlanTitle || ''} onChange={(e) => {
-                                        const nd = {
-                                            ...courseData,
-                                            page3: {
-                                                ...courseData.page3,
-                                                dailyPlanTitle: e.target.value
-                                            }
-                                        };
-                                        setCourseData(nd);
+                                        const nd = JSON.parse(JSON.stringify(courseData)); nd.page3.dailyPlanTitle = e.target.value; setCourseData(nd);
                                     }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] font-black text-slate-800 outline-none focus:ring-2 focus:ring-sky-500" />
                                     
                                     {courseData.page3.dailyPlans?.map((plan, idx) => (
                                         <div key={idx} className="flex gap-2">
                                             <input value={plan} onChange={(e) => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page3: {
-                                                        ...courseData.page3,
-                                                        dailyPlans: courseData.page3.dailyPlans.map((dp, i) => i === idx ? e.target.value : dp)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page3.dailyPlans[idx] = e.target.value; setCourseData(nd);
                                             }} className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[12px] font-bold text-slate-600 outline-none" />
                                             <button onClick={() => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page3: {
-                                                        ...courseData.page3,
-                                                        dailyPlans: courseData.page3.dailyPlans.filter((_, i) => i !== idx)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page3.dailyPlans.splice(idx, 1); setCourseData(nd);
                                             }} className="text-rose-400 hover:text-rose-600"><Trash2 size={16} /></button>
                                         </div>
                                     ))}
                                     <button onClick={() => {
-                                        const nd = {
-                                            ...courseData,
-                                            page3: {
-                                                ...courseData.page3,
-                                                dailyPlans: [...(courseData.page3.dailyPlans || []), 'New daily task point...']
-                                            }
-                                        };
+                                        const nd = JSON.parse(JSON.stringify(courseData));
+                                        if (!nd.page3.dailyPlans) nd.page3.dailyPlans = [];
+                                        nd.page3.dailyPlans.push('New daily task point...');
                                         setCourseData(nd);
                                     }} className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-all">+ Add Daily Task Point</button>
                                 </div>
@@ -549,48 +387,23 @@ const DocumentsCMS = () => {
                                 {/* Examples Block */}
                                 <div className="space-y-4 pt-4 border-t border-slate-50">
                                     <input value={courseData.page3.exampleTitle || ''} onChange={(e) => {
-                                        const nd = {
-                                            ...courseData,
-                                            page3: {
-                                                ...courseData.page3,
-                                                exampleTitle: e.target.value
-                                            }
-                                        };
-                                        setCourseData(nd);
+                                        const nd = JSON.parse(JSON.stringify(courseData)); nd.page3.exampleTitle = e.target.value; setCourseData(nd);
                                     }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] font-black text-slate-800 outline-none" />
                                     
                                     {courseData.page3.examples?.map((ex, idx) => (
                                         <div key={idx} className="flex gap-2">
                                             <input value={ex} onChange={(e) => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page3: {
-                                                        ...courseData.page3,
-                                                        examples: courseData.page3.examples.map((item, i) => i === idx ? e.target.value : item)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page3.examples[idx] = e.target.value; setCourseData(nd);
                                             }} className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[12px] font-black text-slate-700 outline-none" />
                                             <button onClick={() => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page3: {
-                                                        ...courseData.page3,
-                                                        examples: courseData.page3.examples.filter((_, i) => i !== idx)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page3.examples.splice(idx, 1); setCourseData(nd);
                                             }} className="text-rose-400 hover:text-rose-600"><Trash2 size={16} /></button>
                                         </div>
                                     ))}
                                     <button onClick={() => {
-                                        const nd = {
-                                            ...courseData,
-                                            page3: {
-                                                ...courseData.page3,
-                                                examples: [...(courseData.page3.examples || []), '➡️New Example equation...']
-                                            }
-                                        };
+                                        const nd = JSON.parse(JSON.stringify(courseData));
+                                        if (!nd.page3.examples) nd.page3.examples = [];
+                                        nd.page3.examples.push('➡️New Example equation...');
                                         setCourseData(nd);
                                     }} className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-all">+ Add Example Equation</button>
                                 </div>
@@ -598,48 +411,23 @@ const DocumentsCMS = () => {
                                 {/* Important Rules */}
                                 <div className="space-y-4 pt-4 border-t border-slate-50">
                                     <input value={courseData.page3.rulesTitle || ''} onChange={(e) => {
-                                        const nd = {
-                                            ...courseData,
-                                            page3: {
-                                                ...courseData.page3,
-                                                rulesTitle: e.target.value
-                                            }
-                                        };
-                                        setCourseData(nd);
+                                        const nd = JSON.parse(JSON.stringify(courseData)); nd.page3.rulesTitle = e.target.value; setCourseData(nd);
                                     }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[13px] font-black text-slate-800 outline-none" />
                                     
                                     {courseData.page3.rules?.map((rule, idx) => (
                                         <div key={idx} className="flex gap-2">
                                             <input value={rule} onChange={(e) => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page3: {
-                                                        ...courseData.page3,
-                                                        rules: courseData.page3.rules.map((r, i) => i === idx ? e.target.value : r)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page3.rules[idx] = e.target.value; setCourseData(nd);
                                             }} className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-[12px] font-bold text-slate-600 outline-none" />
                                             <button onClick={() => {
-                                                const nd = {
-                                                    ...courseData,
-                                                    page3: {
-                                                        ...courseData.page3,
-                                                        rules: courseData.page3.rules.filter((_, i) => i !== idx)
-                                                    }
-                                                };
-                                                setCourseData(nd);
+                                                const nd = JSON.parse(JSON.stringify(courseData)); nd.page3.rules.splice(idx, 1); setCourseData(nd);
                                             }} className="text-rose-400 hover:text-rose-600"><Trash2 size={16} /></button>
                                         </div>
                                     ))}
                                     <button onClick={() => {
-                                        const nd = {
-                                            ...courseData,
-                                            page3: {
-                                                ...courseData.page3,
-                                                rules: [...(courseData.page3.rules || []), 'Rule description in Hindi...']
-                                            }
-                                        };
+                                        const nd = JSON.parse(JSON.stringify(courseData));
+                                        if (!nd.page3.rules) nd.page3.rules = [];
+                                        nd.page3.rules.push('Rule description in Hindi...');
                                         setCourseData(nd);
                                     }} className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-all">+ Add Rule</button>
                                 </div>
@@ -772,7 +560,7 @@ const DocumentsCMS = () => {
                             {/* Footer buttons simulation */}
                             <div className="absolute bottom-0 inset-x-0 bg-white border-t border-slate-100 p-3.5 flex justify-between gap-3 z-20">
                                 {activeCoursePage > 1 ? (
-                                    <button onClick={() => setActiveCoursePage(activeCoursePage - 1)} className="flex-1 py-2.5 bg-slate-100 border border-slate-200 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-1 transition-colors hover:bg-slate-200">
+                                    <button className="flex-1 py-2.5 bg-slate-100 border border-slate-200 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-1">
                                         <ChevronLeft size={12} /> Prev
                                     </button>
                                 ) : (
@@ -780,11 +568,11 @@ const DocumentsCMS = () => {
                                 )}
                                 
                                 {activeCoursePage < 3 ? (
-                                    <button onClick={() => setActiveCoursePage(activeCoursePage + 1)} className="flex-1 py-2.5 bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-1 transition-colors hover:bg-slate-800">
+                                    <button className="flex-1 py-2.5 bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-1">
                                         Next <ChevronRight size={12} />
                                     </button>
                                 ) : (
-                                    <button className="flex-1 py-2.5 bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-1 shadow-lg shadow-emerald-100/50 cursor-default">
+                                    <button className="flex-1 py-2.5 bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-1 shadow-lg shadow-emerald-100">
                                         Finish <Sparkles size={10} />
                                     </button>
                                 )}
