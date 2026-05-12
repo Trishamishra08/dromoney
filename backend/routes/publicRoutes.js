@@ -1,5 +1,5 @@
 const express = require('express');
-const { getContent, getBulkContent, getActiveBanners } = require('../controllers/contentController');
+const { getContent, getBulkContent, getActiveBanners, downloadLogo } = require('../controllers/contentController');
 const { getBoosters } = require('../controllers/adminBoosterController'); // Reusing controller but for public view (could filter isActive: true)
 const { getPublicNotifications } = require('../controllers/notificationController');
 const { getBusinessIdeas, getBusinessIdeaById } = require('../controllers/businessIdeaController');
@@ -12,6 +12,7 @@ const router = express.Router();
 
 const { getPublicSettings, getReferrerName } = require('../controllers/publicController');
 
+router.get('/content/download-logo', downloadLogo);
 router.get('/content/bulk', getBulkContent);
 router.get('/content/:key', getContent);
 router.get('/banners', getActiveBanners);

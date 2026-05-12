@@ -1,5 +1,6 @@
 const Content = require('../models/Content');
 const asyncHandler = require('../middleware/async');
+const axios = require('axios');
 
 const Banner = require('../models/Banner'); // Added Banner model
 
@@ -81,3 +82,41 @@ exports.updateContent = asyncHandler(async (req, res, next) => {
         data: content
     });
 });
+
+// @desc    Download/proxy brand logo with proper attachment headers
+// @route   GET /api/public/content/download-logo
+// @access  Public
+exports.downloadLogo = asyncHandler(async (req, res, next) => {
+    // Fetch onboarding_course content to get current logoUrl
+    const content = await Content.findOne({ key: 'onboarding_course' });
+    let logoUrl = '';
+    if (content && content.data && content.data.page2 && content.data.page2.logoUrl) {
+        logoUrl = content.data.page2.logoUrl;
+    }
+    
+    // If empty, use our fallback (cloudinary uploaded logo)
+    if (!logoUrl) {
+        logoUrl = 'https://res.cloudinary.com/dncw1hfix/image/upload/v1776323215/dromoney/WhatsApp_Image_2026-04-28_at_10.52.49_PM-removebg-preview.png';
+    }
+
+    try {
+        const filename = 'dromoney_logo.png';
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Type', 'image/png');
+
+        if (logoUrl.startsWith('http')) {
+            const response = await axios({
+                method: 'get',
+                url: logoUrl,
+                responseType: 'stream'
+            });
+            response.data.pipe(res);
+        } else {
+            res.redirect(logoUrl);
+        }
+    } catch (err) {
+        console.error("Error downloading logo:", err);
+        res.status(500).send("Error fetching logo image for download");
+    }
+});
+

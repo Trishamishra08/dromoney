@@ -6,6 +6,7 @@ import logo from '../../assets/WhatsApp_Image_2026-04-28_at_10.52.49_PM-removebg
 const navItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" /></svg> },
     { path: '/admin/kyc', label: 'KYC Details', icon: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></svg> },
+    { path: '/admin/documents', label: 'Documents Pages', icon: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg> },
     { path: '/admin/users', label: 'Users', icon: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg> },
     { path: '/admin/payments', label: 'Payments', icon: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg> },
     { path: '/admin/affiliates', label: 'Affiliate / Referrals', icon: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></svg> },
@@ -117,7 +118,7 @@ const AdminLayout = () => {
 
             {/* ── Sidebar ── */}
             <aside
-                className={`${sidebarOpen ? 'w-56' : 'w-16'} bg-[#0f172a] flex flex-col shrink-0 transition-all duration-300 relative z-30 h-full border-r border-slate-800/40`}
+                className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-[#0f172a] flex flex-col shrink-0 transition-all duration-300 relative z-30 h-full border-r border-slate-800/40`}
                 style={{ overscrollBehaviorY: 'contain', fontFamily: "'Roboto', sans-serif" }}
             >
                 <div className="flex flex-col items-center px-3 py-3 border-b border-slate-800/40 shrink-0 gap-1.5">
@@ -141,9 +142,9 @@ const AdminLayout = () => {
                                 className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative ${isActive ? 'bg-[#FDF2D0] text-[#856404] shadow-lg shadow-black/20 border border-[#F9E9B8]' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
                             >
                                 <item.icon className={`w-5 h-5 shrink-0 ${sidebarOpen ? 'mr-1' : ''}`} />
-                                {sidebarOpen && <span className="text-[12px] font-black tracking-tight truncate uppercase">{item.label}</span>}
+                                {sidebarOpen && <span className="text-[11px] font-black tracking-tight whitespace-normal break-words leading-tight uppercase flex-1 pr-2">{item.label}</span>}
                                 {sidebarOpen && (
-                                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                         <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="m9 18 6-6-6-6" /></svg>
                                     </div>
                                 )}
@@ -153,9 +154,9 @@ const AdminLayout = () => {
 
                     {/* Logout moved here - directly after Nav */}
                     <div className="pt-4 border-t border-slate-800/40 mt-2">
-                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all group font-black uppercase text-[12px]">
+                        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all group font-black uppercase text-[11px]">
                             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
-                            {sidebarOpen && <span className="truncate">Logout Session</span>}
+                            {sidebarOpen && <span className="whitespace-normal break-words text-left flex-1 pr-2">Logout Session</span>}
                         </button>
                     </div>
                 </div>

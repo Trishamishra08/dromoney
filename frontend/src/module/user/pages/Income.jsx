@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import PaymentModal from '../components/PaymentModal';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Share2, TrendingUp, CheckSquare, Trophy, Briefcase,
     Sparkles, ChevronRight, Lock, Loader2, ShieldCheck, Zap,
-    UploadCloud, Fingerprint, Image as ImageIcon, CheckCircle2, Clock, Wifi
+    UploadCloud, Fingerprint, Image as ImageIcon, CheckCircle2, Clock, Wifi,
+    ChevronLeft, Copy, Download, AlertTriangle, BookOpen, AlertCircle, FileText
 } from 'lucide-react';
 import { contentStorage } from '../../shared/services/contentStorage';
 import LogoImg from '../../../assets/WhatsApp_Image_2026-04-28_at_10.52.49_PM-removebg-preview.png';
+import api from '../../shared/services/api';
 
 // ─── 6 Income Cards Config (Modern Fintech Design) ───────────────────────────
 const INCOME_OPTIONS = [
@@ -76,12 +79,40 @@ const INCOME_OPTIONS = [
     },
 ];
 
-import api from '../../shared/services/api';
+const pageVariants = {
+    enter: (direction) => ({
+        x: direction > 0 ? 120 : -120,
+        opacity: 0,
+        scale: 0.98
+    }),
+    center: {
+        zIndex: 1,
+        x: 0,
+        opacity: 1,
+        scale: 1,
+        transition: {
+            x: { type: "spring", stiffness: 350, damping: 30 },
+            opacity: { duration: 0.2 },
+            scale: { duration: 0.2 }
+        }
+    },
+    exit: (direction) => ({
+        zIndex: 0,
+        x: direction < 0 ? 120 : -120,
+        opacity: 0,
+        scale: 0.98,
+        transition: {
+            x: { type: "spring", stiffness: 350, damping: 30 },
+            opacity: { duration: 0.15 },
+            scale: { duration: 0.15 }
+        }
+    })
+};
 
 const Income = () => {
     const navigate = useNavigate();
     const { userData, unlockPlatform, addNotification, loading: userLoading, refreshUserProfile } = useUser();
-    const { isPaid, kycStatus: userKycStatus } = userData;
+    const { isPaid, kycStatus: userKycStatus, hasCompletedCourse } = userData;
 
     // --- State Management ---
     const [kycStatus, setKycStatus] = useState(userKycStatus || 'Not Started');
@@ -96,9 +127,66 @@ const Income = () => {
         subtitle: 'Upcoming earning opportunities'
     });
 
+    // Onboarding Course Slides States
+    const [courseStep, setCourseStep] = useState(1);
+    const [courseDirection, setCourseDirection] = useState(0);
+    const [copiedIndex, setCopiedIndex] = useState(null);
+    const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+    const [courseData, setCourseData] = useState({
+        page1: {
+            title: '👉 Dromoney से कमाई कैसे करें',
+            intro: 'Dromoney एक ऐसा platform है जहाँ आप सीखकर मात्र 15 मिनट मैं earning कर सकते हैं।\n\nयह कोई guaranteed income platform नहीं है — आपकी कमाई आपकी मेहनत ओर कंसिस्टेंसी पर depend करती है।',
+            methodsTitle: '💰 कमाई के तरीके:',
+            methods: [
+                { title: '1. Affiliate Marketing (₹200 per sale)', points: ['आपको एक referral link मिलेगा', 'आप उसे share करेंगे', 'हर course sale पर ₹200 commission मिलेगा'] },
+                { title: '2. Future Fund (Reward System)', points: ['Monetization system (YouTube की तरह)', 'Criteria: 10 successful sales & 10 दिन active (15 min daily)', 'इसके बाद आपको platform से performance-based reward मिलेगा'] }
+            ]
+        },
+        page2: {
+            title: '👉 Affiliate + Promotion Setup',
+            steps: [
+                { stepNum: '🔥 stap 1', title: 'logo download kre & call Script', details: 'सबसे पहले नीचे दिए गए Download button से Dromoney logo डाउनलोड करें जो सीधा आपकी गैलरी में सेव हो जाएगा।' },
+                { stepNum: '🔥 stap 2', title: 'Ready Templates copy', details: 'नीचे दिए गए Promotion messages में से किसी एक को copy करें।' },
+                { stepNum: '🔥 stap 3', title: 'whatsapp status lagye 🤳', details: 'डाउनलोड की गई logo image को अपने Whatsapp status पर लगायें और copy किया हुआ text description में paste कर दें। [Your Referral Link] की जगह अपना link अवश्य डालें।' },
+                { stepNum: '🔥 stap 4', title: 'how to promote other plateform 📱', details: 'Facebook, Instagram reels, and status, या direct chats के माध्यम से प्रमोट करें।' }
+            ],
+            templatesTitle: '💎 Ready Templates (Copy-Paste)',
+            templates: [
+                '👉 Dromoney से मात्र 15 मिनट रोज़ काम करके सीखें और कमाएं।\n\nDirect ₹200 Referral bonus! ✅ 100% Genuine Payment सीधा bank account में।\n\nअभी रजिस्टर करें 👇\n[Your Link]',
+                '🔥 Work From Home Opportunity!\n\nक्या आप भी मोबाइल से ₹500 - ₹2000 रोज़ कमाना चाहते हैं? बिना किसी risk के शुरू करें। 👍\n\nRegister Link 👇\n[Your Link]'
+            ],
+            step5Title: '🔥 stap 5 : calling kra 🤳',
+            step5Details: 'जब लोग आपके status देखकर आपको message करें, तो उन्हें प्यार से समझाएं और signup करवाएं। Detailed call script के लिए नीचे दिए गए Script button पर क्लिक करें।',
+            callScriptLink: 'https://docs.google.com/document/d/1XgIsY_D7Beb6E6w318G6VOf6-K6gLqC1BqWpZ3pM2-8/edit',
+            logoUrl: LogoImg
+        },
+        page3: {
+            title: '👉 रोज क्या करें',
+            dailyPlanTitle: '📅 Daily Plan:',
+            dailyPlans: [
+                'Daily updates share context',
+                'Status update dynamic details',
+                'Task daily basis 15 min focus'
+            ],
+            exampleTitle: '📊 Example:',
+            examples: [
+                '1 sale daily = ₹200',
+                '30 Days = ₹6000',
+                '10 sales complete = Monthly Salary/Future Fund eligibility activated'
+            ],
+            rulesTitle: '⚠️ Important Rules:',
+            rules: [
+                'Spamming block your account permanently',
+                'Fake info direct permanent suspension',
+                'Self referral strict warning'
+            ]
+        }
+    });
+
     useEffect(() => {
         fetchProjects();
         fetchFutureFeatures();
+        fetchOnboardingCourse();
         setKycStatus(userKycStatus);
     }, [userKycStatus]);
 
@@ -106,7 +194,6 @@ const Income = () => {
         try {
             const res = await api.get('/public/content/income_projects');
             if (res.success) {
-                // Prioritize nested data if exists (for dynamic CMS compatibility)
                 if (res.data.data) {
                     setProjectsData(res.data.data);
                 } else {
@@ -130,6 +217,17 @@ const Income = () => {
             }
         } catch (err) {
             console.error("FF config fetch failed:", err);
+        }
+    };
+
+    const fetchOnboardingCourse = async () => {
+        try {
+            const res = await api.get('/public/content/onboarding_course');
+            if (res.success && res.data && res.data.data) {
+                setCourseData(res.data.data);
+            }
+        } catch (err) {
+            console.error("Course content fetch failed:", err);
         }
     };
 
@@ -178,6 +276,52 @@ const Income = () => {
         }
     };
 
+    const handleCopyText = (text, index) => {
+        navigator.clipboard.writeText(text);
+        setCopiedIndex(index);
+        addNotification("Copied!", "Template message copied to clipboard.", "success");
+        setTimeout(() => {
+            setCopiedIndex(null);
+        }, 1500);
+    };
+
+    const handleDownloadLogo = async () => {
+        try {
+            // Pointing to the proxy download API which adds the Content-Disposition attachment header
+            const baseURL = api.defaults.baseURL || '';
+            const downloadUrl = `${baseURL}/public/content/download-logo`;
+            
+            addNotification("Downloading!", "Starting logo download to your gallery...", "success");
+            
+            // Create a temporary link element to trigger the download directly
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (err) {
+            console.error("Download fallback triggered:", err);
+            window.open(courseData.page2.logoUrl || LogoImg, '_blank');
+        }
+    };
+
+    const handleFinishCourse = async () => {
+        setLoading(true);
+        try {
+            const res = await api.post('/user/data/complete-course');
+            if (res.success) {
+                await refreshUserProfile();
+                addNotification("Congratulations! 🎉", "Course completed. Start Earning!", "success");
+            }
+        } catch (err) {
+            console.error("Error completing course:", err);
+            addNotification("Error", "Could not complete course registration. Please try again.", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const status = (userKycStatus || 'Not Started').toLowerCase();
 
     useEffect(() => {
@@ -197,7 +341,6 @@ const Income = () => {
             </div>
         );
     }
-
 
 
     // ── LAYER 3: Approved but not Paid ──────────────────────────────────────
@@ -251,6 +394,343 @@ const Income = () => {
         );
     }
 
+    const renderOnboardingCourseContent = (isModal = false) => {
+        const handlePrev = () => {
+            if (courseStep > 1) {
+                setCourseDirection(-1);
+                setCourseStep(prev => prev - 1);
+            }
+        };
+
+        const handleNext = () => {
+            if (courseStep < 3) {
+                setCourseDirection(1);
+                setCourseStep(prev => prev + 1);
+            }
+        };
+
+        const handleDragEnd = (event, info) => {
+            const swipeThreshold = 50;
+            if (info.offset.x < -swipeThreshold) {
+                handleNext();
+            } else if (info.offset.x > swipeThreshold) {
+                handlePrev();
+            }
+        };
+
+        return (
+            <div className="w-full max-w-md bg-white rounded-[2rem] border border-slate-100 shadow-2xl overflow-hidden relative flex flex-col p-5 space-y-4">
+                
+                {/* Thin stories-style progress bar */}
+                <div className="flex gap-1.5 py-1 shrink-0">
+                    {[1, 2, 3].map((step) => (
+                        <button
+                            key={step}
+                            onClick={() => {
+                                setCourseDirection(step > courseStep ? 1 : -1);
+                                setCourseStep(step);
+                            }}
+                            className="h-1.5 flex-1 rounded-full overflow-hidden bg-slate-100 transition-all cursor-pointer relative"
+                        >
+                            <motion.div
+                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400"
+                                initial={{ width: "0%" }}
+                                animate={{ width: step <= courseStep ? "100%" : "0%" }}
+                                transition={{ duration: 0.35, ease: "easeInOut" }}
+                            />
+                        </button>
+                    ))}
+                </div>
+
+                {/* Header */}
+                <div className="flex items-center justify-between shrink-0 px-1 border-b border-slate-100 pb-3">
+                    <div>
+                        <span className="text-[10px] font-black tracking-widest text-indigo-500 uppercase">STEP {courseStep} OF 3</span>
+                        <h2 className="text-base font-black text-slate-900 tracking-tight">
+                            {isModal ? 'Guidelines & Templates 🎓' : 'Onboarding Guide 🎓'}
+                        </h2>
+                    </div>
+                    {isModal ? (
+                        <button
+                            onClick={() => setIsCourseModalOpen(false)}
+                            className="w-7 h-7 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-sm transition-all active:scale-90"
+                        >
+                            ✕
+                        </button>
+                    ) : (
+                        <div className="bg-emerald-50 text-emerald-600 font-black text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-md border border-emerald-100">
+                            Course Active
+                        </div>
+                    )}
+                </div>
+
+                {/* Smooth Carousel Frame */}
+                <div className="relative flex-1 overflow-hidden min-h-[460px] flex flex-col justify-between">
+                    <AnimatePresence custom={courseDirection} mode="wait">
+                        <motion.div
+                            key={courseStep}
+                            custom={courseDirection}
+                            variants={pageVariants}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            drag="x"
+                            dragConstraints={{ left: 0, right: 0 }}
+                            dragElastic={0.4}
+                            onDragEnd={handleDragEnd}
+                            className="w-full absolute inset-0 overflow-y-auto space-y-4 pr-1 scrollbar-thin cursor-grab active:cursor-grabbing pb-4"
+                        >
+                            {/* PAGE 1 CONTENT */}
+                            {courseStep === 1 && (
+                                <div className="space-y-4 select-none">
+                                    <div>
+                                        <h3 className="text-base font-black text-slate-800 leading-tight">
+                                            {courseData.page1.title}
+                                        </h3>
+                                        <p className="text-xs font-bold text-slate-400 leading-relaxed mt-1.5">
+                                            {courseData.page1.intro}
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-2.5">
+                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{courseData.page1.methodsTitle}</h4>
+                                        
+                                        {courseData.page1.methods?.map((m, idx) => {
+                                            const pointsMerged = m.points?.join(' • ') || '';
+                                            const icons = [
+                                                <Share2 className="text-blue-500" size={14} />,
+                                                <TrendingUp className="text-indigo-500" size={14} />,
+                                                <CheckSquare className="text-orange-500" size={14} />,
+                                                <Trophy className="text-purple-500" size={14} />,
+                                                <Briefcase className="text-emerald-500" size={14} />
+                                            ];
+
+                                            return (
+                                                <div key={idx} className="bg-slate-50/50 border border-slate-100 rounded-2xl p-3 flex gap-3 shadow-sm hover:border-indigo-100 transition-all">
+                                                    <div className="w-8 h-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
+                                                        {icons[idx] || <Sparkles className="text-indigo-500" size={14} />}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h5 className="text-[12px] font-black text-slate-800 leading-tight">{m.title}</h5>
+                                                        <p className="text-[10.5px] font-bold text-slate-500 mt-1 leading-snug whitespace-normal">
+                                                            {pointsMerged}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* PAGE 2 CONTENT */}
+                            {courseStep === 2 && (
+                                <div className="space-y-4">
+                                    <h3 className="text-base font-black text-slate-800 leading-tight">
+                                        {courseData.page2.title}
+                                    </h3>
+
+                                    {/* Premium Logo Showcase Container */}
+                                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-4 border border-indigo-100/40 flex flex-col items-center text-center gap-2.5">
+                                        <img 
+                                            src={courseData.page2.logoUrl || LogoImg} 
+                                            alt="Dromoney Logo" 
+                                            className="h-16 object-contain drop-shadow-md select-none"
+                                        />
+                                        <p className="text-[10.5px] font-bold text-slate-500 leading-normal px-2">
+                                            {courseData.page2.steps?.[0]?.details || 'सबसे पहले Dromoney logo डाउनलोड करें जो सीधा आपकी गैलरी में सेव हो जाएगा।'}
+                                        </p>
+                                        <button
+                                            onClick={handleDownloadLogo}
+                                            className="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black uppercase text-[10px] tracking-widest py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all mt-1"
+                                        >
+                                            <Download size={12} /> Download Logo to Gallery
+                                        </button>
+                                    </div>
+
+                                    {/* Promotion Steps */}
+                                    <div className="space-y-2">
+                                        {courseData.page2.steps?.slice(1).map((step, idx) => (
+                                            <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-100/50 flex flex-col gap-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded-md uppercase tracking-wider">{step.stepNum}</span>
+                                                    <h4 className="text-[11.5px] font-black text-slate-800 leading-none">{step.title}</h4>
+                                                </div>
+                                                <p className="text-[10.5px] font-bold text-slate-500 leading-normal">{step.details}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Calling Script script link */}
+                                    {courseData.page2.step5Title && (
+                                        <div className="bg-amber-50/50 rounded-xl border border-amber-100 p-3 flex flex-col gap-1">
+                                            <h4 className="text-[11.5px] font-black text-amber-800 flex items-center gap-1.5">
+                                                <AlertTriangle size={13} /> {courseData.page2.step5Title}
+                                            </h4>
+                                            <p className="text-[10.5px] font-bold text-slate-600 leading-normal">{courseData.page2.step5Details}</p>
+                                            {courseData.page2.callScriptLink && (
+                                                <a
+                                                    href={courseData.page2.callScriptLink}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="w-full mt-2 bg-amber-600 hover:bg-amber-700 text-white font-black uppercase text-[9px] tracking-widest py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all text-center"
+                                                >
+                                                    <Download size={12} /> View Calling Scripts (PDF)
+                                                </a>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Ready Templates */}
+                                    <div className="space-y-2 pt-1">
+                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{courseData.page2.templatesTitle}</h4>
+                                        <div className="space-y-2">
+                                            {courseData.page2.templates?.map((tmpl, idx) => {
+                                                const isCopied = copiedIndex === idx;
+                                                return (
+                                                    <div key={idx} className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-100 relative flex flex-col gap-3">
+                                                        <p className="text-[11px] font-bold text-slate-600 leading-relaxed whitespace-pre-wrap select-all pr-1">
+                                                            {tmpl}
+                                                        </p>
+                                                        <button
+                                                            onClick={() => handleCopyText(tmpl, idx)}
+                                                            className={`w-full border py-2.5 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-wider shadow-sm transition-all active:scale-95 ${
+                                                                isCopied 
+                                                                    ? 'bg-emerald-500 border-emerald-500 text-white' 
+                                                                    : 'bg-white hover:bg-slate-50 border-slate-200 text-indigo-600'
+                                                            }`}
+                                                            title="Copy Template"
+                                                        >
+                                                            {isCopied ? (
+                                                                <>
+                                                                    <CheckCircle2 size={12} /> Copied!
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Copy size={12} /> Copy Template
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* PAGE 3 CONTENT */}
+                            {courseStep === 3 && (
+                                <div className="space-y-4">
+                                    <h3 className="text-base font-black text-slate-800 leading-tight">
+                                        {courseData.page3.title}
+                                    </h3>
+
+                                    {/* Daily Checklist */}
+                                    <div className="bg-white rounded-2xl border border-slate-100 p-3.5 shadow-sm space-y-2.5">
+                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <CheckSquare size={13} className="text-emerald-500" /> {courseData.page3.dailyPlanTitle}
+                                        </h4>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {courseData.page3.dailyPlans?.map((p, idx) => (
+                                                <div key={idx} className="flex items-start gap-2.5">
+                                                    <div className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                                                        <CheckCircle2 size={12} />
+                                                    </div>
+                                                    <span className="text-[11px] font-bold text-slate-600 leading-snug">{p}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Examples */}
+                                    <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-indigo-900 text-white rounded-[1.5rem] p-4 shadow-md space-y-2 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full translate-x-8 -translate-y-8 blur-xl" />
+                                        <h4 className="text-[10px] font-black text-sky-300 uppercase tracking-wider flex items-center gap-1.5">
+                                            <TrendingUp size={13} /> {courseData.page3.exampleTitle}
+                                        </h4>
+                                        <div className="space-y-1">
+                                            {courseData.page3.examples?.map((ex, idx) => (
+                                                <p key={idx} className="text-[12px] font-black leading-relaxed text-indigo-100">
+                                                    {ex}
+                                                </p>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Security and Safety Rules */}
+                                    <div className="bg-rose-50/50 rounded-2xl border border-rose-100 p-3 space-y-2">
+                                        <h4 className="text-[10px] font-black text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
+                                            <AlertCircle size={13} /> {courseData.page3.rulesTitle}
+                                        </h4>
+                                        <div className="space-y-1.5">
+                                            {courseData.page3.rules?.map((rule, idx) => (
+                                                <div key={idx} className="flex items-start gap-2 text-rose-950">
+                                                    <span className="text-xs shrink-0 mt-0.5">🛑</span>
+                                                    <p className="text-[11px] font-bold leading-normal text-slate-600">{rule}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+
+                {/* Navigation controls */}
+                <div className="bg-white border-t border-slate-100 pt-3 flex gap-3 shrink-0">
+                    {courseStep > 1 ? (
+                        <button
+                            onClick={handlePrev}
+                            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black uppercase text-[10px] tracking-widest py-3 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95"
+                        >
+                            <ChevronLeft size={14} /> Prev
+                        </button>
+                    ) : (
+                        <div className="flex-1"></div>
+                    )}
+
+                    {courseStep < 3 ? (
+                        <button
+                            onClick={handleNext}
+                            className="flex-1 bg-slate-900 hover:bg-black text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95"
+                        >
+                            Next <ChevronRight size={14} />
+                        </button>
+                    ) : (
+                        isModal ? (
+                            <button
+                                onClick={() => setIsCourseModalOpen(false)}
+                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95 shadow-md shadow-emerald-50"
+                            >
+                                Close Guide 🎉
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleFinishCourse}
+                                disabled={loading}
+                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 text-white font-black uppercase text-[10px] tracking-widest py-3 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95 shadow-md shadow-emerald-50"
+                            >
+                                {loading ? 'Completing...' : 'Finish & Earn 🎉'}
+                            </button>
+                        )
+                    )}
+                </div>
+
+            </div>
+        );
+    };
+
+    // ── INTERCEPT LAYER: Onboarding course slideshow for Paid but not completed ──
+    if (isPaid && !hasCompletedCourse) {
+        return (
+            <div className="flex flex-col min-h-screen bg-slate-50 p-4 justify-center items-center pb-20 animate-in fade-in duration-500">
+                {renderOnboardingCourseContent(false)}
+            </div>
+        );
+    }
+
     // ── LAYER 4: Final Income Cards (Modern Mobile UI Redesign) ─────────────
     return (
         <div className="flex flex-col gap-5 p-5 bg-[#F8FAFC] animate-in fade-in duration-700">
@@ -258,12 +738,37 @@ const Income = () => {
             <div className="flex items-center justify-between px-1">
                 <div>
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight">Income Center</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-0.5">Verified Earning Systems</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Verified Earning Systems</p>
+                        
+                        {/* Course Reopen link (कोर्स & टेंपलेट्स) */}
+                        <button
+                            onClick={() => {
+                                setCourseStep(1);
+                                setIsCourseModalOpen(true);
+                            }}
+                            className="text-[9px] font-black text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-tighter transition-all flex items-center gap-0.5 active:scale-95 shadow-sm"
+                        >
+                            <BookOpen size={8} /> कोर्स & टेंपलेट्स
+                        </button>
+                    </div>
                 </div>
                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100">
                     <TrendingUp size={20} className="text-blue-500" />
                 </div>
             </div>
+
+            {/* Optional Course Modal Viewer with Click-Outside closing */}
+            {isCourseModalOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4"
+                    onClick={() => setIsCourseModalOpen(false)}
+                >
+                    <div onClick={(e) => e.stopPropagation()}>
+                        {renderOnboardingCourseContent(true)}
+                    </div>
+                </div>
+            )}
 
             {/* Premium Debit Card Style Referral Section (Rounded & Compact) */}
             <div className="px-1 mb-1">

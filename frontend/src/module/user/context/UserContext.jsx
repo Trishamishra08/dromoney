@@ -25,7 +25,8 @@ const INITIAL_USER_STATE = {
     supportExpiry: null,
     activeBusinessPlan: 'Free',
     businessPlanStatus: 'none',
-    completedTasks: []
+    completedTasks: [],
+    hasCompletedCourse: false
 };
 
 export const UserProvider = ({ children }) => {
@@ -174,7 +175,8 @@ export const UserProvider = ({ children }) => {
             businessPlanStatus: dbUser.businessPlanStatus || 'none',
             businessHubFirstAccessedAt: dbUser.businessHubFirstAccessedAt,
             completedTasks: dbUser.completedTasks || [],
-            dailyTaskCompletions: dbUser.dailyTaskCompletions || []
+            dailyTaskCompletions: dbUser.dailyTaskCompletions || [],
+            hasCompletedCourse: dbUser.hasCompletedCourse || false
         });
     };
 
@@ -256,6 +258,17 @@ export const UserProvider = ({ children }) => {
         } catch (err) { return false; }
     };
 
+    const completeCourse = async () => {
+        try {
+            await api.post('/user/data/complete-course');
+            await refreshUserProfile();
+            return true;
+        } catch (err) {
+            console.error("Failed to complete course:", err);
+            return false;
+        }
+    };
+
     const addCoins = async (amount, source, taskId) => {
         try {
             await api.post('/user/wallet/add-coins', { amount, source, taskId });
@@ -296,6 +309,7 @@ export const UserProvider = ({ children }) => {
         register,
         logout,
         unlockPlatform,
+        completeCourse,
         addCoins,
         requestWithdrawal,
         addNotification,

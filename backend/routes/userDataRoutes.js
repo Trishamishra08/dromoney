@@ -2,6 +2,7 @@ const express = require('express');
 const { 
     updateKyc, 
     unlockPlatform, 
+    completeCourse,
     submitPromotion, 
     getMyPromotions, 
     updateProfilePhoto,
@@ -27,6 +28,7 @@ const { submitReport } = require('../controllers/reportController');
 
 router.patch('/kyc', upload.single('document'), updateKyc);
 router.post('/unlock', unlockPlatform);
+router.post('/complete-course', completeCourse);
 router.post('/promotions', submitPromotion);
 router.get('/promotions', getMyPromotions);
 router.get('/referrals', getReferrals);

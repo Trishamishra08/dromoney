@@ -54,6 +54,7 @@ import KYC from './module/admin/pages/KYC';
 import Promotions from './module/admin/pages/Promotions';
 import WatchAndEarnAdmin from './module/admin/pages/WatchAndEarnAdmin';
 import LayoutManager from './module/admin/pages/LayoutManager';
+import DocumentsCMS from './module/admin/pages/DocumentsCMS';
 import MarketingManager from './module/admin/pages/MarketingManager';
 import AdminChatSupport from './module/admin/pages/ChatSupport';
 import TaskApprovals from './module/admin/pages/TaskApprovals';
@@ -173,6 +174,7 @@ function App() {
             <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>}>
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="kyc" element={<KYC />} />
+              <Route path="documents" element={<DocumentsCMS />} />
               <Route path="users" element={<Users />} />
               <Route path="payments" element={<Payments />} />
               <Route path="affiliates" element={<Affiliates />} />

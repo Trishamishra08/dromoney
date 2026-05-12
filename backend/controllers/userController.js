@@ -141,6 +141,25 @@ exports.unlockPlatform = asyncHandler(async (req, res, next) => {
     });
 });
 
+// @desc    Mark onboarding course as completed
+// @route   POST /api/user/data/complete-course
+// @access  Private
+exports.completeCourse = asyncHandler(async (req, res, next) => {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+        return next(new ErrorResponse('User not found', 404));
+    }
+
+    user.hasCompletedCourse = true;
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: 'Onboarding course completed successfully',
+        hasCompletedCourse: user.hasCompletedCourse
+    });
+});
+
 // @desc    Submit a Brand Promotion
 // @route   POST /api/user/promotions
 // @access  Private

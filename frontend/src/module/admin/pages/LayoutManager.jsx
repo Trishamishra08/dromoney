@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
     Save, Plus, Trash2, Layout, FileText, 
-    Shield, ShieldCheck, BookOpen, AlertCircle
+    Shield, ShieldCheck, BookOpen, AlertCircle,
+    Award, HelpCircle, Download, Copy, AlertTriangle,
+    ChevronRight, ChevronLeft, Link2, Sparkles, Star,
+    Loader2, UploadCloud
 } from 'lucide-react';
 import api from '../../shared/services/api';
 import { useAdmin } from '../context/AdminContext';
@@ -62,6 +65,8 @@ const LayoutManager = () => {
             content: "", icon: AlertCircle, color: 'text-rose-500'
         },
     ]);
+
+
 
     const fetchNavbarSections = async () => {
         const keys = navbarSections.map(s => s.dbKey).join(',');
@@ -160,6 +165,8 @@ const LayoutManager = () => {
         }
     };
 
+    // ── Onboarding Course CMS Actions ──
+
     useEffect(() => {
         fetchNavbarSections();
         fetchFooterPolicies();
@@ -184,19 +191,19 @@ const LayoutManager = () => {
                 <div className="space-y-1">
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight uppercase italic">Layout Manager</h1>
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                        <Layout size={14} className="text-sky-500" /> System UI & Navigation CMS
+                        <Layout size={14} className="text-sky-500" /> System UI & Onboarding Course CMS
                     </p>
                 </div>
 
-                <div className="bg-white p-1.5 rounded-[22px] border border-slate-100 shadow-sm flex gap-1">
+                <div className="bg-white p-1.5 rounded-[22px] border border-slate-100 shadow-sm flex flex-wrap gap-1">
                     <button 
                         onClick={() => setActiveTab('navbar')}
-                        className={`px-8 py-3.5 rounded-[18px] text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'navbar' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+                        className={`px-6 py-3 rounded-[18px] text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'navbar' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
                         Section Content
                     </button>
                     <button 
                         onClick={() => setActiveTab('footer')}
-                        className={`px-8 py-3.5 rounded-[18px] text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'footer' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+                        className={`px-6 py-3 rounded-[18px] text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'footer' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
                         Footer & Policies
                     </button>
                 </div>
@@ -284,7 +291,7 @@ const LayoutManager = () => {
                                         </div>
                                         <button 
                                             onClick={() => handleUpdatePolicy(item)}
-                                            className="lg:flex items-center gap-3 bg-[#0F172A] text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-sky-600 transition-all w-full justify-center"
+                                            className="lg:flex items-center gap-3 bg-[#0F172A] text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-[#1E293B] transition-all w-full justify-center"
                                         >
                                             <Save size={16} /> Update {item.label} Data
                                         </button>
@@ -315,3 +322,4 @@ const LayoutManager = () => {
 };
 
 export default LayoutManager;
+

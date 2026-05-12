@@ -29,6 +29,10 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false, // Platform unlock status
     },
+    hasCompletedCourse: {
+        type: Boolean,
+        default: false,
+    },
     unlockedAt: {
         type: Date,
     },
