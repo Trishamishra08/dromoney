@@ -393,20 +393,6 @@ const Home = () => {
                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">{service.label}</span>
                         </button>
                     ))}
-
-                    {/* FCM Test Button */}
-                    <button
-                        onClick={triggerTestNotification}
-                        disabled={isFcmLoading}
-                        className="flex flex-col items-center gap-2 group transition-all"
-                    >
-                        <div className={`w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center shadow-sm group-hover:-translate-y-1 transition-transform ${isFcmLoading ? 'animate-pulse' : ''}`}>
-                            <PlusSquare size={22} strokeWidth={2.2} />
-                        </div>
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">
-                            {isFcmLoading ? 'Sending...' : 'Test Notify'}
-                        </span>
-                    </button>
                 </div>
             </div>
 

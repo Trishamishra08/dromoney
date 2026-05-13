@@ -88,7 +88,11 @@ const AdminLogin = () => {
                             <p className="text-xs text-slate-400 font-medium">Enter your authorized credentials.</p>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+                            {/* Dummy inputs to prevent browser autofill/autocomplete */}
+                            <input type="text" name="prevent_autofill_email" style={{ display: 'none' }} tabIndex="-1" autoComplete="new-password" />
+                            <input type="password" name="prevent_autofill_pass" style={{ display: 'none' }} tabIndex="-1" autoComplete="new-password" />
+
                             <div className="space-y-6">
                                 {/* Email Field */}
                                 <div className="relative group">
@@ -102,6 +106,7 @@ const AdminLogin = () => {
                                         placeholder="Authorized Email Address"
                                         className="w-full bg-transparent border-b-2 border-slate-100 py-4 pl-10 text-[15px] font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-indigo-600 transition-all duration-300"
                                         required
+                                        autoComplete="new-password"
                                     />
                                 </div>
 
@@ -117,6 +122,7 @@ const AdminLogin = () => {
                                         placeholder="Secure Password"
                                         className="w-full bg-transparent border-b-2 border-slate-100 py-4 pl-10 pr-20 text-[15px] font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-indigo-600 transition-all duration-300"
                                         required
+                                        autoComplete="new-password"
                                     />
                                     <button
                                         type="button"

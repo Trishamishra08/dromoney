@@ -244,7 +244,7 @@ const WatchAndEarnAdmin = () => {
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] ml-1">Direct Video URL (.mp4)</label>
                                         <div className="relative">
                                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600"><LinkIcon size={18} /></div>
-                                            <input value={introVideo.videoUrl} onChange={(e) => setIntroVideo({...introVideo, videoUrl: e.target.value})} className="w-full bg-white/5 border border-slate-800 rounded-2xl p-4 pl-12 text-sm font-bold text-white focus:outline-none focus:border-indigo-500 transition-all outline-none" placeholder="https://..." />
+                                            <input value={introVideo.videoUrl} onChange={(e) => setIntroVideo({...introVideo, videoUrl: e.target.value})} className="w-full bg-white/5 border border-slate-800 rounded-2xl py-4 pr-4 pl-12 pl-12-override text-sm font-bold text-white focus:outline-none focus:border-indigo-500 transition-all outline-none" placeholder="https://..." />
                                         </div>
                                         <div className="absolute right-2 top-[38px]">
                                              <input 
@@ -268,7 +268,7 @@ const WatchAndEarnAdmin = () => {
                                         <div className="flex gap-3">
                                             <div className="relative flex-1">
                                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600"><ImageIcon size={18} /></div>
-                                                <input value={introVideo.thumbnailUrl} onChange={(e) => setIntroVideo({...introVideo, thumbnailUrl: e.target.value})} className="w-full bg-white/5 border border-slate-800 rounded-2xl p-4 pl-12 text-sm font-bold text-white focus:outline-none focus:border-indigo-500 transition-all outline-none" placeholder="https://..." />
+                                                <input value={introVideo.thumbnailUrl} onChange={(e) => setIntroVideo({...introVideo, thumbnailUrl: e.target.value})} className="w-full bg-white/5 border border-slate-800 rounded-2xl py-4 pr-4 pl-12 pl-12-override text-sm font-bold text-white focus:outline-none focus:border-indigo-500 transition-all outline-none" placeholder="https://..." />
                                             </div>
                                             <div className="relative">
                                                 <input 
@@ -479,7 +479,7 @@ const WatchAndEarnAdmin = () => {
                                             required
                                             type="number"
                                             placeholder="50"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-[22px] p-5 pl-14 text-sm font-bold text-slate-800 focus:outline-none focus:border-indigo-500"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-[22px] py-5 pr-5 pl-14 pl-14-override text-sm font-bold text-slate-800 focus:outline-none focus:border-indigo-500"
                                             value={adForm.coins || ''}
                                             onChange={(e) => setAdForm(prev => ({...prev, coins: e.target.value}))}
                                         />
@@ -495,7 +495,7 @@ const WatchAndEarnAdmin = () => {
                                             min="30"
                                             max="60"
                                             placeholder="30"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-[22px] p-5 pl-14 text-sm font-bold text-slate-800 focus:outline-none focus:border-indigo-500"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-[22px] py-5 pr-5 pl-14 pl-14-override text-sm font-bold text-slate-800 focus:outline-none focus:border-indigo-500"
                                             value={adForm.duration || ''}
                                             onChange={(e) => setAdForm(prev => ({...prev, duration: e.target.value}))}
                                         />

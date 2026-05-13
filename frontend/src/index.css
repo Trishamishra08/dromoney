@@ -160,6 +160,14 @@
     border-radius: 0.5rem !important;
 }
 
+/* Override left padding for inputs that have a leading absolute icon */
+.admin-compact-container input.pl-12-override {
+    padding-left: 3rem !important;
+}
+.admin-compact-container input.pl-14-override {
+    padding-left: 3.5rem !important;
+}
+
 /* Slimmer clickable buttons */
 .admin-compact-container button {
     padding-top: 0.45rem !important;
