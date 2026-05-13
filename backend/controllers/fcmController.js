@@ -14,7 +14,7 @@ exports.saveToken = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Please provide a token', 400));
     }
 
-    const field = platform === 'mobile' ? 'fcmTokenMobile' : 'fcmTokens';
+    const field = (platform === 'mobile' || platform === 'app') ? 'fcmTokenMobile' : 'fcmTokens';
 
     if (req.user) {
         // Atomic update using $addToSet to prevent duplicates and parallel save errors
