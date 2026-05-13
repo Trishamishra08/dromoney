@@ -50,6 +50,21 @@ exports.submitTask = asyncHandler(async (req, res, next) => {
         status: 'Pending'
     });
 
+    // Send push notification to all admins
+    try {
+        const { sendNotificationToAllAdmins } = require('./fcmController');
+        await sendNotificationToAllAdmins({
+            title: 'New Task Proof Submitted 📝',
+            body: `A new task proof has been submitted for "${task.title}". Review proof now.`,
+            data: {
+                type: 'task_submission_alert',
+                link: '/admin/tasks/review'
+            }
+        });
+    } catch (pushErr) {
+        console.error('Admin push notification failed for task proof submission:', pushErr.message);
+    }
+
     res.status(201).json({
         success: true,
         data: submission,
@@ -113,9 +128,45 @@ exports.approveSubmission = asyncHandler(async (req, res, next) => {
 
     await user.save();
 
+    // Check for High Value Milestones & Notify Admins
+    try {
+        const totalCompleted = (user.completedTasks ? user.completedTasks.length : 0) + (user.dailyTaskCompletions ? user.dailyTaskCompletions.length : 0);
+        const hasReachedEarningsMilestone = user.wallet?.lifetimeEarnings >= 5000;
+        
+        // Trigger for exactly 100th task completed
+        if (totalCompleted === 100) {
+            const { sendNotificationToAllAdmins } = require('./fcmController');
+            await sendNotificationToAllAdmins({
+                title: 'Milestone Achieved! 🏆',
+                body: `User ${user.name} has completed their 100th task. Consider sending a reward.`,
+                data: {
+                    type: 'milestone_alert',
+                    link: '/admin/users'
+                }
+            });
+        }
+    } catch (milestoneErr) {
+        console.error('Milestone admin notification failed:', milestoneErr.message);
+    }
+
     // Update submission status
     submission.status = 'Approved';
     await submission.save();
+
+    // Send Push Notification
+    try {
+        const { sendNotificationToUser } = require('./fcmController');
+        await sendNotificationToUser(submission.user, {
+            title: 'Task Approved! 🌟',
+            body: `Awesome work! Your task "${task.title}" has been approved. +${coinsToAdd} Coins added!`,
+            data: {
+                type: 'task',
+                link: '/user/earn'
+            }
+        });
+    } catch (pushErr) {
+        console.error('Push notification failed for task approval:', pushErr.message);
+    }
 
     res.status(200).json({
         success: true,
@@ -138,9 +189,27 @@ exports.rejectSubmission = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Submission is already processed', 400));
     }
 
+    const task = await Task.findById(submission.task);
+    const taskTitle = task ? task.title : 'Task';
+
     submission.status = 'Rejected';
     submission.rejectionReason = reason || 'Proof invalid or incomplete';
     await submission.save();
+
+    // Send Push Notification
+    try {
+        const { sendNotificationToUser } = require('./fcmController');
+        await sendNotificationToUser(submission.user, {
+            title: 'Task Action Required ⚠️',
+            body: `Your task submission for "${taskTitle}" was rejected. Please review guidelines and try again.`,
+            data: {
+                type: 'task',
+                link: '/user/earn'
+            }
+        });
+    } catch (pushErr) {
+        console.error('Push notification failed for task rejection:', pushErr.message);
+    }
 
     res.status(200).json({
         success: true,

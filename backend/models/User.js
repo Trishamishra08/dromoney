@@ -151,6 +151,10 @@ const UserSchema = new mongoose.Schema({
     },
     fcmTokens: [String], // Web tokens
     fcmTokenMobile: [String], // Mobile tokens
+    failedLoginAttempts: {
+        type: Number,
+        default: 0
+    },
     completedTasks: [{
         type: mongoose.Schema.ObjectId,
         ref: 'Task'

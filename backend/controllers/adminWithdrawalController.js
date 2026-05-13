@@ -119,9 +119,14 @@ exports.updateWithdrawalStatus = async (req, res) => {
 
         // Send Push Notification
         if (status === 'Approved' || status === 'Rejected') {
+            const pushTitle = status === 'Approved' ? 'Withdrawal Approved! 🎉' : 'Withdrawal Rejected ❌';
+            const pushBody = status === 'Approved'
+                ? `Your withdrawal request of ₹${withdrawal.amount} has been successfully approved & transferred.`
+                : `Your withdrawal request of ₹${withdrawal.amount} was rejected. Reason: ${remarks || 'Incorrect details or document mismatch.'}`;
+
             await sendNotificationToUser(withdrawal.user, {
-                title: `Withdrawal ${status}`,
-                body: `Your withdrawal request for ₹${withdrawal.amount} has been ${status.toLowerCase()}.${remarks ? ' ' + remarks : ''}`,
+                title: pushTitle,
+                body: pushBody,
                 data: {
                     type: 'withdrawal',
                     link: '/user/wallet'

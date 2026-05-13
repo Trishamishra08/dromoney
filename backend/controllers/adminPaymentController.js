@@ -43,6 +43,21 @@ exports.updatePaymentStatus = async (req, res) => {
                 user.isPaid = true;
                 await user.save();
 
+                // Send Push Notification to the unlocked user
+                try {
+                    const { sendNotificationToUser } = require('./fcmController');
+                    await sendNotificationToUser(user._id, {
+                        title: 'Platform Access Unlocked! 🚀',
+                        body: `Your payment for ${payment.plan || 'Lifetime Access'} is confirmed. Welcome to DroMoney Premium!`,
+                        data: {
+                            type: 'payment',
+                            link: '/user/home'
+                        }
+                    });
+                } catch (pushErr) {
+                    console.error('Push notification failed for payment activation:', pushErr.message);
+                }
+
                 // ── REFERRAL REWARD LOGIC ──
                 // Check if user was referred by someone
                 if (user.referredBy) {
@@ -74,6 +89,21 @@ exports.updatePaymentStatus = async (req, res) => {
                             });
 
                             console.log(`Referral reward of ₹${settings.referralCommission} credited to ${referrer.name} for ${user.name}`);
+
+                            // Send Push Notification to Referrer
+                            try {
+                                const { sendNotificationToUser } = require('./fcmController');
+                                await sendNotificationToUser(referrer._id, {
+                                    title: 'Commission Received! 💰',
+                                    body: `You have earned a direct referral commission of ₹${settings.referralCommission} from ${user.name}'s purchase!`,
+                                    data: {
+                                        type: 'commission',
+                                        link: '/user/income'
+                                    }
+                                });
+                            } catch (pushErr) {
+                                console.error('Push notification failed for referral commission:', pushErr.message);
+                            }
                         } catch (err) {
                             // If index unique constraint fails (code 11000), it means reward already given
                             if (err.code === 11000) {

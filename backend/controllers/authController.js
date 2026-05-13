@@ -93,6 +93,21 @@ exports.register = async (req, res, next) => {
                 source: `Referral Reward: ${user.name}`,
                 status: 'Success'
             });
+
+            // Send Push Notification to Referrer
+            try {
+                const { sendNotificationToUser } = require('./fcmController');
+                await sendNotificationToUser(referrer._id, {
+                    title: 'New Team Member! 👥',
+                    body: `Congratulations! ${user.name} just registered using your referral link.`,
+                    data: {
+                        type: 'referral',
+                        link: '/user/marketing'
+                    }
+                });
+            } catch (pushErr) {
+                console.error('Push notification failed for new referral registration:', pushErr.message);
+            }
         }
 
         sendTokenResponse(user, 201, res);
@@ -259,7 +274,34 @@ exports.login = async (req, res, next) => {
 
         const isMatch = await user.matchPassword(password);
         if (!isMatch) {
+            // Increment failed login attempts
+            user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+            await user.save();
+
+            // Check if attempts reached 3 or more
+            if (user.failedLoginAttempts >= 3) {
+                try {
+                    const { sendNotificationToAllAdmins } = require('./fcmController');
+                    await sendNotificationToAllAdmins({
+                        title: 'Security Alert 🚨',
+                        body: `Multiple failed login attempts or rapid IP switches detected for ${user.name}.`,
+                        data: {
+                            type: 'security_alert',
+                            link: '/admin/users'
+                        }
+                    });
+                } catch (pushErr) {
+                    console.error('Admin push notification failed for security alert:', pushErr.message);
+                }
+            }
+
             return next(new ErrorResponse('Invalid credentials', 401));
+        }
+
+        // Reset failed login attempts on success
+        if (user.failedLoginAttempts > 0) {
+            user.failedLoginAttempts = 0;
+            await user.save();
         }
 
         sendTokenResponse(user, 200, res);

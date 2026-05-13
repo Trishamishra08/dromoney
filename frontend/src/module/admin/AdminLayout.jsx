@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAdmin } from './context/AdminContext';
 import logo from '../../assets/WhatsApp_Image_2026-04-28_at_10.52.49_PM-removebg-preview.png';
+import api from '../shared/services/api';
+import { messaging, getToken, onMessage } from '../../services/firebase';
 
 const navItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" /></svg> },
@@ -69,10 +71,52 @@ const Toast = ({ notification, onRemove }) => {
 };
 
 const AdminLayout = () => {
-    const { adminLogout, notifications, removeNotification } = useAdmin();
+    const { adminLogout, notifications, removeNotification, addNotification } = useAdmin();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+    // FCM Registration for Admin Notifications
+    useEffect(() => {
+        const registerAdminFCM = async () => {
+            try {
+                if (!('serviceWorker' in navigator)) return;
+
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    // Explicitly register Service Worker for notifications
+                    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+
+                    const token = await getToken(messaging, {
+                        vapidKey: import.meta.env.VITE_VAPID_KEY,
+                        serviceWorkerRegistration: registration
+                    });
+
+                    if (token) {
+                        await api.post('/fcm-tokens/save', { token, platform: 'web' });
+                    }
+                }
+            } catch (err) {
+                console.error('[FCM] Admin registration failed:', err);
+            }
+        };
+
+        registerAdminFCM();
+
+        const unsubscribe = onMessage(messaging, (payload) => {
+            // Foreground notification handling
+            window.alert(`Foreground Admin Alert: ${payload.notification.title}\n${payload.notification.body}`);
+            if (addNotification) {
+                addNotification(
+                    payload.notification.title,
+                    payload.notification.body,
+                    'info'
+                );
+            }
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     const handleLogout = () => {
         adminLogout();

@@ -93,6 +93,21 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
         status: 'Pending',
     });
 
+    // Send push notification to all admins
+    try {
+        const { sendNotificationToAllAdmins } = require('./fcmController');
+        await sendNotificationToAllAdmins({
+            title: 'Manual Deposit Pending 💰',
+            body: `User ${user.name} uploaded a receipt for ₹${finalAmount}. Approve or decline.`,
+            data: {
+                type: 'deposit_alert',
+                link: '/admin/deposits'
+            }
+        });
+    } catch (pushErr) {
+        console.error('Admin push notification failed for manual deposit pending:', pushErr.message);
+    }
+
     res.status(200).json({
         success: true,
         orderId: order.id,
@@ -205,6 +220,21 @@ exports.verifyPayment = asyncHandler(async (req, res, next) => {
                             });
 
                             console.log(`[REFERRAL] Credited ₹${commission} to referrer ${referrer._id} for user ${user._id}`);
+
+                            // Send Push Notification to Referrer
+                            try {
+                                const { sendNotificationToUser } = require('./fcmController');
+                                await sendNotificationToUser(referrer._id, {
+                                    title: 'Commission Received! 💰',
+                                    body: `You have earned a direct referral commission of ₹${commission} from ${user.name}'s purchase!`,
+                                    data: {
+                                        type: 'commission',
+                                        link: '/user/income'
+                                    }
+                                });
+                            } catch (pushErr) {
+                                console.error('Push notification failed for referral commission:', pushErr.message);
+                            }
                         }
                     }
                 } catch (refErr) {
@@ -232,6 +262,33 @@ exports.verifyPayment = asyncHandler(async (req, res, next) => {
             }
             
             await user.save();
+        }
+
+        // Send Push Notifications to User based on purchase type
+        try {
+            const { sendNotificationToUser } = require('./fcmController');
+            if (payment.paymentType === 'SUPPORT_BOOSTER' || payment.paymentType === 'TASK_BOOSTER') {
+                const boosterName = payment.paymentType === 'SUPPORT_BOOSTER' ? 'Support Booster' : 'Task Booster';
+                await sendNotificationToUser(user._id, {
+                    title: 'Booster Activated! ⚡',
+                    body: `Your ${boosterName} is active! Enjoy 3X coin earnings for the next 30 days.`,
+                    data: {
+                        type: 'booster',
+                        link: '/user/home'
+                    }
+                });
+            } else {
+                await sendNotificationToUser(user._id, {
+                    title: 'Platform Access Unlocked! 🚀',
+                    body: `Your payment for ${payment.plan || 'Lifetime Access'} is confirmed. Welcome to DroMoney Premium!`,
+                    data: {
+                        type: 'payment',
+                        link: '/user/home'
+                    }
+                });
+            }
+        } catch (pushErr) {
+            console.error('[FCM] Razorpay payment push failed:', pushErr.message);
         }
     }
 

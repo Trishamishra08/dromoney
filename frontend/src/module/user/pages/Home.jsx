@@ -21,7 +21,7 @@ const InstagramIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
 );
 const XIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4l11.733 16H20L8.267 4z"/><path d="M4 20l6.768-6.768m2.46-2.46L20 4"/></svg>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4l11.733 16H20L8.267 4z" /><path d="M4 20l6.768-6.768m2.46-2.46L20 4" /></svg>
 );
 
 const FALLBACK_BANNERS = [
@@ -177,7 +177,7 @@ const Home = () => {
                 if (permission === 'granted') {
                     // Explicitly register Service Worker
                     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                    
+
                     const token = await getToken(messaging, {
                         vapidKey: import.meta.env.VITE_VAPID_KEY,
                         serviceWorkerRegistration: registration
@@ -195,37 +195,13 @@ const Home = () => {
         registerFCM();
 
         const unsubscribe = onMessage(messaging, (payload) => {
-            // Show a native OS/browser notification when the app is in the foreground
-            if (Notification.permission === 'granted') {
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.ready.then((registration) => {
-                        registration.showNotification(payload.notification.title, {
-                            body: payload.notification.body,
-                            icon: '/favicon.svg',
-                            badge: '/favicon.svg',
-                            data: payload.data
-                        });
-                    }).catch(() => {
-                        new Notification(payload.notification.title, {
-                            body: payload.notification.body,
-                            icon: '/favicon.svg'
-                        });
-                    });
-                } else {
-                    new Notification(payload.notification.title, {
-                        body: payload.notification.body,
-                        icon: '/favicon.svg'
-                    });
-                }
-            }
-
+            window.alert(`Foreground Notification: ${payload.notification.title}\n${payload.notification.body}`);
             addNotification(
                 payload.notification.title,
                 payload.notification.body,
                 'info'
             );
         });
-
 
         return () => unsubscribe();
     }, []);
@@ -260,7 +236,7 @@ const Home = () => {
             const res = await api.get(`/public/content/bulk?keys=${keys.join(',')}`);
             if (res.success && res.data) {
                 const data = res.data;
-                
+
                 // 1. Lifetime Promo
                 if (data['lifetime_promo'] && data['lifetime_promo'].data) {
                     setLifetimePromo(data['lifetime_promo'].data);
@@ -270,16 +246,16 @@ const Home = () => {
                 if (data['platform_intro_video'] && data['platform_intro_video'].data) {
                     setIntroConfig(data['platform_intro_video'].data);
                 }
-                
+
                 // 3. Footer Policies
                 const policyKeys = ['menu_privacy', 'menu_terms', 'menu_guidelines', 'menu_refund_policy'];
                 const policies = policyKeys.map(key => {
                     const item = data[key];
                     const urlPath = key === 'menu_refund_policy' ? 'refund-policy' : key.replace('menu_', '');
                     if (item && item.data) {
-                        return { 
-                            label: item.data.title || item.title, 
-                            path: urlPath 
+                        return {
+                            label: item.data.title || item.title,
+                            path: urlPath
                         };
                     }
                     // Fallback
@@ -344,7 +320,7 @@ const Home = () => {
     const handleServiceClick = (service) => {
         const path = service.path;
         const isTargetService = path === '/user/earn' || path === '/user/future-fund' || path === '/user/events';
-        
+
         if (isTargetService) {
             const kycStr = (userData?.kycStatus || 'Not Started').toLowerCase();
             if (kycStr === 'verified' || kycStr === 'approved') {
@@ -367,12 +343,12 @@ const Home = () => {
         <div className="flex flex-col animate-in fade-in duration-700 min-h-full">
             {/* --- 1. Platform Intro Video Card (Moved to Top) --- */}
             {introConfig && introConfig.isActive && (
-                <div 
+                <div
                     onClick={() => setIsVideoPlaying(true)}
                     className="w-full bg-slate-900 rounded-none overflow-hidden shadow-2xl relative group cursor-pointer active:brightness-90 transition-all border border-white/5"
                 >
                     <div className="absolute inset-0">
-                        <img src={introConfig.thumbnailUrl || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80'} className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-1000" alt="Intro"/>
+                        <img src={introConfig.thumbnailUrl || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80'} className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-1000" alt="Intro" />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
                     </div>
 
@@ -411,7 +387,7 @@ const Home = () => {
                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">{service.label}</span>
                         </button>
                     ))}
-                    
+
                     {/* FCM Test Button */}
                     <button
                         onClick={triggerTestNotification}
@@ -435,9 +411,9 @@ const Home = () => {
 
             {/* Main Content Area (With Padding) */}
             <div className="flex flex-col gap-5 p-4 pt-0 pb-4">
-                
 
-                
+
+
 
 
                 {/* --- 3. Wallet Section --- */}
@@ -454,9 +430,9 @@ const Home = () => {
                                 <QrCode size={18} />
                             </div>
                         </div>
-                        
-                        <h2 className="text-2xl font-bold text-white mb-5 tracking-tight relative z-10">$ {Number(earnings.total || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</h2>
-                        
+
+                        <h2 className="text-2xl font-bold text-white mb-5 tracking-tight relative z-10">$ {Number(earnings.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</h2>
+
                         <div className="flex justify-between items-center relative z-10">
                             {[
                                 { icon: DollarSign, label: 'Balance', action: () => navigate('/user/income') },
@@ -506,7 +482,7 @@ const Home = () => {
                                 >
                                     <ChevronDown size={18} strokeWidth={2.5} />
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => !isSupportBoosterActive && handleBuy(boosters.support.title, boosters.support.price)}
                                     disabled={isSupportBoosterActive}
                                     className={`${isSupportBoosterActive ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-[#10B981] text-white hover:bg-[#059669] shadow-lg shadow-emerald-500/30'} px-5 py-2.5 rounded-xl text-[11px] font-black tracking-tight active:scale-95 transition-all w-full sm:w-auto`}
@@ -584,7 +560,7 @@ const Home = () => {
 
                 {/* --- 7. Lifetime Promo --- */}
                 {lifetimePromo && (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 15 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -637,9 +613,9 @@ const Home = () => {
             <footer className="w-full bg-gradient-to-br from-[#050b18] via-[#081f1c] to-[#050b18] pt-10 pb-8 border-t border-white/5 relative overflow-hidden">
                 {/* World Map Background Overlay */}
                 <div className="absolute inset-0 opacity-[0.08] pointer-events-none">
-                    <img 
-                        src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=2000&auto=format&fit=crop" 
-                        className="w-full h-full object-cover grayscale invert" 
+                    <img
+                        src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=2000&auto=format&fit=crop"
+                        className="w-full h-full object-cover grayscale invert"
                         alt="World Map"
                     />
                 </div>
@@ -657,7 +633,7 @@ const Home = () => {
                                     <p className="text-[9px] font-medium text-emerald-400 uppercase tracking-widest mt-1.5 not-italic font-sans">Official Affiliate Partner</p>
                                 </div>
                             </div>
-                            
+
                             <div className="flex gap-4">
                                 {[FacebookIcon, InstagramIcon, XIcon].map((Icon, i) => (
                                     <div key={i} className="text-slate-400 hover:text-emerald-400 transition-all cursor-pointer active:scale-90">
@@ -678,9 +654,9 @@ const Home = () => {
                             <h4 className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-[0.2em] not-italic font-sans">Legal Policies</h4>
                             <div className="flex flex-col gap-3">
                                 {footerPolicies.filter(p => p.path !== 'guidelines').map((policy, pIdx) => (
-                                    <a 
+                                    <a
                                         key={pIdx}
-                                        href={`/user/info/${policy.path}`} 
+                                        href={`/user/info/${policy.path}`}
                                         className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide"
                                     >
                                         {policy.label}
@@ -692,9 +668,9 @@ const Home = () => {
                             <h4 className="text-[10px] font-bold text-emerald-500/80 uppercase tracking-[0.2em] not-italic font-sans">Organization</h4>
                             <div className="flex flex-col gap-3">
                                 {footerPolicies.filter(p => p.path === 'guidelines').map((policy, pIdx) => (
-                                    <a 
+                                    <a
                                         key={pIdx}
-                                        href={`/user/info/${policy.path}`} 
+                                        href={`/user/info/${policy.path}`}
                                         className="text-[11.5px] font-medium text-slate-300 hover:text-white transition-colors uppercase not-italic font-sans tracking-wide"
                                     >
                                         Community Guidelines
@@ -719,7 +695,7 @@ const Home = () => {
             </footer>
 
 
-            <PaymentModal 
+            <PaymentModal
                 isOpen={paymentConfig.isOpen}
                 onClose={() => setPaymentConfig({ ...paymentConfig, isOpen: false })}
                 plan={paymentConfig.plan}
@@ -738,15 +714,15 @@ const Home = () => {
             {/* Video Modal Overlay */}
             {isVideoPlaying && introConfig && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-                    <button 
+                    <button
                         onClick={() => setIsVideoPlaying(false)}
                         className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white border border-white/10 transition-all z-[110] active:scale-90"
                     >
                         <X size={24} />
                     </button>
                     <div className="w-full max-w-4xl aspect-video rounded-none overflow-hidden shadow-2xl border border-white/5 bg-slate-900">
-                        <UniversalVideoPlayer 
-                            url={introConfig.videoUrl} 
+                        <UniversalVideoPlayer
+                            url={introConfig.videoUrl}
                             className="w-full h-full"
                             autoPlay={true}
                         />

@@ -35,6 +35,21 @@ exports.sendBroadcast = async (req, res, next) => {
             });
         }
 
+        // 4. Send Push Notification Broadcast to all devices via FCM
+        try {
+            const { sendBroadcastNotification } = require('./fcmController');
+            await sendBroadcastNotification({
+                title: notification.title,
+                body: notification.message,
+                data: {
+                    type: notification.type,
+                    link: notification.targetUrl || '/user/events'
+                }
+            });
+        } catch (pushErr) {
+            console.error('Push broadcast failed:', pushErr.message);
+        }
+
         res.status(201).json({
             success: true,
             data: notification

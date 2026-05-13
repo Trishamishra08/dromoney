@@ -216,6 +216,21 @@ exports.requestWithdrawal = asyncHandler(async (req, res, next) => {
         feeTransaction: feeTransaction._id
     });
 
+    // Send push notification to all admins
+    try {
+        const { sendNotificationToAllAdmins } = require('./fcmController');
+        await sendNotificationToAllAdmins({
+            title: 'New Withdrawal Request 💸',
+            body: `User ${user.name} has requested a withdrawal of ₹${amount}. Review now.`,
+            data: {
+                type: 'withdrawal_alert',
+                link: '/admin/withdrawals'
+            }
+        });
+    } catch (pushErr) {
+        console.error('Admin push notification failed for withdrawal request:', pushErr.message);
+    }
+
     res.status(200).json({
         success: true,
         message: 'Withdrawal request submitted successfully',

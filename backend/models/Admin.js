@@ -26,6 +26,8 @@ const AdminSchema = new mongoose.Schema({
         default: 'Moderator'
     },
     lastLogin: Date,
+    fcmTokens: [String],
+    fcmTokenMobile: [String],
     createdAt: {
         type: Date,
         default: Date.now

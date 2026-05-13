@@ -68,6 +68,32 @@ exports.manageKYC = async (req, res, next) => {
         user.markModified('kyc');
         await user.save();
 
+        // Send Push Notification
+        try {
+            const { sendNotificationToUser } = require('./fcmController');
+            if (status === 'Approved' || status === 'Verified') {
+                await sendNotificationToUser(user._id, {
+                    title: 'KYC Verified! ✅',
+                    body: 'Congratulations! Your KYC is successfully approved. All earning routes are unlocked.',
+                    data: {
+                        type: 'kyc',
+                        link: '/user/marketing'
+                    }
+                });
+            } else if (status === 'Rejected') {
+                await sendNotificationToUser(user._id, {
+                    title: 'KYC Rejected ⚠️',
+                    body: `KYC verification failed. Reason: ${rejectionReason || 'Invalid documents or blurred image'}. Click here to re-submit your details.`,
+                    data: {
+                        type: 'kyc',
+                        link: '/user/profile'
+                    }
+                });
+            }
+        } catch (pushErr) {
+            console.error('Push notification failed for manageKYC:', pushErr.message);
+        }
+
         res.status(200).json({
             success: true,
             data: user

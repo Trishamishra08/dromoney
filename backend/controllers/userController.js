@@ -80,6 +80,36 @@ exports.updateKyc = asyncHandler(async (req, res, next) => {
 
         user.markModified('kyc');
         await user.save();
+
+        // Send Push Notification to User
+        try {
+            const { sendNotificationToUser } = require('./fcmController');
+            await sendNotificationToUser(user._id, {
+                title: 'KYC Received 📑',
+                body: 'Your KYC documents are successfully received and are under review by our team.',
+                data: {
+                    type: 'kyc',
+                    link: '/user/profile'
+                }
+            });
+        } catch (pushErr) {
+            console.error('Push notification failed for KYC submission:', pushErr.message);
+        }
+
+        // Send Push Notification to Admins
+        try {
+            const { sendNotificationToAllAdmins } = require('./fcmController');
+            await sendNotificationToAllAdmins({
+                title: 'KYC Pending Approval 📂',
+                body: `User ${user.name} has submitted KYC documents. Review details.`,
+                data: {
+                    type: 'kyc_alert',
+                    link: '/admin/kyc'
+                }
+            });
+        } catch (pushErr) {
+            console.error('Admin push notification failed for KYC pending approval:', pushErr.message);
+        }
         
         return res.status(200).json({
             success: true,
