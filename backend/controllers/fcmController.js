@@ -51,13 +51,12 @@ exports.removeToken = asyncHandler(async (req, res, next) => {
 // @route   POST /api/fcm-tokens/test
 // @access  Private
 exports.testNotification = asyncHandler(async (req, res, next) => {
-    const timestamp = new Date().toLocaleTimeString();
     const payload = {
-        title: `Test Notification ${timestamp}`,
-        body: 'This is a test notification from DroMoney 🚀',
+        title: 'Payment Confirmed',
+        body: 'Payment for Booking\n#BK-1774251474362-607 marked as received.',
         data: {
-            type: 'test',
-            id: `test_${Date.now()}`,
+            type: 'payment',
+            id: `payment_${Date.now()}`,
             link: '/user/home'
         }
     };
@@ -69,6 +68,7 @@ exports.testNotification = asyncHandler(async (req, res, next) => {
         message: 'Test notification triggered'
     });
 });
+
 
 // Helper Function: Send Notification to User (Duplicate-Safe)
 exports.sendNotificationToUser = async (userId, payload) => {

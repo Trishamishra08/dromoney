@@ -195,13 +195,37 @@ const Home = () => {
         registerFCM();
 
         const unsubscribe = onMessage(messaging, (payload) => {
-            window.alert(`Foreground Notification: ${payload.notification.title}\n${payload.notification.body}`);
+            // Show a native OS/browser notification when the app is in the foreground
+            if (Notification.permission === 'granted') {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then((registration) => {
+                        registration.showNotification(payload.notification.title, {
+                            body: payload.notification.body,
+                            icon: '/favicon.svg',
+                            badge: '/favicon.svg',
+                            data: payload.data
+                        });
+                    }).catch(() => {
+                        new Notification(payload.notification.title, {
+                            body: payload.notification.body,
+                            icon: '/favicon.svg'
+                        });
+                    });
+                } else {
+                    new Notification(payload.notification.title, {
+                        body: payload.notification.body,
+                        icon: '/favicon.svg'
+                    });
+                }
+            }
+
             addNotification(
                 payload.notification.title,
                 payload.notification.body,
                 'info'
             );
         });
+
 
         return () => unsubscribe();
     }, []);
