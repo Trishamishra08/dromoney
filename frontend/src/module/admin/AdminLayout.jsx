@@ -104,8 +104,13 @@ const AdminLayout = () => {
         registerAdminFCM();
 
         const unsubscribe = onMessage(messaging, (payload) => {
-            // Foreground notification handling
-            window.alert(`Foreground Admin Alert: ${payload.notification.title}\n${payload.notification.body}`);
+            // Trigger native browser notification in foreground
+            if (Notification.permission === 'granted') {
+                new Notification(payload.notification.title, {
+                    body: payload.notification.body,
+                    icon: '/logo.png'
+                });
+            }
             if (addNotification) {
                 addNotification(
                     payload.notification.title,

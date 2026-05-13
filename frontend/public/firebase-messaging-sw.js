@@ -17,8 +17,8 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification?.title || 'DroMoney Notification';
   const notificationOptions = {
     body: payload.notification?.body || 'You have a new message',
-    icon: '/favicon.svg',
-    badge: '/favicon.svg',
+    icon: '/logo.png',
+    badge: '/logo.png',
     data: payload.data
   };
 

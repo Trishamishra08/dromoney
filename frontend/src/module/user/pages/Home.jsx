@@ -195,7 +195,13 @@ const Home = () => {
         registerFCM();
 
         const unsubscribe = onMessage(messaging, (payload) => {
-            window.alert(`Foreground Notification: ${payload.notification.title}\n${payload.notification.body}`);
+            // Trigger native browser notification in foreground
+            if (Notification.permission === 'granted') {
+                new Notification(payload.notification.title, {
+                    body: payload.notification.body,
+                    icon: '/logo.png'
+                });
+            }
             addNotification(
                 payload.notification.title,
                 payload.notification.body,
