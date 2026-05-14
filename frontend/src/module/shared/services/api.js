@@ -24,8 +24,8 @@ api.interceptors.request.use(
         const token = localStorage.getItem('dromoney_token');
         const adminToken = localStorage.getItem('dromoney_admin_token');
         
-        // Use admin token if the request path starts with /admin
-        if (config.url.includes('/admin') && adminToken) {
+        // Use admin token if the request path starts with /admin or if currently on an admin page
+        if ((config.url.includes('/admin') || window.location.pathname.startsWith('/admin')) && adminToken) {
             config.headers.Authorization = `Bearer ${adminToken}`;
         } else if (token) {
             config.headers.Authorization = `Bearer ${token}`;
