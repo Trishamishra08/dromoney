@@ -13,6 +13,7 @@ const Login = () => {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [resendCooldown, setResendCooldown] = useState(0);
 
     // Checkbox for mandatory policies
     const [agreeAll, setAgreeAll] = useState(false);
@@ -23,6 +24,13 @@ const Login = () => {
             navigate('/user/home', { replace: true });
         }
     }, [isAuthenticated, contextLoading, navigate]);
+
+    useEffect(() => {
+        if (resendCooldown > 0) {
+            const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [resendCooldown]);
 
     const handleSendOtp = async (e) => {
         e.preventDefault();
@@ -53,6 +61,18 @@ const Login = () => {
             } else {
                 setError(errMsg);
             }
+        }
+    };
+
+    const handleResendOtp = async () => {
+        setError('');
+        setLoading(true);
+        const result = await sendLoginOtp(phone);
+        setLoading(false);
+        if (result.success) {
+            setResendCooldown(30);
+        } else {
+            setError(result.error);
         }
     };
 
@@ -187,6 +207,16 @@ const Login = () => {
                                         maxLength={6}
                                     />
                                     <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                                </div>
+                                <div className="text-center mt-2">
+                                    <button 
+                                        type="button" 
+                                        onClick={handleResendOtp}
+                                        className="text-[11px] font-bold text-[#0f1d3a] hover:underline disabled:opacity-50"
+                                        disabled={loading || resendCooldown > 0}
+                                    >
+                                        {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : 'Resend OTP'}
+                                    </button>
                                 </div>
                             </div>
 

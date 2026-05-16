@@ -26,7 +26,7 @@ exports.protect = async (req, res, next) => {
         req.user = await User.findById(decoded.id);
 
         if (!req.user) {
-            return next(new ErrorResponse('User not found with this id', 404));
+            return next(new ErrorResponse('Not authorized to access this route', 401));
         }
 
         next();

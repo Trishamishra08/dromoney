@@ -59,12 +59,27 @@ const IncomeInfo = () => {
     }, [window.location.hash]);
 
     const handleProtectedAction = (path) => {
+        const kycStr = (userData?.kycStatus || 'Not Started').toLowerCase();
+        
+        if (kycStr !== 'verified' && kycStr !== 'approved') {
+            if (kycStr === 'pending' || kycStr === 'rejected') {
+                navigate('/user/auth/pending');
+            } else {
+                navigate('/user/auth/kyc');
+            }
+            return;
+        }
+
         if (!userData.isPaid) {
             addNotification("Access Denied", "Please firstly take the 499 plan then access will be granted.", "error");
             setPaymentModal({ isOpen: true, plan: 'Lifetime Access Plan', amount: 499 });
             return;
         }
-        navigate(path);
+        if (path === '/user/marketing') {
+            navigate(path, { state: { showReferral: true } });
+        } else {
+            navigate(path);
+        }
     };
 
     const onPaymentSuccess = async () => {
@@ -136,7 +151,7 @@ const IncomeInfo = () => {
                             
                             <button 
                                 onClick={() => handleProtectedAction('/user/marketing')}
-                                className="w-full mt-2 bg-slate-900 hover:bg-black text-white font-black py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-900/10 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-900/10 active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
                                 Get Referral Link <ArrowRight size={14} strokeWidth={3} />
                             </button>
@@ -182,7 +197,7 @@ const IncomeInfo = () => {
                             
                             <button 
                                 onClick={() => handleProtectedAction('/user/earn')}
-                                className="w-full mt-2 bg-slate-900 hover:bg-black text-white font-black py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-amber-900/10 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-amber-900/10 active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
                                 View Tasks <Zap size={14} fill="currentColor" />
                             </button>

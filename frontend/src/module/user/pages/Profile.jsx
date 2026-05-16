@@ -121,16 +121,6 @@ const Profile = () => {
                             onChange={handleImageChange} 
                         />
 
-                        {/* Hidden File Input for Camera Capture */}
-                        <input 
-                            type="file" 
-                            ref={cameraInputRef}
-                            accept="image/*" 
-                            capture="user"
-                            className="hidden" 
-                            onChange={handleImageChange} 
-                        />
-
                         <div className="w-24 h-24 bg-[#0B1221] rounded-[1.75rem] flex items-center justify-center text-white text-3xl font-bold shadow-xl shadow-slate-200 overflow-hidden border-[3px] border-white relative group">
                             <img src={profileImage || defaultRealImage} alt="Profile" className="w-full h-full object-cover" />
                             {isUploading && (
@@ -142,7 +132,7 @@ const Profile = () => {
                                 onClick={triggerGalleryUpload}
                                 className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
                             >
-                                <Camera size={20} className="text-white" />
+                                <ImageIcon size={20} className="text-white" />
                             </div>
                         </div>
                         
@@ -150,22 +140,16 @@ const Profile = () => {
                             onClick={triggerGalleryUpload}
                             className="absolute -bottom-0.5 -right-0.5 w-8 h-8 bg-white rounded-full shadow-lg border border-slate-100 flex items-center justify-center cursor-pointer active:scale-90 transition-all z-20"
                         >
-                            <Camera size={14} className="text-slate-600" />
+                            <ImageIcon size={14} className="text-slate-600" />
                         </button>
                     </div>
 
-                    <div className="flex items-center gap-2 mb-1.5">
+                    <div className="flex items-center justify-center mb-1.5">
                         <button 
                             onClick={triggerGalleryUpload}
-                            className="bg-white px-3.5 py-1.5 rounded-lg text-[9px] font-black text-slate-800 uppercase tracking-widest border border-slate-100 shadow-sm flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+                            className="bg-[#0B1221] px-4 py-2 rounded-lg text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
                         >
-                            <ImageIcon size={12} className="text-blue-500" /> Gallery
-                        </button>
-                        <button 
-                            onClick={triggerCameraUpload}
-                            className="bg-[#0B1221] px-3.5 py-1.5 rounded-lg text-[9px] font-black text-white uppercase tracking-widest flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
-                        >
-                            <Camera size={12} className="text-blue-400" /> Camera
+                            <ImageIcon size={14} className="text-blue-400" /> Upload Photo
                         </button>
                     </div>
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest opacity-60">Change Profile Photo</p>

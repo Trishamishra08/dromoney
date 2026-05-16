@@ -251,6 +251,15 @@ const Home = () => {
                 // 2. Intro Video Config
                 if (data['platform_intro_video'] && data['platform_intro_video'].data) {
                     setIntroConfig(data['platform_intro_video'].data);
+                } else {
+                    // Fallback to show it if not set in admin
+                    setIntroConfig({
+                        isActive: true,
+                        title: 'Welcome to Dromoney',
+                        subtitle: 'Watch our guide to start earning today!',
+                        thumbnailUrl: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80',
+                        videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'
+                    });
                 }
 
                 // 3. Footer Policies
@@ -377,7 +386,7 @@ const Home = () => {
                 <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Marketplace & Services</h3>
                 <div className="grid grid-cols-4 gap-y-4 gap-x-2 bg-white rounded-2xl p-5 shadow-xl shadow-slate-200/40 border border-slate-50">
                     {[
-                        { icon: Share2, label: 'Refer', color: 'bg-emerald-50 text-emerald-500', path: '/user/marketing' },
+                        { icon: Share2, label: 'Refer', color: 'bg-emerald-50 text-emerald-500', path: '/user/income-info' },
                         { icon: ClipboardList, label: 'Task', color: 'bg-amber-50 text-amber-500', path: '/user/earn' },
                         { icon: TrendingUp, label: 'Fund', color: 'bg-blue-50 text-blue-500', path: '/user/future-fund' },
                         { icon: Sparkles, label: 'Events', color: 'bg-purple-50 text-purple-500', path: '/user/events' }

@@ -20,6 +20,7 @@ const Register = () => {
     const [step, setStep] = useState(1);
     const [otp, setOtp] = useState('');
     const [error, setError] = useState('');
+    const [resendCooldown, setResendCooldown] = useState(0);
 
     const [referrerName, setReferrerName] = useState('');
     const [checkingReferral, setCheckingReferral] = useState(false);
@@ -75,6 +76,13 @@ const Register = () => {
         }
     }, [searchParams]);
 
+    useEffect(() => {
+        if (resendCooldown > 0) {
+            const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [resendCooldown]);
+
     const handleSendOTP = async (e) => {
         e.preventDefault();
         if (!formData.name || !formData.email || formData.phone.length < 10) return;
@@ -84,6 +92,18 @@ const Register = () => {
         setLoading(false);
         if (result.success) {
             setStep(2);
+        } else {
+            setError(result.error);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        setError('');
+        setLoading(true);
+        const result = await sendRegisterOtp(formData.phone, formData.email);
+        setLoading(false);
+        if (result.success) {
+            setResendCooldown(30);
         } else {
             setError(result.error);
         }
@@ -254,6 +274,17 @@ const Register = () => {
                                     required
                                 />
                                 <Lock className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                            </div>
+
+                            <div className="text-center mt-2">
+                                <button 
+                                    type="button" 
+                                    onClick={handleResendOtp}
+                                    className="text-[11px] font-bold text-[#0f1d3a] hover:underline disabled:opacity-50"
+                                    disabled={loading || resendCooldown > 0}
+                                >
+                                    {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : 'Resend OTP'}
+                                </button>
                             </div>
 
                             <button
