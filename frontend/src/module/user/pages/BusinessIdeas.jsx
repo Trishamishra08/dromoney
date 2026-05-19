@@ -131,7 +131,7 @@ const BusinessIdeas = () => {
 
     // --- SCREEN -1: INTRO (Premium Rocket Welcome) ---
     const IntroScreen = () => (
-        <div className="min-h-screen bg-[#F8FAFF] pb-10">
+        <div className="h-[calc(100vh-144px)] flex flex-col bg-[#F8FAFF] overflow-hidden">
             <style>
                 {`
                 @keyframes boost {
@@ -152,15 +152,16 @@ const BusinessIdeas = () => {
                 `}
             </style>
 
-            {/* Sticky Header Row */}
-            <div className="bg-white/80 backdrop-blur-md px-6 py-4 flex items-center sticky top-[64px] z-40 border-b border-slate-100/50">
+            {/* Header Row */}
+            <div className="bg-white/80 backdrop-blur-md px-6 py-3 flex items-center border-b border-slate-100/50 shrink-0">
                 <button onClick={() => navigate('/user/home')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 active:scale-90 transition-all border border-slate-100">
                     <ChevronLeft size={22} />
                 </button>
             </div>
 
-            <div className="flex flex-col items-center justify-center p-5 pt-6">
-                <div className="w-full max-w-[340px] bg-gradient-to-br from-[#5D38F0] to-[#8643FF] rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden mb-8 flex flex-col items-center justify-center">
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col items-center justify-center p-5 min-h-0">
+                <div className="w-full max-w-[340px] bg-gradient-to-br from-[#5D38F0] to-[#8643FF] rounded-[2.5rem] p-6 text-white shadow-xl relative overflow-hidden mb-6 flex flex-col items-center justify-center flex-1 max-h-[360px]">
                     {/* Decorative Elements */}
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl" />
                     <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-400/20 rounded-full -ml-12 -mb-12 blur-2xl" />
@@ -171,33 +172,33 @@ const BusinessIdeas = () => {
                             <p className="text-[10px] font-black text-white/70 uppercase tracking-[0.2em]">महीने की कमाई</p>
                             <Star size={12} className="text-[#FFE03D]" fill="#FFE03D" />
                         </div>
-                        <p className="text-[32px] font-black text-white leading-none drop-shadow-md">
+                        <p className="text-[28px] font-black text-white leading-none drop-shadow-md">
                             ₹50k - <span className="text-[#FFE03D]">₹{selectedIdea?.potentialEarnings || '1 Lakh'}</span>
                         </p>
                     </div>
 
-                    <div className="my-8 relative z-10">
+                    <div className="my-6 relative z-10 flex items-center justify-center flex-1 min-h-0">
                         <div className="absolute inset-0 bg-white/10 blur-[40px] rounded-full scale-125 animate-pulse" />
                         <div className="animate-boost relative">
                             <div className="absolute -bottom-6 -right-6 z-0 flex gap-1">
                                 <div className="animate-puff w-6 h-6 bg-white/40 rounded-full blur-md" style={{ animationDelay: '0s' }} />
                                 <div className="animate-puff w-8 h-8 bg-white/20 rounded-full blur-lg" style={{ animationDelay: '0.2s' }} />
                             </div>
-                            <Rocket size={110} className="text-white drop-shadow-[0_15px_15px_rgba(255,255,255,0.25)] relative z-10" fill="white" fillOpacity={0.2} />
+                            <Rocket size={90} className="text-white drop-shadow-[0_15px_15px_rgba(255,255,255,0.25)] relative z-10" fill="white" fillOpacity={0.2} />
                         </div>
                     </div>
 
                     <div className="text-center space-y-1 relative z-10">
                         <div className="bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-xl">
-                            <p className="text-[12px] font-black text-[#00FF94] leading-tight uppercase tracking-wider">बहुत कम इन्वेस्टमेंट से</p>
+                            <p className="text-[11px] font-black text-[#00FF94] leading-tight uppercase tracking-wider">बहुत कम इन्वेस्टमेंट से</p>
                         </div>
-                        <p className="text-[9px] font-bold text-white/60 uppercase tracking-[0.2em] mt-1.5">Start Your Own Brand Today</p>
+                        <p className="text-[8px] font-bold text-white/60 uppercase tracking-[0.2em] mt-1">Start Your Own Brand Today</p>
                     </div>
                 </div>
 
                 <button 
                     onClick={() => navigate('/user/business-ideas/all')}
-                    className="w-full max-w-[340px] bg-[#5D38F0] hover:bg-[#4C2CD9] text-white font-black text-[14px] py-4.5 rounded-[2rem] shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 transition-all active:scale-95 uppercase tracking-widest border-b-4 border-indigo-800"
+                    className="w-full max-w-[340px] bg-[#5D38F0] hover:bg-[#4C2CD9] text-white font-black text-[14px] py-4 rounded-[2rem] shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 transition-all active:scale-95 uppercase tracking-widest border-b-4 border-indigo-800 shrink-0"
                 >
                     LET'S START <ArrowRight size={18} />
                 </button>
@@ -207,8 +208,8 @@ const BusinessIdeas = () => {
 
     // --- SCREEN 0: PREMIUM CARDS LISTING ---
     const ListingScreen = () => (
-        <div className="min-h-screen bg-[#F8FAFF] pb-10">
-            <div className="bg-white px-6 pt-12 pb-6 flex items-center justify-between sticky top-[64px] z-30 shadow-sm shadow-indigo-50/50 rounded-b-[2.5rem]">
+        <div className="min-h-screen bg-[#F8FAFF] pb-32">
+            <div className="bg-white px-6 pt-4 pb-4 flex items-center justify-between sticky top-[64px] z-30 shadow-sm shadow-indigo-50/50 rounded-b-[2.5rem]">
                 <div className="flex items-center gap-4">
                     <button onClick={() => navigate('/user/business-ideas')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 active:scale-90 transition-all border border-slate-100">
                         <ChevronLeft size={22} />
@@ -379,7 +380,7 @@ const BusinessIdeas = () => {
     // --- SCREEN 2: SUBSCRIPTION ---
     const SubscriptionScreen = () => (
         <div className="min-h-screen bg-[#F8FAFF] pb-40">
-            <div className="px-6 pt-12 pb-4 flex items-center justify-between sticky top-[64px] z-40 bg-[#F8FAFF]/80 backdrop-blur-md">
+            <div className="px-6 pt-4 pb-4 flex items-center justify-between sticky top-[64px] z-40 bg-[#F8FAFF]/80 backdrop-blur-md">
                 <button onClick={() => navigate(`/user/business-ideas/${ideaId}`)} className="w-10 h-10 flex items-center justify-center text-slate-900 bg-white rounded-xl shadow-sm"><ChevronLeft size={24} /></button>
                 <h1 className="text-lg font-black text-slate-900">Unlock Premium</h1>
                 <div className="w-10" />
@@ -510,7 +511,7 @@ const BusinessIdeas = () => {
                         animation: float 4s ease-in-out infinite;
                     }
                 `}</style>
-                <div className="px-6 pt-12 pb-4 flex items-center justify-between bg-[#F8FAFF]/90 backdrop-blur-md sticky top-[64px] z-40">
+                <div className="px-6 pt-4 pb-4 flex items-center justify-between bg-[#F8FAFF]/90 backdrop-blur-md sticky top-[64px] z-40">
                     <button onClick={() => navigate(`/user/business-ideas/${ideaId}/subscription`)} className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-900 shadow-sm border border-slate-100 active:scale-90 transition-all"><ChevronLeft size={24} /></button>
                     <h1 className="text-lg font-black text-slate-900 tracking-tight">Premium Hub</h1>
                     <div className="w-10" />
@@ -828,7 +829,7 @@ const BusinessIdeas = () => {
     };
 
     return (
-        <div className="max-w-md mx-auto bg-white min-h-screen font-sans shadow-xl relative overflow-x-hidden">
+        <div className="max-w-md mx-auto bg-white min-h-screen font-sans shadow-xl relative overflow-x-clip">
             {step === -1 && <IntroScreen />}
             {step === 0 && <ListingScreen />}
             {step === 1 && <DetailsScreen />}
