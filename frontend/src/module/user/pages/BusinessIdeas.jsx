@@ -330,7 +330,7 @@ const BusinessIdeas = () => {
                         <p className="text-[7px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">कुल खर्च</p>
                     </div>
                     <div 
-                        onClick={() => navigate(`/user/business-ideas/${ideaId}/profitDetails`)}
+                        onClick={() => navigate(`/user/business-ideas/${ideaId}/info/profitDetails`)}
                         className="bg-white border border-slate-100 rounded-2xl p-3 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 transition-all"
                     >
                         <div className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-xl flex items-center justify-center mb-2"><TrendingUp size={18} /></div>
