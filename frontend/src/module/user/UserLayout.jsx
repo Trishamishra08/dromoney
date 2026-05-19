@@ -273,7 +273,7 @@ const UserLayout = () => {
             </div>
 
             {/* --- Dynamic Content Rendering Area (Pages) --- */}
-            <main className="max-w-md mx-auto pt-[57px] pb-16">
+            <main className="max-w-md mx-auto pt-[64px] pb-16">
                 <Outlet />
             </main>
 

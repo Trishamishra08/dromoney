@@ -153,7 +153,7 @@ const BusinessIdeas = () => {
             </style>
 
             {/* Sticky Header Row */}
-            <div className="bg-white/80 backdrop-blur-md px-6 py-4 flex items-center sticky top-0 z-40 border-b border-slate-100/50">
+            <div className="bg-white/80 backdrop-blur-md px-6 py-4 flex items-center sticky top-[64px] z-40 border-b border-slate-100/50">
                 <button onClick={() => navigate('/user/home')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 active:scale-90 transition-all border border-slate-100">
                     <ChevronLeft size={22} />
                 </button>
@@ -208,7 +208,7 @@ const BusinessIdeas = () => {
     // --- SCREEN 0: PREMIUM CARDS LISTING ---
     const ListingScreen = () => (
         <div className="min-h-screen bg-[#F8FAFF] pb-10">
-            <div className="bg-white px-6 pt-12 pb-6 flex items-center justify-between sticky top-0 z-30 shadow-sm shadow-indigo-50/50 rounded-b-[2.5rem]">
+            <div className="bg-white px-6 pt-12 pb-6 flex items-center justify-between sticky top-[64px] z-30 shadow-sm shadow-indigo-50/50 rounded-b-[2.5rem]">
                 <div className="flex items-center gap-4">
                     <button onClick={() => navigate('/user/business-ideas')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 active:scale-90 transition-all border border-slate-100">
                         <ChevronLeft size={22} />
@@ -272,7 +272,7 @@ const BusinessIdeas = () => {
     // --- SCREEN 1: START JOURNEY (Business Details) ---
     const DetailsScreen = () => (
         <div className="min-h-screen bg-white pb-40">
-            <div className="px-5 pt-8 pb-2 flex items-center justify-between bg-white sticky top-0 z-40">
+            <div className="px-5 pt-8 pb-2 flex items-center justify-between bg-white sticky top-[64px] z-40">
                 <button onClick={() => navigate('/user/business-ideas/all')} className="w-9 h-9 flex items-center justify-center text-slate-900 bg-slate-50 rounded-xl active:scale-90 transition-all border border-slate-100">
                     <ChevronLeft size={20} />
                 </button>
@@ -379,7 +379,7 @@ const BusinessIdeas = () => {
     // --- SCREEN 2: SUBSCRIPTION ---
     const SubscriptionScreen = () => (
         <div className="min-h-screen bg-[#F8FAFF] pb-40">
-            <div className="px-6 pt-12 pb-4 flex items-center justify-between sticky top-0 z-40 bg-[#F8FAFF]/80 backdrop-blur-md">
+            <div className="px-6 pt-12 pb-4 flex items-center justify-between sticky top-[64px] z-40 bg-[#F8FAFF]/80 backdrop-blur-md">
                 <button onClick={() => navigate(`/user/business-ideas/${ideaId}`)} className="w-10 h-10 flex items-center justify-center text-slate-900 bg-white rounded-xl shadow-sm"><ChevronLeft size={24} /></button>
                 <h1 className="text-lg font-black text-slate-900">Unlock Premium</h1>
                 <div className="w-10" />
@@ -510,7 +510,7 @@ const BusinessIdeas = () => {
                         animation: float 4s ease-in-out infinite;
                     }
                 `}</style>
-                <div className="px-6 pt-12 pb-4 flex items-center justify-between bg-[#F8FAFF]/90 backdrop-blur-md sticky top-0 z-40">
+                <div className="px-6 pt-12 pb-4 flex items-center justify-between bg-[#F8FAFF]/90 backdrop-blur-md sticky top-[64px] z-40">
                     <button onClick={() => navigate(`/user/business-ideas/${ideaId}/subscription`)} className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-900 shadow-sm border border-slate-100 active:scale-90 transition-all"><ChevronLeft size={24} /></button>
                     <h1 className="text-lg font-black text-slate-900 tracking-tight">Premium Hub</h1>
                     <div className="w-10" />
