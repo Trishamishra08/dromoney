@@ -6,6 +6,7 @@ import api from '../../shared/services/api';
 const CoinsAndTasks = () => {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [saveLoading, setSaveLoading] = useState(false);
     const [coinValue, setCoinValue] = useState(0.1);
     const [dailyLimit, setDailyLimit] = useState(100);
     const [activeTab, setActiveTab] = useState('tasks');
@@ -26,7 +27,20 @@ const CoinsAndTasks = () => {
 
     useEffect(() => {
         fetchTasks();
+        fetchSettings();
     }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const response = await api.get('/admin/settings');
+            if (response.success) {
+                setCoinValue(response.data.coinRate || 0.1);
+                setDailyLimit(response.data.maxCoinsPerDay || 100);
+            }
+        } catch (err) {
+            console.error("Fetch Settings Error:", err);
+        }
+    };
 
     const fetchTasks = async () => {
         setLoading(true);
@@ -103,6 +117,24 @@ const CoinsAndTasks = () => {
         }
     };
 
+    const handleSaveSettings = async () => {
+        setSaveLoading(true);
+        try {
+            const response = await api.put('/admin/settings', {
+                coinRate: Number(coinValue),
+                maxCoinsPerDay: Number(dailyLimit)
+            });
+            
+            if (response.success) {
+                alert("Settings saved successfully!");
+            }
+        } catch (err) {
+            alert(err.message || "Failed to save settings");
+        } finally {
+            setSaveLoading(false);
+        }
+    };
+
     return (
         <div className="p-6 animate-in fade-in duration-500">
             <PageHeader title="Coins & Tasks" subtitle="Manage daily tasks and coin economy settings" />
@@ -174,7 +206,7 @@ const CoinsAndTasks = () => {
                             <div>
                                 <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest">1 Coin = ₹</label>
                                 <div className="flex items-center gap-3 mt-2">
-                                    <input type="number" step="0.01" value={coinValue} onChange={e => setCoinValue(e.target.value)}
+                                    <input type="number" step="0.01" min="0" value={coinValue} onChange={e => setCoinValue(Math.max(0, e.target.value))}
                                         className="w-32 border border-slate-200 rounded-xl px-4 py-2.5 text-lg font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500" />
                                     <span className="text-sm font-bold text-slate-400">rupees per coin</span>
                                 </div>
@@ -182,13 +214,23 @@ const CoinsAndTasks = () => {
                             <div>
                                 <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Max Coins Per Day</label>
                                 <div className="flex items-center gap-3 mt-2">
-                                    <input type="number" value={dailyLimit} onChange={e => setDailyLimit(e.target.value)}
+                                    <input type="number" min="0" value={dailyLimit} onChange={e => setDailyLimit(Math.max(0, e.target.value))}
                                         className="w-32 border border-slate-200 rounded-xl px-4 py-2.5 text-lg font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500" />
                                     <span className="text-sm font-bold text-slate-400">coins/day limit per user</span>
                                 </div>
                             </div>
-                            <button className="bg-sky-500 hover:bg-sky-600 text-white font-black text-[12px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all active:scale-95 shadow-md shadow-sky-100">
-                                Save Settings
+                            <button 
+                                onClick={handleSaveSettings}
+                                disabled={saveLoading}
+                                className="bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300 text-white font-black text-[12px] uppercase tracking-widest px-6 py-3 rounded-xl transition-all active:scale-95 shadow-md shadow-sky-100 flex items-center gap-2">
+                                {saveLoading ? (
+                                    <>
+                                        <Loader className="w-4 h-4 animate-spin" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    'Save Settings'
+                                )}
                             </button>
                         </div>
                     </div>
@@ -262,7 +304,7 @@ const CoinsAndTasks = () => {
                                     <label className="text-xs font-bold text-slate-600 block mb-1">Coins Reward <span className="text-rose-500">*</span></label>
                                     <div className="relative">
                                         <Coins size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500" />
-                                        <input type="number" min="1" value={newTaskData.reward} onChange={e => setNewTaskData({...newTaskData, reward: e.target.value})} className="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm font-black text-slate-800 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
+                                        <input type="number" min="1" value={newTaskData.reward} onChange={e => setNewTaskData({...newTaskData, reward: Math.max(1, e.target.value)})} className="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm font-black text-slate-800 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" />
                                     </div>
                                 </div>
 
@@ -294,7 +336,7 @@ const CoinsAndTasks = () => {
                                         </div>
                                         <div>
                                             <label className="text-xs font-bold text-slate-600 block mb-1">Watch Timer (Seconds)</label>
-                                            <input type="number" value={newTaskData.config?.timer || 30} onChange={e => setNewTaskData({...newTaskData, config: {...newTaskData.config, timer: e.target.value}})} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-sky-500" />
+                                            <input type="number" min="1" value={newTaskData.config?.timer || 30} onChange={e => setNewTaskData({...newTaskData, config: {...newTaskData.config, timer: Math.max(1, e.target.value)}})} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-sky-500" />
                                         </div>
                                     </>
                                 )}
@@ -308,7 +350,7 @@ const CoinsAndTasks = () => {
                                         </div>
                                         <div>
                                             <label className="text-xs font-bold text-slate-600 block mb-1">Wait Timer (Seconds)</label>
-                                            <input type="number" value={newTaskData.config?.timer || 15} onChange={e => setNewTaskData({...newTaskData, config: {...newTaskData.config, timer: e.target.value}})} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-sky-500" />
+                                            <input type="number" min="1" value={newTaskData.config?.timer || 15} onChange={e => setNewTaskData({...newTaskData, config: {...newTaskData.config, timer: Math.max(1, e.target.value)}})} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-sky-500" />
                                         </div>
                                     </>
                                 )}

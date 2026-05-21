@@ -11,20 +11,20 @@ const DEFAULT_CONTENT = {
         title: 'How It Works',
         subtitle: 'Master the Dromoney Platform',
         sections: [
-            { title: '1. Register & Verify', text: 'Create your account and complete a simple KYC to unlock all earning features safely.' },
-            { title: '2. Explore Opportunities', text: 'Browse through affiliate projects, daily tasks, and exclusive business ideas tailored for you.' },
-            { title: '3. Start Earning', text: 'Complete tasks or refer partners to accumulate coins and real cash in your dashboard.' },
-            { title: '4. Instant Payouts', text: 'Withdraw your earnings directly to your bank account with our secure payment gateway.' }
+            { title: '1. Register & Verify', text: 'Create your account and complete a simple KYC to unlock all earning features safely. Your identity is verified through Aadhaar/PAN to ensure platform security and prevent fraud.' },
+            { title: '2. Explore Opportunities', text: 'Browse through affiliate projects, daily tasks, and exclusive business ideas tailored for you. Choose from multiple income streams based on your skills and interests.' },
+            { title: '3. Start Earning', text: 'Complete tasks or refer partners to accumulate coins and real cash in your dashboard. Track your progress in real-time and watch your earnings grow.' },
+            { title: '4. Instant Payouts', text: 'Withdraw your earnings directly to your bank account with our secure payment gateway. Get paid within 7 days with 100% transparency and zero hidden charges.' }
         ]
     },
     'benefits': {
         title: 'User Benefits',
         subtitle: 'Why choose Dromoney?',
         sections: [
-            { title: 'Financial Freedom', text: 'Access multiple income streams that you can manage from anywhere in the world.' },
-            { title: 'Skill Development', text: 'Learn marketing and business strategies through our verified project frameworks.' },
-            { title: 'Safe & Secure', text: 'Your data and earnings are protected by industry-leading security protocols.' },
-            { title: 'Community Support', text: 'Join thousands of earners and get 24/7 assistance from our expert team.' }
+            { title: 'Financial Freedom', text: 'Access multiple income streams that you can manage from anywhere in the world. Earn at your own pace without any fixed targets or pressure.' },
+            { title: 'Skill Development', text: 'Learn marketing and business strategies through our verified project frameworks. Get certified and build a portfolio that enhances your professional value.' },
+            { title: 'Safe & Secure', text: 'Your data and earnings are protected by industry-leading security protocols. We use encryption and comply with all data protection regulations.' },
+            { title: 'Community Support', text: 'Join thousands of earners and get 24/7 assistance from our expert team. Share experiences and learn from successful community members.' }
         ]
     },
     'support': {
@@ -40,9 +40,9 @@ const DEFAULT_CONTENT = {
         title: 'About Dromoney',
         subtitle: 'Empowering Digital Earners',
         sections: [
-            { title: 'Our Mission', text: 'To provide a transparent and efficient platform where everyone can monetize their digital presence.' },
-            { title: 'The Platform', text: 'Dromoney is India\'s fastest growing affiliate and task-based earning ecosystem.' },
-            { title: 'Transparency', text: 'We believe in fairness. Every payout and task is tracked with 100% precision.' }
+            { title: 'Our Mission', text: 'To provide a transparent and efficient platform where everyone can monetize their digital presence. We believe in fair compensation and equal opportunities for all users.' },
+            { title: 'The Platform', text: 'Dromoney is India\'s fastest growing affiliate and task-based earning ecosystem. We connect brands with genuine users and creators for authentic marketing campaigns.' },
+            { title: 'Transparency', text: 'We believe in fairness. Every payout and task is tracked with 100% precision. Our blockchain-verified system ensures no user is ever cheated.' }
         ]
     },
     'privacy': {

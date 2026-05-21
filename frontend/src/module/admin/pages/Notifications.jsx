@@ -160,40 +160,40 @@ const Notifications = () => {
                             </button>
                         )}
                     </div>
-                    <div className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto custom-scrollbar">
+                    <div className="divide-y divide-slate-50 max-h-[600px] overflow-y-auto custom-scrollbar">
                         {history.length > 0 ? history.map((n) => (
-                            <div key={n._id} className="p-5 hover:bg-slate-50/60 transition-all group/item">
-                                <div className="flex items-start justify-between mb-2">
+                            <div key={n._id} className="p-8 hover:bg-slate-50/60 transition-all group/item border-l-4 border-l-sky-200 hover:border-l-sky-400">
+                                <div className="flex items-start justify-between mb-4">
                                     <div className="flex-1">
-                                        <h3 className="font-black text-slate-800 text-[13px] leading-tight mb-1">{n.title}</h3>
-                                        <div className="flex items-center gap-2 text-slate-400">
-                                            <Clock size={10} />
-                                            <span className="text-[9px] font-black uppercase tracking-widest">
+                                        <h3 className="font-black text-slate-800 text-[20px] leading-tight mb-3">{n.title}</h3>
+                                        <div className="flex items-center gap-3 text-slate-500">
+                                            <Clock size={16} />
+                                            <span className="text-[13px] font-bold uppercase tracking-wide">
                                                 {new Date(n.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
                                     </div>
                                     <button 
                                         onClick={() => handleDelete(n._id)}
-                                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover/item:opacity-100"
+                                        className="w-10 h-10 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover/item:opacity-100"
                                     >
-                                        <Trash2 size={14} />
+                                        <Trash2 size={18} />
                                     </button>
                                 </div>
-                                <p className="text-[12px] text-slate-500 font-medium leading-relaxed pr-4">{n.message}</p>
-                                <div className="mt-3 flex items-center justify-between">
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-sky-50 rounded-md border border-sky-100">
-                                        <Users size={10} className="text-sky-500" />
-                                        <span className="text-[9px] font-black text-sky-600 uppercase tracking-tighter">{n.recipients?.toLocaleString()} Recipients</span>
+                                <p className="text-[16px] text-slate-700 font-medium leading-relaxed pr-4 mb-5 line-height-loose">{n.message}</p>
+                                <div className="mt-5 flex items-center justify-between">
+                                    <div className="flex items-center gap-3 px-4 py-2.5 bg-sky-50 rounded-lg border border-sky-100">
+                                        <Users size={16} className="text-sky-500" />
+                                        <span className="text-[13px] font-black text-sky-600 uppercase tracking-wide">{n.recipients?.toLocaleString()} Recipients</span>
                                     </div>
                                 </div>
                             </div>
                         )) : (
-                            <div className="p-16 text-center">
-                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                                    <Bell size={24} className="text-slate-200" />
+                            <div className="p-20 text-center">
+                                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
+                                    <Bell size={28} className="text-slate-200" />
                                 </div>
-                                <p className="text-xs font-black text-slate-300 uppercase tracking-widest leading-none">No Broadcast History</p>
+                                <p className="text-sm font-black text-slate-300 uppercase tracking-widest leading-none">No Broadcast History</p>
                             </div>
                         )}
                     </div>

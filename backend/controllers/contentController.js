@@ -103,12 +103,14 @@ exports.downloadLogo = asyncHandler(async (req, res, next) => {
         const filename = 'dromoney_logo.png';
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Access-Control-Allow-Origin', '*');
 
         if (logoUrl.startsWith('http')) {
             const response = await axios({
                 method: 'get',
                 url: logoUrl,
-                responseType: 'stream'
+                responseType: 'stream',
+                timeout: 10000
             });
             response.data.pipe(res);
         } else {
@@ -116,7 +118,11 @@ exports.downloadLogo = asyncHandler(async (req, res, next) => {
         }
     } catch (err) {
         console.error("Error downloading logo:", err);
-        res.status(500).send("Error fetching logo image for download");
+        res.status(500).json({ 
+            success: false, 
+            message: "Error fetching logo image for download",
+            error: err.message 
+        });
     }
 });
 

@@ -32,22 +32,60 @@ const FutureFundAdmin = () => {
     const [editingRules, setEditingRules] = useState(false);
     const [loadingSettings, setLoadingSettings] = useState(true);
 
-    // ── User Data ──
-    const [usersData, setUsersData] = useState([
-        { id: 1, name: 'Ravi Patel', sales: 15, days: 12, minsToday: 18, stage: 'Active', history7d: [45, 38, 52, 40, 35, 28, 42] },
-        { id: 2, name: 'Rahul Sharma', sales: 10, days: 10, minsToday: 15, stage: 'Eligible', history7d: [] },
-        { id: 3, name: 'Priya Singh', sales: 7, days: 6, minsToday: 12.5, stage: 'Locked', history7d: [] },
-        { id: 4, name: 'Neha Verma', sales: 9, days: 5, minsToday: 14, stage: 'Locked', history7d: [] },
-        { id: 5, name: 'Sunita Mehta', sales: 12, days: 11, minsToday: 16, stage: 'Active', history7d: [30, 45, 50, 42, 33, 29, 41] },
-        { id: 6, name: 'Vikram Singh', sales: 3, days: 2, minsToday: 5, stage: 'Locked', history7d: [] },
-        { id: 7, name: 'Anjali Rae', sales: 10, days: 10, minsToday: 15, stage: 'Eligible', history7d: [] },
-        { id: 8, name: 'Karan Joshi', sales: 18, days: 15, minsToday: 20, stage: 'Active', history7d: [55, 60, 48, 52, 59, 61, 65] },
-    ]);
+    // ── User Data from DB ──
+    const [usersData, setUsersData] = useState([]);
+    const [usersLoading, setUsersLoading] = useState(true);
+
+    // Fetch real users from backend
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                setUsersLoading(true);
+                const res = await api.get('/admin/users');
+                if (res.success && res.data) {
+                    const mapped = res.data.map(u => ({
+                        id: u._id,
+                        name: u.name,
+                        email: u.email,
+                        sales: u.referralCount || 0,
+                        days: u.futureFund?.progress || 0,
+                        minsToday: 0, // not tracked per-user on server yet
+                        stage: u.futureFund?.status === 'active' ? 'Active' : 'Locked',
+                        history7d: null // will be fetched on demand
+                    }));
+                    setUsersData(mapped);
+                }
+            } catch (err) {
+                console.error('Failed to load FF users', err);
+            } finally {
+                setUsersLoading(false);
+            }
+        };
+        fetchUsers();
+    }, []);
 
     const [search, setSearch] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
+    const [selectedUserHistory, setSelectedUserHistory] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(5);
+
+    const handleViewHistory = async (user) => {
+        setSelectedUser(user);
+        setSelectedUserHistory([]);
+        setHistoryLoading(true);
+        try {
+            const res = await api.get(`/admin/users/${user.id}/transactions`);
+            if (res.success && res.data?.last7Days) {
+                setSelectedUserHistory(res.data.last7Days);
+            }
+        } catch (err) {
+            console.error('Failed to load user transactions', err);
+        } finally {
+            setHistoryLoading(false);
+        }
+    };
 
     // Fetch dynamic Settings from Database
     useEffect(() => {
@@ -111,7 +149,7 @@ const FutureFundAdmin = () => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
 
-    if (loadingSettings) {
+    if (loadingSettings || usersLoading) {
         return (
             <div className="p-8 text-center bg-slate-50 min-h-screen flex flex-col items-center justify-center font-bold gap-3">
                 <Loader2 className="animate-spin text-indigo-600 w-10 h-10" />
@@ -271,7 +309,7 @@ const FutureFundAdmin = () => {
                                         <td className="px-8 py-5"><StatusBadge status={u.stage} /></td>
                                         <td className="px-8 py-5">
                                             <div className="flex justify-center">
-                                                <button onClick={() => setSelectedUser(u)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm border ${u.stage === 'Active' ? 'bg-sky-50 border-sky-100 text-sky-600 hover:bg-sky-500 hover:text-white' : 'bg-slate-50 border-slate-100 text-slate-300 opacity-50 cursor-not-allowed'}`} disabled={u.stage !== 'Active'}><History size={16} /></button>
+                                                <button onClick={() => handleViewHistory(u)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm border ${u.stage === 'Active' ? 'bg-sky-50 border-sky-100 text-sky-600 hover:bg-sky-500 hover:text-white' : 'bg-slate-50 border-slate-100 text-slate-300 opacity-50 cursor-not-allowed'}`} disabled={u.stage !== 'Active'}><History size={16} /></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -296,22 +334,33 @@ const FutureFundAdmin = () => {
             {/* ── COMPACT HISTORY LOG MODAL ── */}
             {selectedUser && (
                 <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-                    <div onClick={() => setSelectedUser(null)} className="absolute inset-0 bg-[#0F172A]/90 backdrop-blur-sm animate-in fade-in duration-300"></div>
+                    <div onClick={() => { setSelectedUser(null); setSelectedUserHistory([]); }} className="absolute inset-0 bg-[#0F172A]/90 backdrop-blur-sm animate-in fade-in duration-300"></div>
                     <div className="relative bg-white w-full max-w-[380px] rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-400">
                         <div className="bg-[#0F172A] p-6 text-white flex justify-between items-center">
                             <div><h3 className="text-md font-black tracking-tight">{selectedUser.name}'s History</h3><p className="text-[9px] text-sky-400 font-black uppercase tracking-widest leading-none mt-1">Last 7 Days Earnings</p></div>
-                            <button onClick={() => setSelectedUser(null)} className="text-white/40 hover:text-white"><XCircle size={20} /></button>
+                            <button onClick={() => { setSelectedUser(null); setSelectedUserHistory([]); }} className="text-white/40 hover:text-white"><XCircle size={20} /></button>
                         </div>
                         <div className="p-6">
-                            <div className="space-y-2 mb-6 max-h-[280px] overflow-y-auto scrollbar-hide">
-                                {selectedUser.history7d.map((val, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl">
-                                        <div className="flex items-center gap-3"><Calendar size={12} className="text-slate-300" /><p className="text-[11px] font-bold text-slate-600 tracking-tight">Day {7 - idx} Earnings</p></div>
-                                        <p className="text-[13px] font-black text-emerald-600">+ ₹{val}</p>
-                                    </div>
-                                ))}
-                            </div>
-                            <button onClick={() => setSelectedUser(null)} className="w-full bg-[#0F172A] text-white py-4 rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl active:scale-95 transition-all">Close History</button>
+                            {historyLoading ? (
+                                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                    <Loader2 className="animate-spin text-indigo-500 w-8 h-8" />
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fetching transactions...</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2 mb-6 max-h-[280px] overflow-y-auto scrollbar-hide">
+                                    {selectedUserHistory.length > 0 ? selectedUserHistory.map((day, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl">
+                                            <div className="flex items-center gap-3"><Calendar size={12} className="text-slate-300" /><p className="text-[11px] font-bold text-slate-600 tracking-tight">{day.date}</p></div>
+                                            <p className={`text-[13px] font-black ${day.total > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>{day.total > 0 ? `+ ₹${day.total}` : '₹0.00'}</p>
+                                        </div>
+                                    )) : (
+                                        <div className="py-10 text-center">
+                                            <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">No earnings in last 7 days</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            <button onClick={() => { setSelectedUser(null); setSelectedUserHistory([]); }} className="w-full bg-[#0F172A] text-white py-4 rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl active:scale-95 transition-all">Close History</button>
                         </div>
                     </div>
                 </div>

@@ -19,6 +19,7 @@ const Dashboard = () => {
     // ── Interactive States ──
     const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [regOpen, setRegOpen] = useState(true);
+    const [settingsLoaded, setSettingsLoaded] = useState(false);
     const [broadcastMsg, setBroadcastMsg] = useState('');
     const [broadcastTitle, setBroadcastTitle] = useState('Dromoney Global Alert');
     const [isSending, setIsSending] = useState(false);
@@ -26,16 +27,64 @@ const Dashboard = () => {
     const [alerts, setAlerts] = useState([]);
     const [queue, setQueue] = useState([]);
 
+    // Engagement Matrix state
+    const [engagementPeriod, setEngagementPeriod] = useState('daily');
+    const [engagementData, setEngagementData] = useState(null);
+    const [engagementLoading, setEngagementLoading] = useState(true);
+
     useEffect(() => {
         fetchAlerts();
+        fetchSettings();
     }, []);
+
+    useEffect(() => {
+        fetchEngagement(engagementPeriod);
+    }, [engagementPeriod]);
+
+    // Load persisted maintenance & registration state from backend
+    const fetchSettings = async () => {
+        try {
+            const res = await api.get('/public/settings');
+            if (res.success && res.data) {
+                setMaintenanceMode(res.data.maintenanceMode ?? false);
+                setRegOpen(res.data.registrationOpen ?? true);
+            }
+        } catch (err) {
+            console.error("Settings fetch error:", err);
+        } finally {
+            setSettingsLoaded(true);
+        }
+    };
+
+    // Toggle maintenance mode and persist to backend
+    const handleMaintenanceToggle = async () => {
+        const newVal = !maintenanceMode;
+        setMaintenanceMode(newVal);
+        try {
+            await api.put('/admin/settings', { maintenanceMode: newVal });
+        } catch (err) {
+            console.error("Failed to save maintenance mode:", err);
+            setMaintenanceMode(!newVal); // revert on error
+        }
+    };
+
+    // Toggle registration open and persist to backend
+    const handleRegToggle = async () => {
+        const newVal = !regOpen;
+        setRegOpen(newVal);
+        try {
+            await api.put('/admin/settings', { registrationOpen: newVal });
+        } catch (err) {
+            console.error("Failed to save registration state:", err);
+            setRegOpen(!newVal); // revert on error
+        }
+    };
 
     const fetchAlerts = async () => {
         try {
             const response = await api.get('/admin/dashboard/alerts');
             if (response.success) setAlerts(response.data);
             
-            // Optionally fetch user queue
             const userRes = await api.get('/admin/users');
             if (userRes.success) {
                 const pending = userRes.data.filter(u => u.kyc?.status === 'Pending').slice(0, 3);
@@ -48,6 +97,18 @@ const Dashboard = () => {
             }
         } catch (err) {
             console.error("Alerts fetching error:", err);
+        }
+    };
+
+    const fetchEngagement = async (period) => {
+        setEngagementLoading(true);
+        try {
+            const res = await api.get(`/admin/dashboard/engagement?period=${period}`);
+            if (res.success) setEngagementData(res.data);
+        } catch (err) {
+            console.error("Engagement fetch error:", err);
+        } finally {
+            setEngagementLoading(false);
         }
     };
 
@@ -80,7 +141,7 @@ const Dashboard = () => {
 
     const handleRefresh = async () => {
         setIsRefreshing(true);
-        await Promise.all([fetchDashboardStats(), fetchAlerts()]);
+        await Promise.all([fetchDashboardStats(), fetchAlerts(), fetchEngagement(engagementPeriod)]);
         setTimeout(() => setIsRefreshing(false), 800);
     };
 
@@ -139,14 +200,22 @@ const Dashboard = () => {
                     <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
                         <div className="flex items-center gap-2.5">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Maintenance</span>
-                            <button onClick={() => setMaintenanceMode(!maintenanceMode)} className={`w-8 h-4 rounded-full relative transition-all ${maintenanceMode ? 'bg-rose-500 shadow-lg shadow-rose-200' : 'bg-slate-200'}`}>
+                            <button
+                                onClick={handleMaintenanceToggle}
+                                disabled={!settingsLoaded}
+                                className={`w-8 h-4 rounded-full relative transition-all ${maintenanceMode ? 'bg-rose-500 shadow-lg shadow-rose-200' : 'bg-slate-200'} ${!settingsLoaded ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            >
                                 <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${maintenanceMode ? 'right-0.5' : 'left-0.5'}`}></div>
                             </button>
                         </div>
                         <div className="h-3 w-px bg-slate-100"></div>
                         <div className="flex items-center gap-2.5">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Register</span>
-                            <button onClick={() => setRegOpen(!regOpen)} className={`w-8 h-4 rounded-full relative transition-all ${regOpen ? 'bg-emerald-500 shadow-lg shadow-emerald-200' : 'bg-slate-200'}`}>
+                            <button
+                                onClick={handleRegToggle}
+                                disabled={!settingsLoaded}
+                                className={`w-8 h-4 rounded-full relative transition-all ${regOpen ? 'bg-emerald-500 shadow-lg shadow-emerald-200' : 'bg-slate-200'} ${!settingsLoaded ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            >
                                 <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${regOpen ? 'right-0.5' : 'left-0.5'}`}></div>
                             </button>
                         </div>
@@ -275,26 +344,110 @@ const Dashboard = () => {
                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Platform adoption velocity</p>
                         </div>
                         <div className="flex gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
-                            {['Daily', 'Weekly'].map(t => (
-                                <button key={t} className={`px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest transition-all ${t === 'Daily' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>{t}</button>
+                            {['daily', 'weekly'].map(t => (
+                                <button
+                                    key={t}
+                                    onClick={() => setEngagementPeriod(t)}
+                                    className={`px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest transition-all ${engagementPeriod === t ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}
+                                >
+                                    {t}
+                                </button>
                             ))}
                         </div>
                     </div>
 
-                    <div className="h-48 flex items-end justify-between gap-3 px-2 relative z-10">
-                        {[35, 65, 45, 85, 55, 95, 75, 45, 65, 80].map((h, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center group/bar">
-                                <div 
-                                    style={{ height: `${h}%` }} 
-                                    className={`w-full max-w-[32px] rounded-t-lg transition-all duration-700 bg-slate-50 relative group-hover/bar:bg-[#FDF2D0] group-hover/bar:border group-hover/bar:border-[#F9E9B8] cursor-pointer shadow-sm`}
-                                >
-                                     <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] font-black px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap">
-                                        {Math.floor(h * 24)} Sessions
+                    {engagementLoading ? (
+                        <div className="h-48 flex items-center justify-center">
+                            <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-500 rounded-full animate-spin"></div>
+                        </div>
+                    ) : engagementData ? (() => {
+                        const { labels, registrations, logins, taskCompletions } = engagementData;
+                        const allVals = [...registrations, ...logins, ...taskCompletions];
+                        const maxVal = Math.max(...allVals, 1);
+                        const CHART_H = 160; // px — fixed chart height
+                        const MIN_BAR = 6;   // px — always visible even for 0
+
+                        const series = [
+                            { key: 'registrations', data: registrations, color: '#6366f1', label: 'Registrations' },
+                            { key: 'logins',         data: logins,         color: '#38bdf8', label: 'Logins'        },
+                            { key: 'tasks',          data: taskCompletions,color: '#34d399', label: 'Tasks Done'    },
+                        ];
+
+                        return (
+                            <div>
+                                {/* Legend */}
+                                <div className="flex items-center gap-5 mb-3 px-1">
+                                    {series.map(s => (
+                                        <div key={s.key} className="flex items-center gap-1.5">
+                                            <div className="w-2.5 h-2.5 rounded-sm" style={{ background: s.color }}></div>
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{s.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Y-axis grid lines */}
+                                <div className="relative" style={{ height: CHART_H + 24 }}>
+                                    {/* Grid lines */}
+                                    {[0, 25, 50, 75, 100].map(pct => (
+                                        <div
+                                            key={pct}
+                                            className="absolute left-0 right-0 border-t border-slate-100"
+                                            style={{ bottom: 24 + (pct / 100) * CHART_H }}
+                                        >
+                                            <span className="absolute -left-1 -top-2.5 text-[8px] text-slate-300 font-black">
+                                                {pct > 0 ? Math.round((pct / 100) * maxVal) : ''}
+                                            </span>
+                                        </div>
+                                    ))}
+
+                                    {/* Bars */}
+                                    <div className="absolute bottom-6 left-4 right-0 flex items-end gap-1" style={{ height: CHART_H }}>
+                                        {labels.map((label, i) => (
+                                            <div key={i} className="flex-1 flex flex-col items-center group/col" style={{ height: CHART_H }}>
+                                                {/* Bar group */}
+                                                <div className="w-full flex items-end justify-center gap-0.5" style={{ height: CHART_H }}>
+                                                    {series.map(s => {
+                                                        const barH = Math.max(
+                                                            Math.round((s.data[i] / maxVal) * CHART_H),
+                                                            s.data[i] > 0 ? MIN_BAR : 2
+                                                        );
+                                                        return (
+                                                            <div
+                                                                key={s.key}
+                                                                className="relative group/bar flex-1 max-w-[10px] rounded-t-sm cursor-pointer transition-opacity hover:opacity-75"
+                                                                style={{ height: barH, background: s.color }}
+                                                            >
+                                                                {/* Tooltip */}
+                                                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
+                                                                    {s.data[i]}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                                {/* X label */}
+                                                <span className="text-[7px] font-black text-slate-400 uppercase tracking-wide mt-1 truncate w-full text-center absolute bottom-0">
+                                                    {label}
+                                                </span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
+
+                                {/* Summary row */}
+                                <div className="mt-2 pt-3 border-t border-slate-50 grid grid-cols-3 gap-2">
+                                    {series.map(s => (
+                                        <div key={s.key} className="text-center">
+                                            <p className="text-[13px] font-black text-slate-800">{s.data.reduce((a, b) => a + b, 0)}</p>
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{s.label}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        ))}
-                    </div>
+                        );
+                    })() : (
+                        <div className="h-48 flex items-center justify-center text-slate-300 text-[11px] font-black uppercase tracking-widest">No data available</div>
+                    )}
                 </div>
 
                 {/* Broadcast Center */}

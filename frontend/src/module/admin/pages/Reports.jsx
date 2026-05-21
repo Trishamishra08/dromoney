@@ -9,7 +9,7 @@ import PageHeader from '../components/PageHeader';
 import api from '../../shared/services/api';
 
 const Reports = () => {
-    const [activeTab, setActiveTab] = useState('feedback');
+    const [activeTab, setActiveTab] = useState('problems');
     const [loading, setLoading] = useState(false);
 
     // ── Real Data States ──
@@ -27,7 +27,10 @@ const Reports = () => {
             ]);
             
             if (fRes.success) setFeedbacks(fRes.data);
-            if (rRes.success) setReports(rRes.data);
+            if (rRes.success) {
+                setReports(rRes.data);
+                console.log(`Loaded ${rRes.data?.length || 0} reports`);
+            }
             
             if (gRes.success && gRes.data && gRes.data.data) {
                 setGuides(gRes.data.data.sections || []);
@@ -43,10 +46,12 @@ const Reports = () => {
         try {
             const res = await api.patch(`/admin/reports/${id}/status`, { status });
             if (res.success) {
-                setReports(reports.map(r => r._id === id ? { ...r, status } : r));
+                setReports(prev => prev.map(r => r._id === id ? { ...r, status } : r));
+                alert(`Report marked as ${status}`);
             }
         } catch (err) {
             console.error(err);
+            alert('Failed to update status');
         }
     };
 

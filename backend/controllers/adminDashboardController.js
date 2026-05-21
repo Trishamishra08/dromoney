@@ -54,7 +54,73 @@ exports.getStats = async (req, res, next) => {
     }
 };
 
-// @desc    Get Safety Guard Alerts
+// @desc    Get Engagement Matrix Data (Daily / Weekly)
+// @route   GET /api/admin/dashboard/engagement?period=daily|weekly
+// @access  Private (Admin)
+exports.getEngagement = async (req, res, next) => {
+    try {
+        const period = req.query.period === 'weekly' ? 'weekly' : 'daily';
+        const now = new Date();
+        const labels = [];
+        const registrations = [];
+        const logins = [];
+        const taskCompletions = [];
+
+        const TaskSubmission = require('../models/TaskSubmission');
+
+        if (period === 'daily') {
+            // Last 10 days
+            for (let i = 9; i >= 0; i--) {
+                const dayStart = new Date(now);
+                dayStart.setDate(now.getDate() - i);
+                dayStart.setHours(0, 0, 0, 0);
+                const dayEnd = new Date(dayStart);
+                dayEnd.setHours(23, 59, 59, 999);
+
+                const label = dayStart.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                labels.push(label);
+
+                const regCount = await User.countDocuments({ createdAt: { $gte: dayStart, $lte: dayEnd } });
+                registrations.push(regCount);
+
+                const loginCount = await User.countDocuments({ updatedAt: { $gte: dayStart, $lte: dayEnd } });
+                logins.push(loginCount);
+
+                const taskCount = await TaskSubmission.countDocuments({ createdAt: { $gte: dayStart, $lte: dayEnd } });
+                taskCompletions.push(taskCount);
+            }
+        } else {
+            // Last 8 weeks
+            for (let i = 7; i >= 0; i--) {
+                const weekStart = new Date(now);
+                weekStart.setDate(now.getDate() - i * 7 - 6);
+                weekStart.setHours(0, 0, 0, 0);
+                const weekEnd = new Date(now);
+                weekEnd.setDate(now.getDate() - i * 7);
+                weekEnd.setHours(23, 59, 59, 999);
+
+                const label = `W${8 - i}`;
+                labels.push(label);
+
+                const regCount = await User.countDocuments({ createdAt: { $gte: weekStart, $lte: weekEnd } });
+                registrations.push(regCount);
+
+                const loginCount = await User.countDocuments({ updatedAt: { $gte: weekStart, $lte: weekEnd } });
+                logins.push(loginCount);
+
+                const taskCount = await TaskSubmission.countDocuments({ createdAt: { $gte: weekStart, $lte: weekEnd } });
+                taskCompletions.push(taskCount);
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            data: { labels, registrations, logins, taskCompletions }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
 // @route   GET /api/admin/dashboard/alerts
 // @access  Private (Admin)
 exports.getAlerts = async (req, res, next) => {

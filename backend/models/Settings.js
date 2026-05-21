@@ -61,6 +61,10 @@ const SettingsSchema = new mongoose.Schema({
         type: Number,
         default: 0.10
     },
+    maxCoinsPerDay: {
+        type: Number,
+        default: 100
+    },
     minWithdrawal: {
         type: Number,
         default: 100

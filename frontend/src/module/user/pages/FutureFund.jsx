@@ -68,6 +68,48 @@ const FutureFund = () => {
 
     const isBoosterActiveCount = userData.isBoosterActive ? 1 : 0;
 
+    // ── Real earnings data computed from DB transactions ──
+    const realEarningsData = useMemo(() => {
+        const transactions = userData.wallet?.transactions || [];
+
+        const now = new Date();
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+
+        const todayFF = transactions
+            .filter(tx => {
+                const txDate = new Date(tx.createdAt);
+                return tx.type === 'credit' && tx.status === 'Success' && txDate >= todayStart;
+            })
+            .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
+        const totalFF = transactions
+            .filter(tx => tx.type === 'credit' && tx.status === 'Success')
+            .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+            const dayStart = new Date(now);
+            dayStart.setDate(dayStart.getDate() - i);
+            dayStart.setHours(0, 0, 0, 0);
+
+            const dayEnd = new Date(dayStart);
+            dayEnd.setHours(23, 59, 59, 999);
+
+            const dayTotal = transactions
+                .filter(tx => {
+                    const txDate = new Date(tx.createdAt);
+                    return tx.type === 'credit' && tx.status === 'Success' && txDate >= dayStart && txDate <= dayEnd;
+                })
+                .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
+            const label = i === 0 ? 'Today' : i === 1 ? 'Yesterday' : `Day ${7 - i}`;
+            last7Days.push({ day: label, amount: dayTotal.toFixed(2) });
+        }
+
+        return { todayFF: todayFF.toFixed(2), totalFF: totalFF.toFixed(2), last7Days };
+    }, [userData.wallet?.transactions]);
+
     // Handle forward unlock / simulation
     const handleMoveForward = async () => {
         // Instant visual feedback and transition
@@ -121,7 +163,7 @@ const FutureFund = () => {
                         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">Today FF Earning</p>
                             <div>
-                                <h2 className="text-2xl font-black text-slate-800 leading-none">₹45.00</h2>
+                                <h2 className="text-2xl font-black text-slate-800 leading-none">₹{realEarningsData.todayFF}</h2>
                                 <p className="text-[9px] font-bold text-slate-400 mt-1.5">Auto-credit to wallet</p>
                             </div>
                         </div>
@@ -130,7 +172,7 @@ const FutureFund = () => {
                         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">Total Future Fund</p>
                             <div>
-                                <h2 className="text-2xl font-black text-blue-600 leading-none">₹210.00</h2>
+                                <h2 className="text-2xl font-black text-blue-600 leading-none">₹{realEarningsData.totalFF}</h2>
                                 <p className="text-[9px] font-bold text-slate-400 mt-1.5">Based on performance</p>
                             </div>
                         </div>
@@ -143,18 +185,10 @@ const FutureFund = () => {
                             <span className="text-[9px] font-extrabold text-blue-500 uppercase tracking-wider">Passive Flow</span>
                         </div>
                         <div className="divide-y divide-slate-50 px-4 py-2.5">
-                            {[
-                                { day: 'Today', amount: '45.00' },
-                                { day: 'Yesterday', amount: '38.00' },
-                                { day: 'Day 3', amount: '52.00' },
-                                { day: 'Day 4', amount: '40.00' },
-                                { day: 'Day 5', amount: '35.00' },
-                                { day: 'Day 6', amount: '28.00' },
-                                { day: 'Day 7', amount: '42.00' }
-                            ].map((item, i) => (
+                            {realEarningsData.last7Days.map((item, i) => (
                                 <div key={i} className="flex justify-between items-center py-1.5 text-[12px]">
                                     <span className="font-bold text-slate-500">{item.day}</span>
-                                    <span className="font-extrabold text-slate-800">₹{item.amount}</span>
+                                    <span className={`font-extrabold ${Number(item.amount) > 0 ? 'text-slate-800' : 'text-slate-400'}`}>₹{item.amount}</span>
                                 </div>
                             ))}
                         </div>
@@ -251,7 +285,7 @@ const FutureFund = () => {
                 {/* Full Width Compact Hero Card */}
                 <div className="w-full bg-gradient-to-br from-purple-700 via-purple-600 to-indigo-500 rounded-b-[2rem] p-4 pb-6 text-white relative overflow-hidden shadow-xl">
                     <button
-                        onClick={() => navigate('/user/home')}
+                        onClick={() => navigate(-1)}
                         className="absolute top-4 left-2 w-10 h-10 flex items-center justify-center text-white active:scale-75 transition-all z-[100] cursor-pointer"
                     >
                         <ChevronLeft size={24} strokeWidth={2.5} />
@@ -377,7 +411,7 @@ const FutureFund = () => {
                             </button>
 
                             <button
-                                onClick={() => navigate('/user/home')}
+                                onClick={() => navigate(-1)}
                                 className="w-full bg-white text-slate-500 font-extrabold py-3 rounded-2xl text-[10px] active:scale-[0.98] transition-all tracking-wider uppercase border border-slate-200 shadow-sm text-center"
                             >
                                 Continue Earning

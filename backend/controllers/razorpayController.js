@@ -41,11 +41,15 @@ exports.createOrder = asyncHandler(async (req, res, next) => {
         durationDays = 90;
     } else if (type === 'SUPPORT_BOOSTER' || type === 'TASK_BOOSTER') {
         const isSupport = type === 'SUPPORT_BOOSTER';
-        const hasActive = isSupport ? user.isSupportBoosterActive : user.isTaskBoosterActive;
         
-        if (hasActive) {
-            return next(new ErrorResponse(`You already have an active ${isSupport ? 'Support' : 'Task'} booster.`, 400));
+        // Enforce one-booster-at-a-time rule — block if EITHER booster is already active
+        if (user.isSupportBoosterActive) {
+            return next(new ErrorResponse('You already have an active Support Booster. Only one booster is allowed at a time.', 400));
         }
+        if (user.isTaskBoosterActive) {
+            return next(new ErrorResponse('You already have an active Task Booster. Only one booster is allowed at a time.', 400));
+        }
+        
         const boosterType = type === 'SUPPORT_BOOSTER' ? 'support' : 'task';
         const Booster = require('../models/Booster');
         const booster = await Booster.findOne({ type: boosterType });

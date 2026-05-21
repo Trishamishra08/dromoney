@@ -56,7 +56,7 @@ exports.getAds = asyncHandler(async (req, res, next) => {
         data,
         dailyAdCount,
         nextAdAvailableAt,
-        maxDailyLimit: 10
+        maxDailyLimit: ads.length  // actual number of available ads
     });
 });
 
@@ -103,7 +103,7 @@ exports.getAdById = asyncHandler(async (req, res, next) => {
         },
         dailyAdCount,
         nextAdAvailableAt,
-        maxDailyLimit: 10
+        maxDailyLimit: await Ad.countDocuments({ status: 'Active' })
     });
 });
 
@@ -127,9 +127,10 @@ exports.rewardUserForAd = asyncHandler(async (req, res, next) => {
         user.lastAdCountResetAt = new Date();
     }
 
-    // 2. Check maximum 10 videos limit
-    if (user.dailyAdCount >= 10) {
-        return next(new ErrorResponse('Daily limit reached. You can only watch a maximum of 10 ads per day.', 400));
+    // 2. Check maximum limit = total active ads
+    const totalActiveAds = await Ad.countDocuments({ status: 'Active' });
+    if (user.dailyAdCount >= totalActiveAds) {
+        return next(new ErrorResponse(`Daily limit reached. You can only watch a maximum of ${totalActiveAds} ads per day.`, 400));
     }
 
     // 3. Check cooldown gap of 30s to 60s

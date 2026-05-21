@@ -17,7 +17,8 @@ const PromoteBrand = () => {
         usersRequired: '',
         description: ''
     });
-
+    
+    const [errors, setErrors] = useState({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
@@ -57,6 +58,122 @@ const PromoteBrand = () => {
         'Custom Task'
     ];
 
+    // Validation functions
+    const validateName = (name) => {
+        if (!name || name.trim().length === 0) {
+            return "Name is required";
+        }
+        if (name.trim().length < 2) {
+            return "Name must be at least 2 characters";
+        }
+        if (!/^[a-zA-Z\s]+$/.test(name)) {
+            return "Name can only contain letters and spaces";
+        }
+        return "";
+    };
+
+    const validateMobile = (mobile) => {
+        if (!mobile || mobile.length === 0) {
+            return "Mobile number is required";
+        }
+        if (mobile.length !== 10) {
+            return "Mobile number must be exactly 10 digits";
+        }
+        if (!/^\d{10}$/.test(mobile)) {
+            return "Mobile number must contain only digits";
+        }
+        return "";
+    };
+
+    const validateWhatsapp = (whatsapp) => {
+        if (!whatsapp || whatsapp.trim().length === 0) {
+            return "WhatsApp/Email is required";
+        }
+        
+        if (whatsapp.includes('@')) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(whatsapp)) {
+                return "Invalid email format";
+            }
+        } else {
+            // Must be a phone number - exactly 10 digits
+            if (!/^\d{10}$/.test(whatsapp)) {
+                return "WhatsApp number must be exactly 10 digits";
+            }
+        }
+        return "";
+    };
+
+    const validateCategory = (category) => {
+        if (!category || category.trim().length === 0) {
+            return "Please select a task category";
+        }
+        return "";
+    };
+
+    const validateLink = (link) => {
+        if (!link || link.trim().length === 0) {
+            return "Task link is required";
+        }
+        try {
+            new URL(link);
+        } catch {
+            return "Invalid URL format";
+        }
+        return "";
+    };
+
+    const validateBudget = (budget) => {
+        if (!budget || Number(budget) <= 0) {
+            return "Budget must be greater than 0";
+        }
+        if (Number(budget) > 100000) {
+            return "Budget cannot exceed ₹100,000";
+        }
+        return "";
+    };
+
+    const validateUsers = (users) => {
+        if (!users || Number(users) <= 0) {
+            return "Target users must be greater than 0";
+        }
+        return "";
+    };
+
+    // Real-time validation on field change
+    const handleFieldChange = (field, value) => {
+        setFormData(prev => ({...prev, [field]: value}));
+        
+        let error = "";
+        switch(field) {
+            case 'name':
+                error = validateName(value);
+                break;
+            case 'mobile':
+                error = validateMobile(value.replace(/\D/g, '').slice(0, 10));
+                break;
+            case 'whatsapp':
+                error = validateWhatsapp(value);
+                break;
+            case 'category':
+                error = validateCategory(value);
+                break;
+            case 'link':
+                error = validateLink(value);
+                break;
+            case 'budget':
+                error = validateBudget(value);
+                break;
+            case 'usersRequired':
+                error = validateUsers(value);
+                break;
+            default:
+                break;
+        }
+        
+        setErrors(prev => ({...prev, [field]: error}));
+    };
+
     const handleBudgetChange = (val) => {
         const budget = val === '' ? '' : Number(val);
         setFormData(prev => ({
@@ -64,6 +181,7 @@ const PromoteBrand = () => {
             budget: val,
             usersRequired: budget === '' ? '' : String(budget / costPerUser)
         }));
+        setErrors(prev => ({...prev, budget: validateBudget(val)}));
     };
 
     const handleUsersChange = (val) => {
@@ -73,13 +191,29 @@ const PromoteBrand = () => {
             usersRequired: val,
             budget: users === '' ? '' : String(users * costPerUser)
         }));
+        setErrors(prev => ({...prev, usersRequired: validateUsers(val)}));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (formData.mobile.length !== 10) {
-            alert("Mobile number must be exactly 10 digits");
+        // Validate all fields
+        const newErrors = {
+            name: validateName(formData.name),
+            mobile: validateMobile(formData.mobile),
+            whatsapp: validateWhatsapp(formData.whatsapp),
+            category: validateCategory(formData.category),
+            link: validateLink(formData.link),
+            budget: validateBudget(formData.budget),
+            usersRequired: validateUsers(formData.usersRequired)
+        };
+        
+        setErrors(newErrors);
+        
+        // Check if there are any errors
+        const hasErrors = Object.values(newErrors).some(error => error !== "");
+        if (hasErrors) {
+            alert("Please fix the errors in the form");
             return;
         }
 
@@ -101,6 +235,7 @@ const PromoteBrand = () => {
                 setIsSubmitted(true);
                 // Reset form
                 setFormData({ name: '', mobile: '', whatsapp: '', category: '', link: '', budget: '', usersRequired: '', description: '' });
+                setErrors({});
                 // Refresh list
                 await fetchPromotions();
                 setView('list');
@@ -138,7 +273,7 @@ const PromoteBrand = () => {
                     {/* Compact Row */}
                     <div className="flex items-center gap-3 relative z-20 w-full text-left">
                         <button 
-                            onClick={() => navigate('/user/home')} 
+                            onClick={() => navigate(-1)} 
                             className="w-8 h-8 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-xl text-white active:scale-90 transition-all border border-white/10 cursor-pointer"
                         >
                             <ChevronLeft size={16} />
@@ -253,8 +388,12 @@ const PromoteBrand = () => {
                         {/* NAME */}
                         <div className="space-y-1">
                             <label className="text-[9px] font-black text-[#5B718F] tracking-widest uppercase ml-1">Name</label>
-                            <div className="relative flex items-center bg-white border border-[#E2E8F0] rounded-xl h-11 shadow-sm group focus-within:border-[#1B75FF] focus-within:ring-1 focus-within:ring-[#1B75FF]/20 transition-all">
-                                <div className="w-11 h-full flex items-center justify-center border-r border-[#F1F5F9] text-slate-300 group-focus-within:text-[#1B75FF] transition-colors">
+                            <div className={`relative flex items-center bg-white border rounded-xl h-11 shadow-sm group focus-within:ring-1 transition-all ${
+                                errors.name ? 'border-red-300 focus-within:border-red-500 focus-within:ring-red-500/20' : 'border-[#E2E8F0] focus-within:border-[#1B75FF] focus-within:ring-[#1B75FF]/20'
+                            }`}>
+                                <div className={`w-11 h-full flex items-center justify-center border-r ${
+                                    errors.name ? 'border-red-200 text-red-400' : 'border-[#F1F5F9] text-slate-300 group-focus-within:text-[#1B75FF]'
+                                } transition-colors`}>
                                     <User size={16} />
                                 </div>
                                 <input 
@@ -263,16 +402,21 @@ const PromoteBrand = () => {
                                     placeholder="Enter your name"
                                     className="flex-1 h-full px-3 text-xs font-bold text-slate-700 bg-transparent outline-none placeholder:text-slate-300"
                                     value={formData.name}
-                                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                    onChange={(e) => handleFieldChange('name', e.target.value)}
                                 />
                             </div>
+                            {errors.name && <p className="text-[9px] font-bold text-red-500 ml-1">{errors.name}</p>}
                         </div>
 
                         {/* MOBILE NUMBER */}
                         <div className="space-y-1">
                             <label className="text-[9px] font-black text-[#5B718F] tracking-widest uppercase ml-1">Mobile Number</label>
-                            <div className="relative flex items-center bg-white border border-[#E2E8F0] rounded-xl h-11 shadow-sm group focus-within:border-[#1B75FF] focus-within:ring-1 focus-within:ring-[#1B75FF]/20 transition-all">
-                                <div className="w-11 h-full flex items-center justify-center border-r border-[#F1F5F9] text-slate-300 group-focus-within:text-[#1B75FF] transition-colors">
+                            <div className={`relative flex items-center bg-white border rounded-xl h-11 shadow-sm group focus-within:ring-1 transition-all ${
+                                errors.mobile ? 'border-red-300 focus-within:border-red-500 focus-within:ring-red-500/20' : 'border-[#E2E8F0] focus-within:border-[#1B75FF] focus-within:ring-[#1B75FF]/20'
+                            }`}>
+                                <div className={`w-11 h-full flex items-center justify-center border-r ${
+                                    errors.mobile ? 'border-red-200 text-red-400' : 'border-[#F1F5F9] text-slate-300 group-focus-within:text-[#1B75FF]'
+                                } transition-colors`}>
                                     <Phone size={16} />
                                 </div>
                                 <input 
@@ -282,27 +426,43 @@ const PromoteBrand = () => {
                                     maxLength={10}
                                     className="flex-1 h-full px-3 text-xs font-bold text-slate-700 bg-transparent outline-none placeholder:text-slate-300"
                                     value={formData.mobile}
-                                    onChange={(e) => setFormData({...formData, mobile: e.target.value.replace(/\D/g, '').slice(0, 10)})}
+                                    onChange={(e) => handleFieldChange('mobile', e.target.value.replace(/\D/g, '').slice(0, 10))}
                                 />
                             </div>
+                            {errors.mobile && <p className="text-[9px] font-bold text-red-500 ml-1">{errors.mobile}</p>}
                         </div>
 
                         {/* WHATSAPP/EMAIL */}
                         <div className="space-y-1">
                             <label className="text-[9px] font-black text-[#5B718F] tracking-widest uppercase ml-1">Whatsapp/Email</label>
-                            <div className="relative flex items-center bg-white border border-[#E2E8F0] rounded-xl h-11 shadow-sm group focus-within:border-[#1B75FF] focus-within:ring-1 focus-within:ring-[#1B75FF]/20 transition-all">
-                                <div className="w-11 h-full flex items-center justify-center border-r border-[#F1F5F9] text-slate-300 group-focus-within:text-[#1B75FF] transition-colors">
+                            <div className={`relative flex items-center bg-white border rounded-xl h-11 shadow-sm group focus-within:ring-1 transition-all ${
+                                errors.whatsapp ? 'border-red-300 focus-within:border-red-500 focus-within:ring-red-500/20' : 'border-[#E2E8F0] focus-within:border-[#1B75FF] focus-within:ring-[#1B75FF]/20'
+                            }`}>
+                                <div className={`w-11 h-full flex items-center justify-center border-r ${
+                                    errors.whatsapp ? 'border-red-200 text-red-400' : 'border-[#F1F5F9] text-slate-300 group-focus-within:text-[#1B75FF]'
+                                } transition-colors`}>
                                     <Mail size={16} />
                                 </div>
                                 <input 
                                     required
                                     type="text"
                                     placeholder="Contact"
+                                    maxLength={50}
                                     className="flex-1 h-full px-3 text-xs font-bold text-slate-700 bg-transparent outline-none placeholder:text-slate-300"
                                     value={formData.whatsapp}
-                                    onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        // If it's only digits, limit to 10
+                                        if (/^\d*$/.test(val)) {
+                                            handleFieldChange('whatsapp', val.slice(0, 10));
+                                        } else {
+                                            // Allow email format
+                                            handleFieldChange('whatsapp', val);
+                                        }
+                                    }}
                                 />
                             </div>
+                            {errors.whatsapp && <p className="text-[9px] font-bold text-red-500 ml-1">{errors.whatsapp}</p>}
                         </div>
 
                         {/* TASK CATEGORY */}

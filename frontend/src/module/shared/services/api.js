@@ -39,7 +39,13 @@ api.interceptors.request.use(
 
 // Response interceptor to handle errors
 api.interceptors.response.use(
-    (response) => response.data,
+    (response) => {
+        // Don't transform blob responses
+        if (response.data instanceof Blob) {
+            return response.data;
+        }
+        return response.data;
+    },
     (error) => {
         let message = 'Something went wrong';
         

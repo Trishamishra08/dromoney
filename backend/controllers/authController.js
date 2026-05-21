@@ -196,6 +196,11 @@ exports.sendLoginOtp = async (req, res, next) => {
             return next(new ErrorResponse('No account found with this phone number. Please register.', 404));
         }
 
+        // Check if user is blocked
+        if (user.isBlocked) {
+            return next(new ErrorResponse('Your account has been blocked. Please contact support.', 403));
+        }
+
         // Generate a 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
@@ -250,6 +255,11 @@ exports.verifyLoginOtp = async (req, res, next) => {
             return next(new ErrorResponse('User not found', 404));
         }
 
+        // Check if user is blocked
+        if (user.isBlocked) {
+            return next(new ErrorResponse('Your account has been blocked. Please contact support.', 403));
+        }
+
         sendTokenResponse(user, 200, res);
     } catch (err) {
         next(err);
@@ -270,6 +280,11 @@ exports.login = async (req, res, next) => {
         const user = await User.findOne({ email }).select('+password');
         if (!user) {
             return next(new ErrorResponse('Invalid credentials', 401));
+        }
+
+        // Check if user is blocked
+        if (user.isBlocked) {
+            return next(new ErrorResponse('Your account has been blocked. Please contact support.', 403));
         }
 
         const isMatch = await user.matchPassword(password);

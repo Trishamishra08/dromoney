@@ -29,6 +29,11 @@ exports.protect = async (req, res, next) => {
             return next(new ErrorResponse('Not authorized to access this route', 401));
         }
 
+        // Check if user is blocked
+        if (req.user.isBlocked) {
+            return next(new ErrorResponse('Your account has been blocked. Please contact support.', 403));
+        }
+
         next();
     } catch (err) {
         return next(new ErrorResponse('Not authorized to access this route', 401));
@@ -93,7 +98,12 @@ exports.getOptionalUser = async (req, res, next) => {
     if (token) {
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            req.user = await User.findById(decoded.id);
+            const user = await User.findById(decoded.id);
+            
+            // Only set req.user if user exists and is not blocked
+            if (user && !user.isBlocked) {
+                req.user = user;
+            }
         } catch (err) {
             // Ignore error, leave req.user empty
         }

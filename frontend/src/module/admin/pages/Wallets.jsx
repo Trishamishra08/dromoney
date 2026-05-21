@@ -1,27 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Eye, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, X } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import StatusBadge from '../components/StatusBadge';
 import AdminStatCard from '../components/AdminStatCard';
-import { Wallet, IndianRupee, Clock, AlertCircle } from 'lucide-react';
+import { Wallet, IndianRupee, Clock, AlertCircle, User, Building2, CreditCard, Calendar, Hash } from 'lucide-react';
 import api from '../../shared/services/api';
 
 const Wallets = () => {
     const [list, setList] = useState([]);
     const [loading, setLoading] = useState(false);
     const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
-    
-    // Toast state
-    const [toast, setToast] = useState(null); // { message: '', type: 'success' | 'error' }
 
+    // Toast
+    const [toast, setToast] = useState(null);
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
     };
 
-    // Modal State
+    // Balance Modal
     const [selectedUser, setSelectedUser] = useState(null);
-    const [showModal, setShowModal] = useState(false);
+    const [showBalanceModal, setShowBalanceModal] = useState(false);
+
+    // Detail Modal
+    const [selectedDetail, setSelectedDetail] = useState(null);
+    const [showDetailModal, setShowDetailModal] = useState(false);
+
+    // Confirm action modal
+    const [confirmAction, setConfirmAction] = useState(null); // { id, status, name, amount }
 
     useEffect(() => {
         fetchWithdrawals();
@@ -35,22 +41,23 @@ const Wallets = () => {
                 const data = response.data.map(w => ({
                     id: w._id,
                     user: w.user?.name || 'Unknown',
-                    walletBalance: w.user?.wallet?.balance || 0, // Extracting the balance
+                    walletBalance: w.user?.wallet?.balance || 0,
+                    rawAmount: w.amount,
                     amount: `₹${w.amount}`,
                     method: w.paymentMethod || w.method || 'UPI',
                     upiId: w.upiId,
                     bankDetails: w.bankDetails,
-                    date: new Date(w.createdAt).toLocaleDateString(),
+                    date: new Date(w.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+                    time: new Date(w.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
                     status: w.status
                 }));
                 setList(data);
-                
-                // Calculate simple stats
+
                 const s = { total: 0, approved: 0, pending: 0, rejected: 0 };
                 response.data.forEach(x => {
                     s.total += x.amount;
                     if (x.status === 'Approved') s.approved += x.amount;
-                    if (x.status === 'Pending') s.pending += x.amount;
+                    if (x.status === 'Pending')  s.pending  += x.amount;
                     if (x.status === 'Rejected') s.rejected += x.amount;
                 });
                 setStats(s);
@@ -66,94 +73,131 @@ const Wallets = () => {
         try {
             const response = await api.put(`/admin/withdrawals/${id}`, { status });
             if (response.success) {
-                showToast(`Withdrawal status updated to ${status} successfully!`, 'success');
+                showToast(`Withdrawal ${status} successfully!`, 'success');
+                setConfirmAction(null);
+                setShowDetailModal(false);
                 fetchWithdrawals();
             }
         } catch (err) {
-            showToast(err.message || "Something went wrong", 'error');
+            showToast(err.message || 'Something went wrong', 'error');
         }
     };
 
-    const approve = id => handleAction(id, 'Approved');
-    const reject = id => handleAction(id, 'Rejected');
+    const openDetail = (w) => {
+        setSelectedDetail(w);
+        setShowDetailModal(true);
+    };
 
-    const openBalanceModal = (user) => {
-        setSelectedUser(user);
-        setShowModal(true);
+    const openBalance = (w) => {
+        setSelectedUser(w);
+        setShowBalanceModal(true);
+    };
+
+    const statusColor = (s) => {
+        if (s === 'Approved') return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+        if (s === 'Rejected') return 'text-rose-600 bg-rose-50 border-rose-200';
+        return 'text-amber-600 bg-amber-50 border-amber-200';
     };
 
     return (
-        <div className="p-6 animate-in fade-in duration-500 relative">
+        <div className="p-6 animate-in fade-in duration-500 relative font-['Poppins']">
+
+            {/* Toast */}
             {toast && (
                 <div className={`fixed top-5 right-5 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 ${
-                    toast.type === 'success' 
-                        ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+                    toast.type === 'success'
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-800'
                         : 'bg-rose-50 border-rose-100 text-rose-800'
                 }`}>
-                    {toast.type === 'success' ? (
-                        <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0 animate-bounce" />
-                    ) : (
-                        <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
-                    )}
-                    <span className="text-xs font-semibold">{toast.message}</span>
+                    {toast.type === 'success'
+                        ? <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                        : <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                    }
+                    <span className="text-xs">{toast.message}</span>
                 </div>
             )}
 
             <PageHeader title="Wallet & Withdrawals" subtitle="Review and process withdrawal requests" />
 
+            {/* Stat Cards */}
             <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-                <AdminStatCard label="Total Value" value={`₹${stats.total}`} change={`${list.length} requests`} icon={Wallet} color="bg-slate-700" />
-                <AdminStatCard label="Approved" value={`₹${stats.approved}`} change="Success" icon={IndianRupee} color="bg-emerald-500" />
-                <AdminStatCard label="Pending" value={`₹${stats.pending}`} change="Awaiting" icon={Clock} color="bg-amber-500" />
-                <AdminStatCard label="Rejected" value={`₹${stats.rejected}`} change="Declined" icon={AlertCircle} color="bg-rose-500" />
+                <AdminStatCard label="Total Value"  value={`₹${stats.total}`}    change={`${list.length} requests`} icon={Wallet}       color="bg-slate-700"   />
+                <AdminStatCard label="Approved"     value={`₹${stats.approved}`} change="Success"                  icon={IndianRupee}   color="bg-emerald-500" />
+                <AdminStatCard label="Pending"      value={`₹${stats.pending}`}  change="Awaiting"                 icon={Clock}         color="bg-amber-500"   />
+                <AdminStatCard label="Rejected"     value={`₹${stats.rejected}`} change="Declined"                 icon={AlertCircle}   color="bg-rose-500"    />
             </div>
 
+            {/* Table */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="bg-slate-50/50 border-b border-slate-50">
+                            <tr className="bg-slate-50/50 border-b border-slate-100">
                                 {['ID', 'User', 'Amount', 'Method', 'Date', 'Status', 'Actions'].map(h => (
-                                    <th key={h} className="text-left px-5 py-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
+                                    <th key={h} className="text-left px-5 py-3.5 text-[10px] text-slate-400 uppercase tracking-widest">{h}</th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {list.map(w => (
+                            {loading ? (
+                                <tr><td colSpan="7" className="py-16 text-center text-[11px] text-slate-400 uppercase tracking-widest">Loading...</td></tr>
+                            ) : list.length === 0 ? (
+                                <tr><td colSpan="7" className="py-16 text-center text-[11px] text-slate-400 uppercase tracking-widest">No withdrawal requests found</td></tr>
+                            ) : list.map(w => (
                                 <tr key={w.id} className="hover:bg-slate-50/40 transition-colors">
-                                    <td className="px-5 py-4 text-[12px] font-black text-sky-600">{w.id}</td>
-                                    <td className="px-5 py-4 font-black text-slate-800 text-[13px]">{w.user}</td>
-                                    <td className="px-5 py-4 font-black text-slate-900">{w.amount}</td>
+                                    <td className="px-5 py-4 text-[11px] text-sky-600 font-mono">{w.id.slice(-8).toUpperCase()}</td>
+                                    <td className="px-5 py-4 text-slate-800 text-[13px]">{w.user}</td>
+                                    <td className="px-5 py-4 text-slate-900 text-[13px]">{w.amount}</td>
                                     <td className="px-5 py-4">
-                                        <p className="text-[12px] font-bold text-slate-600">{w.method}</p>
+                                        <p className="text-[12px] text-slate-600">{w.method}</p>
                                         {w.bankDetails ? (
-                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">
-                                                <p>A/C: <span className="font-bold text-slate-700">{w.bankDetails.accountNumber}</span></p>
+                                            <div className="text-[10px] text-slate-400 mt-0.5 space-y-0.5">
+                                                <p>A/C: {w.bankDetails.accountNumber}</p>
                                                 <p>IFSC: {w.bankDetails.ifscCode}</p>
                                             </div>
                                         ) : (
-                                            <p className="text-[10px] font-medium text-slate-400">{w.upiId || 'N/A'}</p>
+                                            <p className="text-[10px] text-slate-400">{w.upiId || 'N/A'}</p>
                                         )}
                                     </td>
-                                    <td className="px-5 py-4 text-[12px] font-bold text-slate-400">{w.date}</td>
+                                    <td className="px-5 py-4 text-[12px] text-slate-400">{w.date}</td>
                                     <td className="px-5 py-4"><StatusBadge status={w.status} /></td>
                                     <td className="px-5 py-4">
-                                        <div className="flex gap-2">
-                                            {/* Wallet Icon for Balance Popup */}
-                                            <button 
-                                                onClick={() => openBalanceModal(w)}
-                                                className="w-7 h-7 bg-amber-50 hover:bg-amber-100 text-amber-500 rounded-lg flex items-center justify-center transition-colors shadow-sm border border-amber-100"
-                                                title="View Wallet Balance"
+                                        <div className="flex items-center gap-2">
+                                            {/* Wallet Balance */}
+                                            <button
+                                                onClick={() => openBalance(w)}
+                                                title="View wallet balance"
+                                                className="w-7 h-7 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-500 rounded-lg flex items-center justify-center transition-all border border-amber-100 cursor-pointer"
                                             >
                                                 <Wallet size={13} />
                                             </button>
 
-                                            <button className="w-7 h-7 bg-sky-50 hover:bg-sky-100 text-sky-500 rounded-lg flex items-center justify-center transition-colors"><Eye size={13} /></button>
-                                            
+                                            {/* View Details */}
+                                            <button
+                                                onClick={() => openDetail(w)}
+                                                title="View details"
+                                                className="w-7 h-7 bg-sky-50 hover:bg-sky-500 hover:text-white text-sky-500 rounded-lg flex items-center justify-center transition-all border border-sky-100 cursor-pointer"
+                                            >
+                                                <Eye size={13} />
+                                            </button>
+
+                                            {/* Approve — only for Pending */}
                                             {w.status === 'Pending' && (
                                                 <>
-                                                    <button onClick={() => approve(w.id)} className="w-7 h-7 bg-emerald-50 hover:bg-emerald-100 text-emerald-500 rounded-lg flex items-center justify-center transition-colors"><CheckCircle size={13} /></button>
-                                                    <button onClick={() => reject(w.id)} className="w-7 h-7 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg flex items-center justify-center transition-colors"><XCircle size={13} /></button>
+                                                    <button
+                                                        onClick={() => setConfirmAction({ id: w.id, status: 'Approved', name: w.user, amount: w.amount })}
+                                                        title="Approve"
+                                                        className="w-7 h-7 bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-500 rounded-lg flex items-center justify-center transition-all border border-emerald-100 cursor-pointer"
+                                                    >
+                                                        <CheckCircle size={13} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setConfirmAction({ id: w.id, status: 'Rejected', name: w.user, amount: w.amount })}
+                                                        title="Reject"
+                                                        className="w-7 h-7 bg-rose-50 hover:bg-rose-500 hover:text-white text-rose-500 rounded-lg flex items-center justify-center transition-all border border-rose-100 cursor-pointer"
+                                                    >
+                                                        <XCircle size={13} />
+                                                    </button>
                                                 </>
                                             )}
                                         </div>
@@ -165,41 +209,157 @@ const Wallets = () => {
                 </div>
             </div>
 
-            {/* Wallet Balance Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[40px] w-full max-w-sm p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
-                        {/* Background Decor */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                        
-                        <div className="relative z-10 text-center">
-                            <div className="w-20 h-20 bg-amber-50 rounded-[28px] flex items-center justify-center mx-auto mb-6 border border-amber-100 shadow-inner">
-                                <Wallet size={32} className="text-amber-500" />
+            {/* ── CONFIRM ACTION MODAL ── */}
+            {confirmAction && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 ${confirmAction.status === 'Approved' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+                            {confirmAction.status === 'Approved'
+                                ? <CheckCircle size={24} className="text-emerald-500" />
+                                : <XCircle size={24} className="text-rose-500" />
+                            }
+                        </div>
+                        <h3 className="text-center text-[15px] text-slate-800 mb-1">
+                            {confirmAction.status === 'Approved' ? 'Approve Withdrawal?' : 'Reject Withdrawal?'}
+                        </h3>
+                        <p className="text-center text-[11px] text-slate-400 mb-5">
+                            {confirmAction.name} — {confirmAction.amount}
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setConfirmAction(null)}
+                                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-[11px] text-slate-500 hover:bg-slate-50 transition-all cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => handleAction(confirmAction.id, confirmAction.status)}
+                                className={`flex-1 py-2.5 rounded-xl text-[11px] text-white transition-all cursor-pointer ${
+                                    confirmAction.status === 'Approved'
+                                        ? 'bg-emerald-500 hover:bg-emerald-600'
+                                        : 'bg-rose-500 hover:bg-rose-600'
+                                }`}
+                            >
+                                Confirm {confirmAction.status}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── DETAIL MODAL ── */}
+            {showDetailModal && selectedDetail && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+                        {/* Header */}
+                        <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-white text-[14px]">Withdrawal Details</h3>
+                                <p className="text-slate-400 text-[10px] uppercase tracking-widest mt-0.5">ID: {selectedDetail.id.slice(-8).toUpperCase()}</p>
                             </div>
-                            
-                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">{selectedUser?.user}'s Account</h3>
-                            <h2 className="text-3xl font-black text-slate-900 mb-8 tracking-tight flex items-center justify-center gap-2">
-                                <span className="text-slate-300 text-xl font-bold">₹</span>
-                                {selectedUser?.walletBalance?.toLocaleString()}
-                            </h2>
-                            
-                            <div className="bg-slate-50 rounded-3xl p-6 mb-8 border border-slate-100">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Withdrawal</span>
-                                    <span className="text-xs font-black text-rose-500">{selectedUser?.amount}</span>
+                            <button onClick={() => setShowDetailModal(false)} className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center text-white transition-all cursor-pointer">
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6 space-y-4">
+                            {/* Status badge */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-slate-400 uppercase tracking-widest">Status</span>
+                                <span className={`text-[11px] px-3 py-1 rounded-full border ${statusColor(selectedDetail.status)}`}>
+                                    {selectedDetail.status}
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><User size={9} /> User</p>
+                                    <p className="text-[13px] text-slate-800">{selectedDetail.user}</p>
                                 </div>
-                                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                                    <div className="h-full bg-amber-500 rounded-full" style={{ width: '60%' }}></div>
+                                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><IndianRupee size={9} /> Amount</p>
+                                    <p className="text-[13px] text-emerald-600">{selectedDetail.amount}</p>
+                                </div>
+                                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><Calendar size={9} /> Date</p>
+                                    <p className="text-[12px] text-slate-700">{selectedDetail.date}</p>
+                                    <p className="text-[10px] text-slate-400">{selectedDetail.time}</p>
+                                </div>
+                                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><CreditCard size={9} /> Method</p>
+                                    <p className="text-[12px] text-slate-700">{selectedDetail.method}</p>
                                 </div>
                             </div>
 
-                            <button 
-                                onClick={() => setShowModal(false)}
-                                className="w-full bg-[#0F172A] text-white py-4 rounded-[22px] font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all"
-                            >
-                                Close Balance View
+                            {/* Bank Details */}
+                            {selectedDetail.bankDetails && (
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2">
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-widest flex items-center gap-1 mb-2"><Building2 size={9} /> Bank Details</p>
+                                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                                        <div><span className="text-slate-400">Holder:</span> <span className="text-slate-700">{selectedDetail.bankDetails.holderName}</span></div>
+                                        <div><span className="text-slate-400">Bank:</span> <span className="text-slate-700">{selectedDetail.bankDetails.bankName}</span></div>
+                                        <div><span className="text-slate-400">A/C:</span> <span className="text-slate-700 font-mono">{selectedDetail.bankDetails.accountNumber}</span></div>
+                                        <div><span className="text-slate-400">IFSC:</span> <span className="text-slate-700 font-mono">{selectedDetail.bankDetails.ifscCode}</span></div>
+                                    </div>
+                                </div>
+                            )}
+                            {selectedDetail.upiId && (
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                    <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-1">UPI ID</p>
+                                    <p className="text-[12px] text-slate-700 font-mono">{selectedDetail.upiId}</p>
+                                </div>
+                            )}
+
+                            {/* Action buttons inside detail modal for Pending */}
+                            {selectedDetail.status === 'Pending' && (
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        onClick={() => setConfirmAction({ id: selectedDetail.id, status: 'Approved', name: selectedDetail.user, amount: selectedDetail.amount })}
+                                        className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer"
+                                    >
+                                        <CheckCircle size={14} /> Approve
+                                    </button>
+                                    <button
+                                        onClick={() => setConfirmAction({ id: selectedDetail.id, status: 'Rejected', name: selectedDetail.user, amount: selectedDetail.amount })}
+                                        className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer"
+                                    >
+                                        <XCircle size={14} /> Reject
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── WALLET BALANCE MODAL ── */}
+            {showBalanceModal && selectedUser && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between mb-5">
+                            <h3 className="text-[14px] text-slate-800">Wallet Balance</h3>
+                            <button onClick={() => setShowBalanceModal(false)} className="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center justify-center text-slate-500 transition-all cursor-pointer">
+                                <X size={16} />
                             </button>
                         </div>
+
+                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-5 text-center mb-4">
+                            <p className="text-[10px] text-amber-600 uppercase tracking-widest mb-1">{selectedUser.user}'s Balance</p>
+                            <p className="text-3xl text-slate-900">₹{selectedUser.walletBalance?.toLocaleString()}</p>
+                        </div>
+
+                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between mb-5">
+                            <span className="text-[11px] text-slate-500">This Withdrawal</span>
+                            <span className="text-[13px] text-rose-500">{selectedUser.amount}</span>
+                        </div>
+
+                        <button
+                            onClick={() => setShowBalanceModal(false)}
+                            className="w-full py-3 bg-slate-900 hover:bg-black text-white rounded-xl text-[11px] uppercase tracking-widest transition-all cursor-pointer"
+                        >
+                            Close
+                        </button>
                     </div>
                 </div>
             )}

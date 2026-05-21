@@ -40,76 +40,114 @@ exports.updatePaymentStatus = async (req, res) => {
         if (status === 'Success') {
             const user = await User.findById(payment.user);
             if (user) {
-                user.isPaid = true;
-                await user.save();
+                // Handle Booster Activations
+                if (payment.paymentType === 'SUPPORT_BOOSTER' || payment.paymentType === 'TASK_BOOSTER') {
+                    const isSupport = payment.paymentType === 'SUPPORT_BOOSTER';
 
-                // Send Push Notification to the unlocked user
-                try {
-                    const { sendNotificationToUser } = require('./fcmController');
-                    await sendNotificationToUser(user._id, {
-                        title: 'Platform Access Unlocked! 🚀',
-                        body: `Your payment for ${payment.plan || 'Lifetime Access'} is confirmed. Welcome to DroMoney Premium!`,
-                        data: {
-                            type: 'payment',
-                            link: '/user/home'
-                        }
-                    });
-                } catch (pushErr) {
-                    console.error('Push notification failed for payment activation:', pushErr.message);
-                }
+                    // Enforce one-booster rule
+                    const hasOtherBooster = isSupport ? user.isTaskBoosterActive : user.isSupportBoosterActive;
+                    if (hasOtherBooster) {
+                        return res.status(400).json({ success: false, message: 'User already has an active booster of the other type.' });
+                    }
 
-                // ── REFERRAL REWARD LOGIC ──
-                // Check if user was referred by someone
-                if (user.referredBy) {
-                    const Settings = require('../models/Settings');
-                    const ReferralTransaction = require('../models/ReferralTransaction');
-                    
-                    const settings = await Settings.findOne();
-                    const referrer = await User.findById(user.referredBy);
+                    const expiryDate = new Date();
+                    expiryDate.setDate(expiryDate.getDate() + 30);
 
-                    // Conditions: System Enabled, Referrer exists, Referrer is subscribed, Not self-referral
-                    if (settings?.referralSystemEnabled && referrer && referrer.isPaid && referrer._id.toString() !== user._id.toString()) {
+                    if (isSupport) {
+                        user.isSupportBoosterActive = true;
+                        user.supportBoosterExpiry = expiryDate;
+                    } else {
+                        user.isTaskBoosterActive = true;
+                        user.taskBoosterExpiry = expiryDate;
+                    }
+                    user.isBoosterActive = true;
+                    user.boosterExpiry = expiryDate;
+                    await user.save();
+
+                    try {
+                        const { sendNotificationToUser } = require('./fcmController');
+                        const boosterName = isSupport ? 'Support Booster' : 'Task Booster';
+                        await sendNotificationToUser(user._id, {
+                            title: 'Booster Activated! ⚡',
+                            body: `Your ${boosterName} is now active! Enjoy 3X coin earnings for 30 days.`,
+                            data: { type: 'booster', link: '/user/home' }
+                        });
+                    } catch (pushErr) {
+                        console.error('Push notification failed for booster activation:', pushErr.message);
+                    }
+                } else {
+                    // Default: Platform unlock
+                    user.isPaid = true;
+                    await user.save();
+
+                    // Send Push Notification to the unlocked user
+                    try {
+                        const { sendNotificationToUser } = require('./fcmController');
+                        await sendNotificationToUser(user._id, {
+                            title: 'Platform Access Unlocked! 🚀',
+                            body: `Your payment for ${payment.plan || 'Lifetime Access'} is confirmed. Welcome to DroMoney Premium!`,
+                            data: {
+                                type: 'payment',
+                                link: '/user/home'
+                            }
+                        });
+                    } catch (pushErr) {
+                        console.error('Push notification failed for payment activation:', pushErr.message);
+                    }
+
+                    // ── REFERRAL REWARD LOGIC ──
+                    // Check if user was referred by someone
+                    if (user.referredBy) {
+                        const Settings = require('../models/Settings');
+                        const ReferralTransaction = require('../models/ReferralTransaction');
                         
-                        try {
-                            // 1. Log Transaction (Unique index on referredUser prevents duplicates)
-                            await ReferralTransaction.create({
-                                referrer: referrer._id,
-                                referredUser: user._id,
-                                amount: settings.referralCommission
-                            });
+                        const settings = await Settings.findOne();
+                        const referrer = await User.findById(user.referredBy);
 
-                            // 2. Atomic Update of Referrer Wallet
-                            await User.findByIdAndUpdate(referrer._id, {
-                                $inc: {
-                                    'wallet.balance': settings.referralCommission,
-                                    'wallet.lifetimeEarnings': settings.referralCommission,
-                                    'wallet.referralEarnings': settings.referralCommission,
-                                    'referralCount': 1
-                                }
-                            });
-
-                            console.log(`Referral reward of ₹${settings.referralCommission} credited to ${referrer.name} for ${user.name}`);
-
-                            // Send Push Notification to Referrer
+                        // Conditions: System Enabled, Referrer exists, Referrer is subscribed, Not self-referral
+                        if (settings?.referralSystemEnabled && referrer && referrer.isPaid && referrer._id.toString() !== user._id.toString()) {
+                            
                             try {
-                                const { sendNotificationToUser } = require('./fcmController');
-                                await sendNotificationToUser(referrer._id, {
-                                    title: 'Commission Received! 💰',
-                                    body: `You have earned a direct referral commission of ₹${settings.referralCommission} from ${user.name}'s purchase!`,
-                                    data: {
-                                        type: 'commission',
-                                        link: '/user/income'
+                                // 1. Log Transaction (Unique index on referredUser prevents duplicates)
+                                await ReferralTransaction.create({
+                                    referrer: referrer._id,
+                                    referredUser: user._id,
+                                    amount: settings.referralCommission
+                                });
+
+                                // 2. Atomic Update of Referrer Wallet
+                                await User.findByIdAndUpdate(referrer._id, {
+                                    $inc: {
+                                        'wallet.balance': settings.referralCommission,
+                                        'wallet.lifetimeEarnings': settings.referralCommission,
+                                        'wallet.referralEarnings': settings.referralCommission,
+                                        'referralCount': 1
                                     }
                                 });
-                            } catch (pushErr) {
-                                console.error('Push notification failed for referral commission:', pushErr.message);
-                            }
-                        } catch (err) {
-                            // If index unique constraint fails (code 11000), it means reward already given
-                            if (err.code === 11000) {
-                                console.log('Referral reward already processed for this user');
-                            } else {
-                                console.error('Referral Reward Error:', err);
+
+                                console.log(`Referral reward of ₹${settings.referralCommission} credited to ${referrer.name} for ${user.name}`);
+
+                                // Send Push Notification to Referrer
+                                try {
+                                    const { sendNotificationToUser } = require('./fcmController');
+                                    await sendNotificationToUser(referrer._id, {
+                                        title: 'Commission Received! 💰',
+                                        body: `You have earned a direct referral commission of ₹${settings.referralCommission} from ${user.name}'s purchase!`,
+                                        data: {
+                                            type: 'commission',
+                                            link: '/user/income'
+                                        }
+                                    });
+                                } catch (pushErr) {
+                                    console.error('Push notification failed for referral commission:', pushErr.message);
+                                }
+                            } catch (err) {
+                                // If index unique constraint fails (code 11000), it means reward already given
+                                if (err.code === 11000) {
+                                    console.log('Referral reward already processed for this user');
+                                } else {
+                                    console.error('Referral Reward Error:', err);
+                                }
                             }
                         }
                     }

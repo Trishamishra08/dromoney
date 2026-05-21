@@ -32,6 +32,9 @@ const PaymentModal = ({ isOpen, onClose, plan, amount, type = 'PLATFORM_UNLOCK',
 
     if (!isOpen) return null;
 
+    // Determine if this purchase is blocked because platform is already unlocked
+    const isPlatformAlreadyUnlocked = type === 'PLATFORM_UNLOCK' && userData?.isPaid;
+
     const handlePay = async () => {
         setStatus('loading');
         setErrorMsg('');
@@ -146,7 +149,16 @@ const PaymentModal = ({ isOpen, onClose, plan, amount, type = 'PLATFORM_UNLOCK',
                             </p>
                         </div>
 
-                        {status === 'error' && (
+                        {/* Platform already unlocked warning */}
+                        {isPlatformAlreadyUnlocked && (
+                            <div className="mx-5 mt-4 p-3 bg-rose-50 rounded-xl border border-rose-100 flex items-start gap-2">
+                                <AlertCircle size={14} className="text-rose-500 mt-0.5 flex-shrink-0" />
+                                <p className="text-[10px] font-bold text-rose-600">Platform already unlocked.</p>
+                            </div>
+                        )}
+
+                        {/* Payment error */}
+                        {status === 'error' && !isPlatformAlreadyUnlocked && (
                             <div className="mx-5 mt-4 p-3 bg-red-50 rounded-xl border border-red-100 flex items-start gap-2">
                                 <AlertCircle size={14} className="text-red-500 mt-0.5 flex-shrink-0" />
                                 <p className="text-[10px] font-bold text-red-600">{errorMsg}</p>
@@ -155,11 +167,12 @@ const PaymentModal = ({ isOpen, onClose, plan, amount, type = 'PLATFORM_UNLOCK',
 
                         <div className="p-5">
                             <button
-                                onClick={handlePay}
-                                className="w-full bg-sky-500 hover:bg-sky-600 active:scale-[0.98] text-white font-black py-4 rounded-xl text-[12px] uppercase tracking-widest transition-all shadow-lg shadow-sky-200 flex items-center justify-center gap-2"
+                                onClick={isPlatformAlreadyUnlocked ? undefined : handlePay}
+                                disabled={isPlatformAlreadyUnlocked}
+                                className={`w-full ${isPlatformAlreadyUnlocked ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-sky-500 hover:bg-sky-600 active:scale-[0.98] text-white shadow-lg shadow-sky-200'} font-black py-4 rounded-xl text-[12px] uppercase tracking-widest transition-all flex items-center justify-center gap-2`}
                             >
                                 <ShieldCheck size={16} />
-                                Pay ₹{parseFloat(amount).toFixed(2)} via Razorpay
+                                {isPlatformAlreadyUnlocked ? 'Already Unlocked' : `Pay ₹${parseFloat(amount).toFixed(2)} via Razorpay`}
                             </button>
                             <p className="text-center text-[9px] text-slate-400 font-bold mt-3 uppercase tracking-widest">UPI · Card · Netbanking · Wallets</p>
                         </div>

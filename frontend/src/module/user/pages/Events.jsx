@@ -27,9 +27,11 @@ const Events = () => {
                 const res = await api.get('/public/events');
                 if (res.success && res.data && res.data.length > 0) {
                     setEventList(res.data);
-                    if (res.joinedEvents) {
-                        setJoinedEvents(res.joinedEvents);
-                        localStorage.setItem('dromoney_joined_events', JSON.stringify(res.joinedEvents));
+                    if (res.joinedEvents && Array.isArray(res.joinedEvents)) {
+                        // Ensure all IDs are strings for comparison
+                        const joinedIds = res.joinedEvents.map(id => id.toString());
+                        setJoinedEvents(joinedIds);
+                        localStorage.setItem('dromoney_joined_events', JSON.stringify(joinedIds));
                     } else {
                         setJoinedEvents([]);
                     }
@@ -50,7 +52,7 @@ const Events = () => {
         };
 
         fetchEvents();
-    }, []);
+    }, [userData?._id]);
 
     const showToast = (message, type = 'info') => {
         setToast({ message, type });
@@ -155,178 +157,185 @@ const Events = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#F8FAFC] pb-28">
+        <div className="flex flex-col bg-[#F8FAFC] pb-24 font-['Poppins']">
             <UnlockModal isOpen={isUnlockOpen} onClose={() => setIsUnlockOpen(false)} />
             
-            {/* Header - Compact Dark Blue gradient consistent with DroMoney branding */}
-            <div className="bg-gradient-to-br from-slate-950 via-blue-900 to-slate-900 p-4 rounded-b-[1.5rem] shadow-lg sticky top-[57px] z-40 relative overflow-hidden">
+            {/* Header — flush to top, no gap */}
+            <div className="bg-gradient-to-br from-slate-950 via-blue-900 to-slate-900 px-4 pt-3 pb-4 shadow-lg sticky top-0 z-40 relative overflow-hidden">
                 <div className="absolute -right-10 -top-10 w-24 h-24 bg-white/5 rounded-full blur-3xl"></div>
                 
-                <div className="flex items-center justify-between relative z-10 max-w-md mx-auto">
+                <div className="flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-3">
                         <button 
-                            onClick={() => navigate('/user/home')}
+                            onClick={() => navigate(-1)}
                             className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 active:scale-95 transition-all cursor-pointer"
                         >
                             <ChevronLeft size={18} />
                         </button>
                         <div className="flex flex-col text-left">
-                            <h1 className="text-base font-black text-white tracking-tight leading-none">Events</h1>
-                            <p className="text-[9px] font-bold text-blue-300 opacity-80 uppercase tracking-widest mt-1">Win Big Rewards</p>
+                            <h1 className="text-base text-white tracking-tight leading-none">Events</h1>
+                            <p className="text-[9px] text-blue-300 opacity-80 uppercase tracking-widest mt-0.5">Win Big Rewards</p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
                         <Coins size={12} className="text-yellow-400 fill-yellow-400" />
-                        <span className="text-[12px] font-black text-white">{userData.coins.total}</span>
+                        <span className="text-[12px] text-white">{userData.coins.total}</span>
                     </div>
                 </div>
 
                 {/* Trophy Banner */}
-                <div className="mt-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3 flex items-center gap-3 max-w-md mx-auto">
-                    <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center shadow-lg shrink-0">
-                        <Trophy size={20} className="text-white" />
+                <div className="mt-2.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-2.5 flex items-center gap-3">
+                    <div className="w-9 h-9 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center shadow-lg shrink-0">
+                        <Trophy size={18} className="text-white" />
                     </div>
                     <div className="flex-1 text-left">
-                        <h2 className="text-[13px] font-black text-white leading-none">Join & Win Prizes!</h2>
-                        <p className="text-[8px] font-bold text-blue-100 opacity-60 mt-1">Use coins to participate and earn huge Cash payouts.</p>
+                        <h2 className="text-[12px] text-white leading-none">Join & Win Prizes!</h2>
+                        <p className="text-[8px] text-blue-100 opacity-60 mt-0.5">Use coins to participate and earn huge Cash payouts.</p>
                     </div>
                 </div>
             </div>
 
-            <div className="p-4 space-y-4 max-w-md mx-auto w-full">
-                {/* Event Cards Section */}
-                <div className="space-y-3">
-                    <div className="flex justify-between items-center px-1">
-                        <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-left">Active Live Events</h2>
-                        <span className="bg-emerald-50 text-emerald-600 px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border border-emerald-100/50 animate-pulse">Live Dashboard</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-3">
-                        {eventList.map((event) => {
-                            const id = event._id || event.id;
-                            const isJoined = joinedEvents.includes(id);
-                            const isComingSoon = event.status !== 'Active';
-                            const theme = getPastelTheme(event.tag);
+            <div className="p-3 space-y-3 w-full">
+                {/* Live badge */}
+                <div className="flex justify-between items-center px-1">
+                    <h2 className="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Active Live Events</h2>
+                    <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-wider border border-emerald-100 animate-pulse">Live</span>
+                </div>
+                
+                {/* Event Cards */}
+                <div className="flex flex-col gap-2.5">
+                    {eventList.length === 0 ? (
+                        <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center shadow-sm">
+                            <Trophy size={28} className="text-slate-200 mx-auto mb-2" />
+                            <h3 className="text-[12px] text-slate-600 mb-1">No Live Events</h3>
+                            <p className="text-[9px] text-slate-400 uppercase tracking-wider">Check back soon!</p>
+                        </div>
+                    ) : eventList.map((event) => {
+                        const id = event._id?.toString() || event.id?.toString();
+                        const isJoined = joinedEvents.includes(id);
+                        const isComingSoon = event.status !== 'Active';
+                        const theme = getPastelTheme(event.tag);
+                        // Ensure fee is always shown as positive
+                        const feeDisplay = Math.abs(Number(event.fee) || 0);
 
-                            return (
-                                <div 
-                                    key={id} 
-                                    onClick={() => isJoined && navigateToEvent(event)}
-                                    className={`border rounded-3xl p-4 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden flex flex-col gap-3.5 group cursor-pointer ${theme.cardBg} ${theme.border}`}
-                                >
-                                    {/* Top row: Title, tag, button */}
-                                    <div className="flex justify-between items-start">
-                                        <div className="space-y-1 flex-1 pr-2 text-left">
-                                            <div className="flex items-center gap-1.5">
-                                                {theme.accentIcon}
-                                                <h3 className="text-[15px] font-black text-slate-800 leading-tight group-hover:text-blue-600 transition-colors">{event.title}</h3>
-                                            </div>
-                                            <span className={`inline-block text-[8px] font-black tracking-widest px-2 py-0.5 rounded-md uppercase w-fit ${theme.tagBadge}`}>
+                        return (
+                            <div
+                                key={id}
+                                className={`border rounded-2xl overflow-hidden shadow-sm ${theme.cardBg} ${theme.border}`}
+                            >
+                                {/* Card top: title + join button */}
+                                <div className="flex items-center justify-between px-3.5 pt-3 pb-2">
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                        {theme.accentIcon}
+                                        <div className="min-w-0">
+                                            <h3 className="text-[13px] text-slate-800 leading-tight truncate">{event.title}</h3>
+                                            <span className={`inline-block text-[7px] tracking-widest px-1.5 py-0.5 rounded mt-0.5 uppercase ${theme.tagBadge}`}>
                                                 {event.tag}
                                             </span>
                                         </div>
-
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation(); // Prevent card onClick trigger
-                                                if (isJoined) {
-                                                    navigateToEvent(event);
-                                                } else {
-                                                    handleJoinEvent(event);
-                                                }
-                                            }}
-                                            disabled={isComingSoon}
-                                            className={`px-4.5 py-2.5 rounded-2xl text-[9px] font-black tracking-widest uppercase transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer ${
-                                                isJoined 
-                                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-100 font-extrabold' 
-                                                : isComingSoon
-                                                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                                                : `${theme.button}`
-                                            }`}
-                                        >
-                                            {isJoined ? "JOINED" : isComingSoon ? "Soon" : "JOIN EVENT"}
-                                        </button>
                                     </div>
 
-                                    {/* Compact 2x2 stats block with theme-specific pastel border and backdrop */}
-                                    <div className={`grid grid-cols-2 gap-3 p-3 rounded-2xl ${theme.statsBg}`}>
-                                        <div className="space-y-0.5 text-left">
-                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Entry Fee</p>
-                                            <div className="flex items-center gap-1">
-                                                <Coins size={11} className="text-amber-500 fill-amber-500" />
-                                                <span className="text-[11px] font-black text-slate-700">{event.fee} Coins</span>
-                                            </div>
-                                        </div>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (isJoined) navigateToEvent(event);
+                                            else handleJoinEvent(event);
+                                        }}
+                                        disabled={isComingSoon}
+                                        className={`ml-2 px-3 py-2 rounded-xl text-[9px] tracking-widest uppercase transition-all active:scale-95 shrink-0 cursor-pointer ${
+                                            isJoined
+                                                ? 'bg-emerald-500 text-white'
+                                                : isComingSoon
+                                                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                                : theme.button
+                                        }`}
+                                    >
+                                        {isJoined ? '✓ Joined' : isComingSoon ? 'Soon' : 'Join'}
+                                    </button>
+                                </div>
 
-                                        <div className="space-y-0.5 text-left">
-                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Pool Prize</p>
-                                            <p className="text-[11px] font-black text-emerald-600 leading-none">{event.prize || '₹500'}</p>
+                                {/* Stats row */}
+                                <div className={`mx-3 mb-3 grid grid-cols-4 gap-0 rounded-xl overflow-hidden border ${theme.statsBg}`}>
+                                    <div className="flex flex-col items-center justify-center py-2 px-1 border-r border-slate-100/60">
+                                        <p className="text-[7px] text-slate-400 uppercase tracking-wide mb-0.5">Entry</p>
+                                        <div className="flex items-center gap-0.5">
+                                            <Coins size={9} className="text-amber-500 fill-amber-500" />
+                                            <span className="text-[10px] text-slate-700">{feeDisplay}</span>
                                         </div>
-
-                                        <div className="flex items-center gap-1 text-slate-500 pt-1 border-t border-slate-100 text-left">
-                                            <Clock size={11} className="text-slate-400" />
-                                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tight">
-                                                {event.startTime}
-                                            </span>
+                                    </div>
+                                    <div className="flex flex-col items-center justify-center py-2 px-1 border-r border-slate-100/60">
+                                        <p className="text-[7px] text-slate-400 uppercase tracking-wide mb-0.5">Prize</p>
+                                        <span className="text-[10px] text-emerald-600">{event.prize || '₹500'}</span>
+                                    </div>
+                                    <div className="flex flex-col items-center justify-center py-2 px-1 border-r border-slate-100/60">
+                                        <p className="text-[7px] text-slate-400 uppercase tracking-wide mb-0.5">Time</p>
+                                        <div className="flex items-center gap-0.5">
+                                            <Clock size={9} className="text-slate-400" />
+                                            <span className="text-[9px] text-slate-500 truncate max-w-[40px]">{event.startTime || 'Live'}</span>
                                         </div>
-
-                                        <div className="flex items-center gap-1 text-slate-500 pt-1 border-t border-slate-100 text-left">
-                                            <Users size={11} className="text-slate-400" />
-                                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tight">
-                                                {event.participantsCount || event.participants || 0} Joined
-                                            </span>
+                                    </div>
+                                    <div className="flex flex-col items-center justify-center py-2 px-1">
+                                        <p className="text-[7px] text-slate-400 uppercase tracking-wide mb-0.5">Joined</p>
+                                        <div className="flex items-center gap-0.5">
+                                            <Users size={9} className="text-slate-400" />
+                                            <span className="text-[10px] text-slate-500">{event.participantsCount || event.participants || 0}</span>
                                         </div>
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
+                            </div>
+                        );
+                    })}
                 </div>
 
-                {/* Support Booster - Premium Compact */}
-                <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-3xl overflow-hidden shadow-xl mt-2">
-                    <div className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-amber-400/20 rounded-xl flex items-center justify-center border border-amber-400/20 shadow-inner shrink-0">
-                                <Zap size={20} className="text-amber-400 fill-amber-400" />
+                {/* Support Booster */}
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-lg">
+                    <div className="p-3.5 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 bg-amber-400/20 rounded-xl flex items-center justify-center border border-amber-400/20 shrink-0">
+                                <Zap size={18} className="text-amber-400 fill-amber-400" />
                             </div>
                             <div className="text-left">
-                                <h4 className="text-[13px] font-black text-white tracking-tight leading-none mb-1">₹11 Support Booster</h4>
-                                <p className="text-[9px] font-bold text-slate-400 leading-none">Activate 60% Winning Chance</p>
+                                <h4 className="text-[12px] text-white leading-none mb-0.5">₹11 Support Booster</h4>
+                                <p className="text-[8px] text-slate-400">Activate 60% Winning Chance</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                             <button
+                            <button
                                 onClick={() => setIsBoosterExpanded(!isBoosterExpanded)}
-                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${isBoosterExpanded ? 'bg-amber-400 text-slate-900 rotate-180' : 'bg-white/5 text-white/40 border border-white/10'}`}
+                                className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${isBoosterExpanded ? 'bg-amber-400 text-slate-900 rotate-180' : 'bg-white/5 text-white/40 border border-white/10'}`}
                             >
-                                <ChevronDown size={16} />
+                                <ChevronDown size={14} />
                             </button>
                             <button
-                                onClick={handleBuyBooster}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase shadow-lg shadow-blue-900/20 active:scale-95 transition-all cursor-pointer"
+                                onClick={() => !(userData.isSupportBoosterActive || userData.isTaskBoosterActive) && handleBuyBooster()}
+                                disabled={userData.isSupportBoosterActive || userData.isTaskBoosterActive}
+                                className={`px-3 py-2 rounded-lg text-[9px] tracking-widest uppercase shadow-lg active:scale-95 transition-all cursor-pointer ${
+                                    (userData.isSupportBoosterActive || userData.isTaskBoosterActive)
+                                        ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                }`}
                             >
-                                Buy
+                                {(userData.isSupportBoosterActive || userData.isTaskBoosterActive) ? '✓ Active' : 'Buy'}
                             </button>
                         </div>
                     </div>
 
                     {isBoosterExpanded && (
-                        <div className="bg-white/5 border-t border-white/5 p-4 space-y-3 animate-in slide-in-from-top-4 duration-300">
+                        <div className="bg-white/5 border-t border-white/5 p-3.5 space-y-2.5 animate-in slide-in-from-top-4 duration-300">
                             {[
-                                { icon: <Zap size={14} />, title: "60% Winning Boost", desc: "Win big in every event with high prioritization", color: "text-amber-400" },
-                                { icon: <Lightbulb size={14} />, title: "Quiz Support", desc: "Platform support in 6/10 questions automatically", color: "text-yellow-400" },
-                                { icon: <Rocket size={14} />, title: "Priority Entry", desc: "Early access to premium and high prize events", color: "text-orange-400" },
-                                { icon: <Award size={14} />, title: "Elite Badge", desc: "Exclusive profile support badge next to your user name", color: "text-blue-400" }
+                                { icon: <Zap size={13} />, title: "60% Winning Boost", desc: "Win big in every event with high prioritization", color: "text-amber-400" },
+                                { icon: <Lightbulb size={13} />, title: "Quiz Support", desc: "Platform support in 6/10 questions automatically", color: "text-yellow-400" },
+                                { icon: <Rocket size={13} />, title: "Priority Entry", desc: "Early access to premium and high prize events", color: "text-orange-400" },
+                                { icon: <Award size={13} />, title: "Elite Badge", desc: "Exclusive profile support badge next to your user name", color: "text-blue-400" }
                             ].map((item, i) => (
-                                <div key={i} className="flex items-center gap-3 text-left">
-                                    <div className={`w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center ${item.color}`}>
+                                <div key={i} className="flex items-center gap-2.5 text-left">
+                                    <div className={`w-7 h-7 bg-white/5 rounded-lg flex items-center justify-center shrink-0 ${item.color}`}>
                                         {item.icon}
                                     </div>
                                     <div>
-                                        <h4 className="text-[11px] font-black text-white leading-tight">{item.title}</h4>
-                                        <p className="text-[9px] font-bold text-slate-400 leading-none mt-0.5">{item.desc}</p>
+                                        <h4 className="text-[10px] text-white leading-tight">{item.title}</h4>
+                                        <p className="text-[8px] text-slate-400 mt-0.5">{item.desc}</p>
                                     </div>
                                 </div>
                             ))}
@@ -335,13 +344,13 @@ const Events = () => {
                 </div>
             </div>
 
-            {/* Custom Toast */}
+            {/* Toast */}
             {toast && (
-                <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-xs p-4 rounded-2xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300 z-[100] ${
+                <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 w-[85%] max-w-xs p-3.5 rounded-2xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300 z-[100] ${
                     toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
                 }`}>
-                    {toast.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
-                    <p className="text-[11px] font-black uppercase tracking-widest">{toast.message}</p>
+                    {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                    <p className="text-[10px] uppercase tracking-widest">{toast.message}</p>
                 </div>
             )}
 

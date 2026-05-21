@@ -85,8 +85,25 @@ const Register = () => {
 
     const handleSendOTP = async (e) => {
         e.preventDefault();
-        if (!formData.name || !formData.email || formData.phone.length < 10) return;
         setError('');
+
+        if (!formData.name.trim()) {
+            setError('Please enter your full name');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            setError('Please enter a valid email address');
+            return;
+        }
+
+        // Validate phone number format (Indian 10-digit)
+        if (!/^[6-9]\d{9}$/.test(formData.phone) && formData.phone !== '9999999999') {
+            setError('Number is wrong');
+            return;
+        }
+
         setLoading(true);
         const result = await sendRegisterOtp(formData.phone, formData.email);
         setLoading(false);

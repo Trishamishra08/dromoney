@@ -596,71 +596,57 @@ const MarketingManager = () => {
 
                 {/* ── TAB 2: BOOSTER PACKS ── */}
                 {activeTab === 'boosters' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         {['support', 'task'].map((type) => {
                             const b = boosters[type];
                             return (
-                                <div key={type} className="bg-white rounded-[44px] border border-slate-100 shadow-sm p-8 group">
-                                    <div className="flex items-center gap-4 mb-10 pb-8 border-b border-slate-50">
-                                        <div className={`w-14 h-14 ${type === 'support' ? 'bg-amber-100 text-amber-600' : 'bg-sky-100 text-sky-600'} rounded-2xl flex items-center justify-center`}><Zap size={32} /></div>
+                                <div key={type} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 group">
+                                    {/* Card Header */}
+                                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-50">
+                                        <div className={`w-9 h-9 ${type === 'support' ? 'bg-amber-100 text-amber-600' : 'bg-sky-100 text-sky-600'} rounded-xl flex items-center justify-center shrink-0`}><Zap size={18} /></div>
                                         <div>
-                                            <h3 className="text-xl font-black text-slate-800 tracking-tight">{b.title}</h3>
-                                            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Manage Dropdown Benefits</p>
+                                            <h3 className="text-[13px] font-black text-slate-800 tracking-tight leading-none">{b.title}</h3>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Manage Dropdown Benefits</p>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-6 mb-10">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Booster Title</label>
+                                    <div className="space-y-3 mb-4">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1">
+                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Booster Title</label>
                                                 <input value={b.title} onChange={(e) => {
-                                                    setBoosters({
-                                                        ...boosters,
-                                                        [type]: { ...boosters[type], title: e.target.value }
-                                                    });
-                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-black text-slate-800 outline-none" />
+                                                    setBoosters({ ...boosters, [type]: { ...boosters[type], title: e.target.value } });
+                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5 text-[12px] font-black text-slate-800 outline-none focus:ring-2 focus:ring-sky-400" />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Booster Price (₹)</label>
-                                                <input type="number" value={b.price} onChange={(e) => {
-                                                    setBoosters({
-                                                        ...boosters,
-                                                        [type]: { ...boosters[type], price: Number(e.target.value) }
-                                                    });
-                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-black text-slate-800 outline-none" />
+                                            <div className="space-y-1">
+                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Booster Price (₹)</label>
+                                                <input type="number" min="0" value={b.price} onChange={(e) => {
+                                                    const val = Math.max(0, Number(e.target.value));
+                                                    setBoosters({ ...boosters, [type]: { ...boosters[type], price: val } });
+                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5 text-[12px] font-black text-slate-800 outline-none focus:ring-2 focus:ring-sky-400" />
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Booster Validity (Value)</label>
-                                                <input type="number" value={b.validityValue === undefined ? 30 : b.validityValue} onChange={(e) => {
-                                                    const val = e.target.value === '' ? '' : Number(e.target.value);
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1">
+                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Booster Validity (Value)</label>
+                                                <input type="number" min="0" value={b.validityValue === undefined ? 30 : b.validityValue} onChange={(e) => {
+                                                    const raw = e.target.value === '' ? '' : Number(e.target.value);
+                                                    const val = raw === '' ? '' : Math.max(0, raw);
                                                     const unit = b.validityUnit || 'Days';
                                                     setBoosters({
                                                         ...boosters,
-                                                        [type]: {
-                                                            ...boosters[type],
-                                                            validityValue: val,
-                                                            validity: `${val || 0} ${unit}`
-                                                        }
+                                                        [type]: { ...boosters[type], validityValue: val, validity: `${val || 0} ${unit}` }
                                                     });
-                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-black text-slate-800 outline-none" placeholder="e.g. 30" />
+                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5 text-[12px] font-black text-slate-800 outline-none focus:ring-2 focus:ring-sky-400" placeholder="e.g. 30" />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Booster Validity (Unit)</label>
+                                            <div className="space-y-1">
+                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Booster Validity (Unit)</label>
                                                 <select value={b.validityUnit || 'Days'} onChange={(e) => {
                                                     const unit = e.target.value;
                                                     const val = b.validityValue || 30;
-                                                    setBoosters({
-                                                        ...boosters,
-                                                        [type]: {
-                                                            ...boosters[type],
-                                                            validityUnit: unit,
-                                                            validity: `${val} ${unit}`
-                                                        }
-                                                    });
-                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-black text-slate-800 outline-none">
+                                                    setBoosters({ ...boosters, [type]: { ...boosters[type], validityUnit: unit, validity: `${val} ${unit}` } });
+                                                }} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5 text-[12px] font-black text-slate-800 outline-none focus:ring-2 focus:ring-sky-400">
                                                     <option value="Days">Days</option>
                                                     <option value="Months">Months</option>
                                                     <option value="Years">Years</option>
@@ -668,47 +654,35 @@ const MarketingManager = () => {
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-heading Text</label>
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Sub-heading Text</label>
                                             <input value={b.subtitle} onChange={(e) => {
-                                                setBoosters({
-                                                    ...boosters,
-                                                    [type]: { ...boosters[type], subtitle: e.target.value }
-                                                });
-                                            }} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-[14px] font-black text-slate-800 outline-none" />
+                                                setBoosters({ ...boosters, [type]: { ...boosters[type], subtitle: e.target.value } });
+                                            }} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5 text-[12px] font-black text-slate-800 outline-none focus:ring-2 focus:ring-sky-400" />
                                         </div>
 
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2"><List size={14} /> Benefit List (Image 1 Dropdown)</label>
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-0.5 flex items-center gap-1.5"><List size={12} /> Benefit List (Image 1 Dropdown)</label>
                                             {b.benefits.map((text, idx) => (
-                                                <div key={idx} className="flex gap-3">
+                                                <div key={idx} className="flex gap-2">
                                                     <input value={text} onChange={(e) => {
                                                         const newBenefits = [...b.benefits];
                                                         newBenefits[idx] = e.target.value;
-                                                        setBoosters({
-                                                            ...boosters,
-                                                            [type]: { ...boosters[type], benefits: newBenefits }
-                                                        });
-                                                    }} className="flex-1 bg-white border border-slate-100 rounded-xl px-4 py-3 text-[13px] font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-sky-500 outline-none" />
+                                                        setBoosters({ ...boosters, [type]: { ...boosters[type], benefits: newBenefits } });
+                                                    }} className="flex-1 bg-white border border-slate-100 rounded-lg px-3 py-2 text-[12px] font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-sky-400 outline-none" />
                                                     <button onClick={() => {
-                                                        setBoosters({
-                                                            ...boosters,
-                                                            [type]: { ...boosters[type], benefits: b.benefits.filter((_, i) => i !== idx) }
-                                                        });
-                                                    }} className="w-11 h-11 bg-rose-50 text-rose-400 rounded-xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16} /></button>
+                                                        setBoosters({ ...boosters, [type]: { ...boosters[type], benefits: b.benefits.filter((_, i) => i !== idx) } });
+                                                    }} className="w-8 h-8 bg-rose-50 text-rose-400 rounded-lg flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all shrink-0"><Trash2 size={13} /></button>
                                                 </div>
                                             ))}
                                             <button onClick={() => {
-                                                setBoosters({
-                                                    ...boosters,
-                                                    [type]: { ...boosters[type], benefits: [...b.benefits, 'New Benefit Point'] }
-                                                });
-                                            }} className="w-full py-4 border-2 border-dashed border-slate-100 rounded-2xl text-[11px] font-black uppercase text-slate-400 hover:text-sky-500 hover:border-sky-200 transition-all">+ Add New Point</button>
+                                                setBoosters({ ...boosters, [type]: { ...boosters[type], benefits: [...b.benefits, 'New Benefit Point'] } });
+                                            }} className="w-full py-2.5 border-2 border-dashed border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-sky-500 hover:border-sky-200 transition-all">+ Add New Point</button>
                                         </div>
                                     </div>
 
-                                    <button onClick={() => handleUpdateBooster(type)} className="w-full bg-[#0F172A] text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
-                                        <Save size={16} /> Update {b.title} Configuration
+                                    <button onClick={() => handleUpdateBooster(type)} className="w-full bg-[#0F172A] text-white py-3 rounded-xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg hover:scale-[1.01] active:scale-95 transition-all">
+                                        <Save size={14} /> Update {b.title} Configuration
                                     </button>
                                 </div>
                             );

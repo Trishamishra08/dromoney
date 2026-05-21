@@ -18,12 +18,21 @@ const Login = () => {
     // Checkbox for mandatory policies
     const [agreeAll, setAgreeAll] = useState(false);
 
-    // Redirect to home if user is already logged in
+    // Redirect to home if user is already logged in — early return prevents flash
     useEffect(() => {
         if (isAuthenticated && !contextLoading) {
             navigate('/user/home', { replace: true });
         }
     }, [isAuthenticated, contextLoading, navigate]);
+
+    // While auth state is being determined, show nothing (prevents login flash)
+    if (isAuthenticated || contextLoading) {
+        return (
+            <div className="min-h-screen bg-[#0f1d3a] flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-white/10 border-t-white/60 rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     useEffect(() => {
         if (resendCooldown > 0) {

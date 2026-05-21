@@ -12,6 +12,19 @@ exports.submitReport = asyncHandler(async (req, res, next) => {
         message
     });
 
+    // Populate user name for the socket event
+    const populated = await Report.findById(report._id).populate('user', 'name');
+
+    // Emit real-time notification to all connected admin clients
+    if (global.io) {
+        global.io.emit('new_report', {
+            _id: populated._id,
+            userName: populated.user?.name || 'A user',
+            message: populated.message,
+            createdAt: populated.createdAt
+        });
+    }
+
     res.status(201).json({
         success: true,
         data: report

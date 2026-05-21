@@ -3,7 +3,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
     Menu, Bell, Wallet as WalletIcon, Home as HomeIcon, LayoutGrid, User, History, 
     PhoneCall, HelpCircle, Building2, Rocket, MonitorPlay, X, CheckCircle2, 
-    AlertCircle, Info, Globe, Sparkles, Headset, ChevronDown, TrendingUp, 
+    AlertCircle, Info, Sparkles, Headset, TrendingUp, 
     Wrench, MessageSquare, Zap, Users, Share2 
 } from 'lucide-react';
 import { motion } from "framer-motion";
@@ -15,7 +15,6 @@ const UserLayout = () => {
     const navigate = useNavigate();
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isLangOpen, setIsLangOpen] = useState(false);
     const { userData, notifications, clearNotifications, markAsRead, logout } = useUser();
 
     const navItems = [
@@ -36,9 +35,9 @@ const UserLayout = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden">
+        <div className="h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden flex flex-col max-w-md mx-auto relative">
             {/* --- New Dromoney Fixed Top Header --- */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md px-4 py-1.5 flex items-center justify-between max-w-md mx-auto border-b border-slate-800 shadow-xl min-h-[64px]">
+            <header className="shrink-0 z-50 bg-slate-900/95 backdrop-blur-md px-4 py-1.5 flex items-center justify-between border-b border-slate-800 shadow-xl min-h-[57px]">
                 {/* 1. Brand & Logo (Left Side) */}
                 <div className="flex items-center gap-1 active:scale-95 transition-transform cursor-pointer" onClick={() => navigate('/user/home')}>
                     <div className="w-14 h-14 flex items-center justify-center">
@@ -214,25 +213,6 @@ const UserLayout = () => {
                             <div className="h-px bg-white/5 mx-4 mb-2"></div>
 
                             {/* Options with reduced padding */}
-                            <div>
-                                <button 
-                                    onClick={() => setIsLangOpen(!isLangOpen)}
-                                    className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-white/[0.03] rounded-xl transition-all group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Globe size={18} className="text-slate-500 group-hover:text-emerald-400 transition-colors" />
-                                        <span className="text-[13px] font-normal text-slate-300">Language</span>
-                                    </div>
-                                    <ChevronDown size={14} className={`text-slate-600 transition-transform duration-300 ${isLangOpen ? 'rotate-180' : ''}`} />
-                                </button>
-                                <div className={`overflow-hidden transition-all duration-300 bg-white/[0.02] rounded-xl mx-1 ${isLangOpen ? 'max-h-32 my-1 border border-white/5' : 'max-h-0'}`}>
-                                    <button onClick={() => setIsMenuOpen(false)} className="w-full px-6 py-2.5 text-left text-[12px] font-normal text-slate-400 hover:text-emerald-400 flex items-center justify-between">
-                                        English <CheckCircle2 size={12} className="text-emerald-400" />
-                                    </button>
-                                    <button onClick={() => setIsMenuOpen(false)} className="w-full px-6 py-2.5 text-left text-[12px] font-normal text-slate-400 hover:text-emerald-400">Hindi</button>
-                                </div>
-                            </div>
-
                             {[
                                 { icon: HelpCircle, label: 'How It Works', path: '/user/info/how-it-works' },
                                 { icon: Sparkles, label: 'Benefits', path: '/user/info/benefits' },
@@ -273,14 +253,14 @@ const UserLayout = () => {
             </div>
 
             {/* --- Dynamic Content Rendering Area (Pages) --- */}
-            <main className="max-w-md mx-auto pt-[57px] pb-16">
+            <main className="flex-1 overflow-y-auto overflow-x-hidden">
                 <Outlet />
             </main>
 
-            {/* --- Premium White Elevated Bottom Navigation Bar (Same as Mechanic Image 2) --- */}
-            <div className="fixed bottom-0 left-0 right-0 z-50">
+            {/* --- Premium White Elevated Bottom Navigation Bar --- */}
+            <div className="shrink-0 z-50">
                 {/* The Ultra-Light Mustard Bar Container */}
-                <div className="relative bg-[#FFFEF7] border-t border-black/5 h-20 flex items-center px-4 shadow-[0_-10px_30px_rgba(0,0,0,0.06)] max-w-md mx-auto">
+                <div className="relative bg-[#FFFEF7] border-t border-black/5 h-20 flex items-center px-4 shadow-[0_-10px_30px_rgba(0,0,0,0.06)]">
                     
                     {/* --- The Jumping Bubble Layer --- */}
                     <div className="absolute inset-0 flex px-4 pointer-events-none">

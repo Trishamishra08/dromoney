@@ -38,7 +38,7 @@ const Payments = () => {
                     email: p.user?.email || 'N/A',
                     phone: p.user?.phone || 'N/A',
                     plan: p.plan || 'Lifetime Access',
-                    amount: `₹${p.amount}`,
+                    amount: `₹${parseFloat(p.amount).toFixed(2)}`,
                     method: p.method || 'Razorpay',
                     date: new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
                     status: p.status,
@@ -97,7 +97,7 @@ const Payments = () => {
     const failedCount = paymentsList.filter(p => p.status === 'Failed').length;
 
     return (
-        <div className="p-6 animate-in fade-in duration-500 relative">
+        <div className="p-6 animate-in fade-in duration-500 relative font-['Poppins']">
             {toast && (
                 <div className={`fixed top-5 right-5 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 ${
                     toast.type === 'success' 
@@ -109,14 +109,14 @@ const Payments = () => {
                     ) : (
                         <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
                     )}
-                    <span className="text-xs font-semibold">{toast.message}</span>
+                    <span className="text-xs font-medium font-['Poppins']">{toast.message}</span>
                 </div>
             )}
             <PageHeader title="Payments Tracking" subtitle="Manage account activation fees and verification" />
 
             {/* Stat Cards */}
             <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-                <AdminStatCard label="Total Revenue" value={`₹${totalCollected.toLocaleString()}`} change={`${successCount} Successful`} icon={IndianRupee} color="bg-emerald-500" />
+                <AdminStatCard label="Total Revenue" value={`₹${totalCollected.toFixed(2)}`} change={`${successCount} Successful`} icon={IndianRupee} color="bg-emerald-500" />
                 <AdminStatCard label="Pending Approval" value={pendingCount} change="Review UTRs" icon={Clock} color="bg-amber-500" />
                 <AdminStatCard label="Active Users" value={successCount} change="Verified access" icon={CheckSquare} color="bg-sky-500" />
                 <AdminStatCard label="Declined" value={failedCount} change="Payment issues" icon={XSquare} color="bg-rose-500" />
@@ -131,14 +131,14 @@ const Payments = () => {
                         placeholder="Search by name, ID or UTR number..."
                         value={search}
                         onChange={handleSearch}
-                        className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-[14px] font-bold text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm transition-all"
+                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-[14px] font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm transition-all font-['Poppins']"
                     />
                 </div>
 
                 <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-slate-100 shadow-sm">
                     {tabs.map(t => (
                         <button key={t} onClick={() => { setFilter(t); setCurrentPage(1); }}
-                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all ${filter === t ? 'bg-[#0F172A] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+                            className={`px-4 py-2 rounded-xl text-[10px] font-semibold uppercase tracking-tight transition-all font-['Poppins'] ${filter === t ? 'bg-[#0F172A] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
                             {t}
                         </button>
                     ))}
@@ -151,33 +151,33 @@ const Payments = () => {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-slate-50 bg-slate-50/50">
-                                <th className="text-left px-5 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Transaction ID</th>
-                                <th className="text-left px-5 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">User Profile</th>
-                                <th className="text-left px-5 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Amount</th>
-                                <th className="text-left px-5 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Method</th>
-                                <th className="text-left px-5 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">UTR Number</th>
-                                <th className="text-left px-5 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
-                                <th className="text-center px-5 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Actions</th>
+                                <th className="text-left px-5 py-5 text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] font-['Poppins']">Transaction ID</th>
+                                <th className="text-left px-5 py-5 text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] font-['Poppins']">User Profile</th>
+                                <th className="text-left px-5 py-5 text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] font-['Poppins']">Amount</th>
+                                <th className="text-left px-5 py-5 text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] font-['Poppins']">Method</th>
+                                <th className="text-left px-5 py-5 text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] font-['Poppins']">UTR Number</th>
+                                <th className="text-left px-5 py-5 text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] font-['Poppins']">Status</th>
+                                <th className="text-center px-5 py-5 text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] font-['Poppins']">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {currentItems.length > 0 ? currentItems.map(p => (
                                 <tr key={p.id} className="hover:bg-slate-50/40 transition-colors group">
-                                    <td className="px-5 py-4 font-black text-sky-600 text-[12px] tabular-nums tracking-tight">#{p.id}</td>
+                                    <td className="px-5 py-4 font-medium text-sky-600 text-[12px] tabular-nums tracking-tight font-['Poppins']">#{p.id}</td>
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-sky-400 font-black text-[11px]">
+                                            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-sky-400 font-semibold text-[11px] font-['Poppins']">
                                                 {p.user.charAt(0)}
                                             </div>
                                             <div>
-                                                <p className="font-black text-slate-800 text-[13px] leading-none tracking-tight">{p.user}</p>
-                                                <p className="text-[10px] text-slate-400 mt-1 font-bold">{p.email}</p>
+                                                <p className="font-semibold text-slate-800 text-[13px] leading-none tracking-tight font-['Poppins']">{p.user}</p>
+                                                <p className="text-[10px] text-slate-400 mt-1 font-medium font-['Poppins']">{p.email}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-5 py-4 font-black text-slate-900 text-[13px] tabular-nums">{p.amount}</td>
-                                    <td className="px-5 py-4 text-[12px] font-bold text-slate-500 uppercase tracking-tighter">{p.method}</td>
-                                    <td className="px-5 py-4 text-[12px] font-black text-slate-800 tabular-nums">{p.utr}</td>
+                                    <td className="px-5 py-4 font-semibold text-slate-900 text-[13px] tabular-nums font-['Poppins']">{p.amount}</td>
+                                    <td className="px-5 py-4 text-[12px] font-medium text-slate-500 uppercase tracking-tighter font-['Poppins']">{p.method}</td>
+                                    <td className="px-5 py-4 text-[12px] font-medium text-slate-800 tabular-nums font-['Poppins']">{p.utr}</td>
                                     <td className="px-5 py-4 border-none"><StatusBadge status={p.status} /></td>
                                     <td className="px-5 py-4">
                                         <div className="flex gap-2 items-center justify-center">
@@ -196,7 +196,7 @@ const Payments = () => {
                                     <td colSpan="7" className="py-24 text-center">
                                         <div className="flex flex-col items-center gap-3 grayscale opacity-30">
                                             <CreditCard size={48} className="text-slate-300" />
-                                            <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">No payment records found</p>
+                                            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 font-['Poppins']">No payment records found</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -207,14 +207,14 @@ const Payments = () => {
 
                 {/* Pagination Footer */}
                 <div className="px-5 py-4 bg-slate-50/50 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest order-2 sm:order-1 outline-none">
+                    <div className="text-[10px] font-medium text-slate-400 uppercase tracking-widest order-2 sm:order-1 outline-none font-['Poppins']">
                         Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filtered.length)} of {filtered.length} entries
                     </div>
                     <div className="flex items-center gap-2 order-1 sm:order-2">
                         <button
                             disabled={currentPage === 1}
                             onClick={() => setCurrentPage(prev => prev - 1)}
-                            className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-500 hover:bg-slate-50 disabled:opacity-50 shadow-sm transition-all"
+                            className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-semibold uppercase text-slate-500 hover:bg-slate-50 disabled:opacity-50 shadow-sm transition-all font-['Poppins']"
                         >
                             Prev
                         </button>
@@ -223,7 +223,7 @@ const Payments = () => {
                                 <button
                                     key={i}
                                     onClick={() => setCurrentPage(i + 1)}
-                                    className={`w-8 h-8 rounded-xl text-[10px] font-black flex items-center justify-center transition-all shadow-sm ${currentPage === i + 1 ? 'bg-[#0F172A] text-white' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'}`}
+                                    className={`w-8 h-8 rounded-xl text-[10px] font-semibold flex items-center justify-center transition-all shadow-sm font-['Poppins'] ${currentPage === i + 1 ? 'bg-[#0F172A] text-white' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'}`}
                                 >
                                     {i + 1}
                                 </button>
@@ -232,7 +232,7 @@ const Payments = () => {
                         <button
                             disabled={currentPage === totalPages || totalPages === 0}
                             onClick={() => setCurrentPage(prev => prev + 1)}
-                            className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-500 hover:bg-slate-50 disabled:opacity-50 shadow-sm transition-all"
+                            className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-semibold uppercase text-slate-500 hover:bg-slate-50 disabled:opacity-50 shadow-sm transition-all font-['Poppins']"
                         >
                             Next
                         </button>
@@ -246,8 +246,8 @@ const Payments = () => {
                     <div onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-[#0F172A]/80 backdrop-blur-sm"></div>
                     <div className="relative bg-white w-full max-w-[420px] rounded-[40px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
                         <div className="bg-[#0F172A] p-7 text-white relative">
-                            <h3 className="text-xl font-black tracking-tight mb-1">Payment Verification</h3>
-                            <p className="text-[10px] text-sky-400 font-black uppercase tracking-[0.2em]">TXN ID: #{selectedPayment.id}</p>
+                            <h3 className="text-xl font-semibold tracking-tight mb-1 font-['Poppins']">Payment Verification</h3>
+                            <p className="text-[10px] text-sky-400 font-medium uppercase tracking-[0.2em] font-['Poppins']">TXN ID: #{selectedPayment.id}</p>
                             <button onClick={() => setIsModalOpen(false)} className="absolute top-7 right-7 w-9 h-9 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center transition-colors text-white/40 hover:text-white">
                                 <XClose size={22} />
                             </button>
@@ -257,25 +257,25 @@ const Payments = () => {
                             {/* User & Amount Info */}
                             <div className="flex items-center justify-between bg-slate-50 p-5 rounded-[24px] border border-slate-100 shadow-inner">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-sky-400 font-black">
+                                    <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-sky-400 font-semibold font-['Poppins']">
                                         {selectedPayment.user.charAt(0)}
                                     </div>
                                     <div>
-                                        <p className="text-[13px] font-black text-slate-800 leading-none">{selectedPayment.user}</p>
-                                        <p className="text-[10px] text-slate-400 mt-1 font-bold">{selectedPayment.method}</p>
+                                        <p className="text-[13px] font-semibold text-slate-800 leading-none font-['Poppins']">{selectedPayment.user}</p>
+                                        <p className="text-[10px] text-slate-400 mt-1 font-medium font-['Poppins']">{selectedPayment.method}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xl font-black text-slate-900 leading-none">{selectedPayment.amount}</p>
-                                    <p className="text-[9px] text-emerald-500 font-black uppercase mt-1 tracking-widest">Entry Fee</p>
+                                    <p className="text-xl font-semibold text-slate-900 leading-none font-['Poppins']">{selectedPayment.amount}</p>
+                                    <p className="text-[9px] text-emerald-500 font-medium uppercase mt-1 tracking-widest font-['Poppins']">Entry Fee</p>
                                 </div>
                             </div>
 
                             {/* UTR & ScreenShot Mockup */}
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between px-1">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">UTR Number</p>
-                                    <p className="text-[13px] font-black text-slate-800 tracking-wider font-mono">{selectedPayment.utr}</p>
+                                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest font-['Poppins']">UTR Number</p>
+                                    <p className="text-[13px] font-semibold text-slate-800 tracking-wider font-mono font-['Poppins']">{selectedPayment.utr}</p>
                                 </div>
 
                                 <div className="aspect-[1.5/1] bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center relative overflow-hidden group shadow-inner">
@@ -285,7 +285,7 @@ const Payments = () => {
                                     </div>
                                     <div className="flex flex-col items-center gap-2">
                                         <ImageIcon size={40} className="text-slate-300" />
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em]">Payment Screenshot</p>
+                                        <p className="text-[9px] font-medium text-slate-400 uppercase tracking-[0.15em] font-['Poppins']">Payment Screenshot</p>
                                     </div>
                                 </div>
                             </div>
@@ -293,7 +293,7 @@ const Payments = () => {
                             {/* Date info */}
                             <div className="flex items-center gap-2 px-1">
                                 <Calendar size={14} className="text-slate-300" />
-                                <p className="text-[11px] font-bold text-slate-400">Transaction initiated on {selectedPayment.date}</p>
+                                <p className="text-[11px] font-medium text-slate-400 font-['Poppins']">Transaction initiated on {selectedPayment.date}</p>
                             </div>
 
                             {/* Actions */}
@@ -301,21 +301,21 @@ const Payments = () => {
                                 <div className="flex gap-4 pt-2">
                                     <button
                                         onClick={() => handleStatusUpdate(selectedPayment.id, 'Failed')}
-                                        className="flex-1 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white py-4.5 rounded-[20px] font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-rose-100/50"
+                                        className="flex-1 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white py-4.5 rounded-[20px] font-semibold text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-rose-100/50 font-['Poppins']"
                                     >
                                         Decline
                                     </button>
                                     <button
                                         onClick={() => handleStatusUpdate(selectedPayment.id, 'Success')}
-                                        className="flex-1 bg-sky-500 hover:bg-sky-600 text-white py-4.5 rounded-[20px] font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-xl shadow-sky-200"
+                                        className="flex-1 bg-sky-500 hover:bg-sky-600 text-white py-4.5 rounded-[20px] font-semibold text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-xl shadow-sky-200 font-['Poppins']"
                                     >
                                         Verify & Activate
                                     </button>
                                 </div>
                             ) : (
-                                <div className={`p-5 rounded-[24px] text-center border-2 ${selectedPayment.status === 'Success' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1">Audit Record</p>
-                                    <p className="text-[12px] font-bold tracking-tight">Status: <span className="underline decoration-2 underline-offset-4">{selectedPayment.status}</span></p>
+                                <div className={`p-5 rounded-[24px] text-center border-2 font-['Poppins'] ${selectedPayment.status === 'Success' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
+                                    <p className="text-[10px] font-medium uppercase tracking-[0.2em] mb-1">Audit Record</p>
+                                    <p className="text-[12px] font-medium tracking-tight">Status: <span className="underline decoration-2 underline-offset-4">{selectedPayment.status}</span></p>
                                 </div>
                             )}
                         </div>

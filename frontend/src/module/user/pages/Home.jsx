@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
     IndianRupee, Coins, Users, CreditCard, ChevronRight, Zap,
     Wallet, Sparkles, Send, Trophy, Gift, Shield, Rocket, CheckCircle2, BarChart2, ClipboardList, ChevronDown, Share2, TrendingUp,
-    Video, X, DollarSign, ArrowUp, ArrowDown, RotateCcw, QrCode, Smartphone, Receipt, Building, Clock, Lightbulb, Film, PlusSquare, MoreHorizontal
+    Video, X, ArrowUp, RotateCcw, QrCode, Smartphone, Receipt, Building, Clock, Lightbulb, Film, PlusSquare, MoreHorizontal
 } from 'lucide-react';
 import PaymentModal from '../components/PaymentModal';
 import api from '../../shared/services/api';
@@ -432,17 +432,15 @@ const Home = () => {
                             </div>
                         </div>
 
-                        <h2 className="text-2xl font-bold text-white mb-5 tracking-tight relative z-10">$ {Number(earnings.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</h2>
+                        <h2 className="text-2xl font-bold text-white mb-5 tracking-tight relative z-10">₹ {Number(userData?.wallet?.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h2>
 
-                        <div className="flex justify-between items-center relative z-10">
+                        <div className="flex justify-around items-center relative z-10">
                             {[
-                                { icon: DollarSign, label: 'Balance', action: () => navigate('/user/income') },
-                                { icon: Wallet, label: 'Add Money', action: () => navigate('/user/wallet') },
-                                { icon: ArrowUp, label: 'Send', action: () => navigate('/user/history') },
-                                { icon: ArrowDown, label: 'Receive', action: () => navigate('/user/history') },
-                                { icon: RotateCcw, label: 'History', action: () => navigate('/user/history') },
+                                { icon: IndianRupee, label: 'Balance', action: () => navigate('/user/income') },
+                                { icon: ArrowUp, label: 'Send', action: () => navigate('/user/wallet') },
+                                { icon: RotateCcw, label: 'History', action: () => navigate('/user/wallet') },
                             ].map((action, i) => (
-                                <div key={i} onClick={action.action} className="flex flex-col items-center gap-1.5 cursor-pointer group/btn w-[54px]">
+                                <div key={i} onClick={action.action} className="flex flex-col items-center gap-1.5 cursor-pointer group/btn w-[72px]">
                                     <div className="w-11 h-11 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-teal-50 transition-all group-hover/btn:bg-white/20">
                                         <action.icon size={18} strokeWidth={2.5} />
                                     </div>
@@ -478,34 +476,20 @@ const Home = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => setIsSupportExpanded(!isSupportExpanded)}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isSupportExpanded ? 'bg-amber-200 text-amber-900 rotate-180' : 'bg-white text-slate-300'}`}
+                                    onClick={() => !isSupportBoosterActive && !isTaskBoosterActive && handleBuy(boosters.support.title, boosters.support.price)}
+                                    disabled={isSupportBoosterActive || isTaskBoosterActive}
+                                    className={`${
+                                        isSupportBoosterActive
+                                            ? 'bg-emerald-100 text-emerald-600 cursor-not-allowed shadow-none border border-emerald-200'
+                                            : isTaskBoosterActive
+                                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                                            : 'bg-[#10B981] text-white hover:bg-[#059669] shadow-lg shadow-emerald-500/30'
+                                    } px-5 py-2.5 rounded-xl text-[11px] font-black tracking-tight active:scale-95 transition-all w-full sm:w-auto`}
                                 >
-                                    <ChevronDown size={18} strokeWidth={2.5} />
-                                </button>
-                                <button
-                                    onClick={() => !isSupportBoosterActive && handleBuy(boosters.support.title, boosters.support.price)}
-                                    disabled={isSupportBoosterActive}
-                                    className={`${isSupportBoosterActive ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-[#10B981] text-white hover:bg-[#059669] shadow-lg shadow-emerald-500/30'} px-5 py-2.5 rounded-xl text-[11px] font-black tracking-tight active:scale-95 transition-all w-full sm:w-auto`}
-                                >
-                                    {isSupportBoosterActive ? 'Already Bought' : 'Boost Support'}
+                                    {isSupportBoosterActive ? '✓ Active' : isTaskBoosterActive ? 'Locked' : 'Boost Support'}
                                 </button>
                             </div>
                         </div>
-                        {isSupportExpanded && (
-                            <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-300">
-                                <div className="bg-white/50 rounded-xl p-3 border border-amber-50 space-y-2.5">
-                                    {boosters.support.benefits.map((text, i) => (
-                                        <div key={i} className="flex items-center gap-2">
-                                            <div className="w-4 h-4 bg-amber-100 rounded-full flex items-center justify-center">
-                                                <CheckCircle2 size={10} className="text-amber-600" />
-                                            </div>
-                                            <span className="text-[11px] font-bold text-amber-900/80 tracking-tight">{text}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* Task Booster */}
@@ -528,34 +512,20 @@ const Home = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => setIsTaskExpanded(!isTaskExpanded)}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isTaskExpanded ? 'bg-sky-200 text-sky-900 rotate-180' : 'bg-white text-slate-300'}`}
+                                    onClick={() => !isTaskBoosterActive && !isSupportBoosterActive && handleBuy(boosters.task.title, boosters.task.price)}
+                                    disabled={isTaskBoosterActive || isSupportBoosterActive}
+                                    className={`${
+                                        isTaskBoosterActive
+                                            ? 'bg-sky-100 text-sky-600 cursor-not-allowed shadow-none border border-sky-200'
+                                            : isSupportBoosterActive
+                                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                                            : 'bg-sky-500 hover:bg-sky-600 text-white shadow-lg shadow-sky-500/30'
+                                    } px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-tight active:scale-95 transition-all`}
                                 >
-                                    <ChevronDown size={18} strokeWidth={2.5} />
-                                </button>
-                                <button
-                                    onClick={() => !isTaskBoosterActive && handleBuy(boosters.task.title, boosters.task.price)}
-                                    disabled={isTaskBoosterActive}
-                                    className={`${isTaskBoosterActive ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-sky-500 hover:bg-sky-600 text-white shadow-lg shadow-sky-500/30'} px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-tight active:scale-95 transition-all`}
-                                >
-                                    {isTaskBoosterActive ? 'Already Bought' : 'Buy Now'}
+                                    {isTaskBoosterActive ? '✓ Active' : isSupportBoosterActive ? 'Locked' : 'Buy Now'}
                                 </button>
                             </div>
                         </div>
-                        {isTaskExpanded && (
-                            <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-300">
-                                <div className="bg-white/50 rounded-xl p-3 border border-sky-50 space-y-2.5">
-                                    {boosters.task.benefits.map((text, i) => (
-                                        <div key={i} className="flex items-center gap-2">
-                                            <div className="w-4 h-4 bg-sky-100 rounded-full flex items-center justify-center">
-                                                <CheckCircle2 size={10} className="text-sky-600" />
-                                            </div>
-                                            <span className="text-[11px] font-bold text-sky-900/80 tracking-tight">{text}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
 

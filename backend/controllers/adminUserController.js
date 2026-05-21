@@ -143,6 +143,58 @@ exports.toggleBlock = async (req, res, next) => {
     }
 };
 
+// @desc    Get user's transaction history (Admin view)
+// @route   GET /api/admin/users/:id/transactions
+// @access  Private (Admin)
+exports.getUserTransactions = async (req, res, next) => {
+    try {
+        const transactions = await Transaction.find({ user: req.params.id })
+            .sort({ createdAt: -1 })
+            .limit(100);
+
+        // Group by date — compute last 7 days daily totals
+        const now = new Date();
+        const last7Days = [];
+
+        for (let i = 6; i >= 0; i--) {
+            const dayStart = new Date(now);
+            dayStart.setDate(dayStart.getDate() - i);
+            dayStart.setHours(0, 0, 0, 0);
+
+            const dayEnd = new Date(dayStart);
+            dayEnd.setHours(23, 59, 59, 999);
+
+            const dayTotal = transactions
+                .filter(tx => {
+                    const txDate = new Date(tx.createdAt);
+                    return (
+                        tx.currency === 'INR' &&
+                        tx.type === 'credit' &&
+                        tx.status === 'Success' &&
+                        txDate >= dayStart &&
+                        txDate <= dayEnd
+                    );
+                })
+                .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
+            last7Days.push({
+                date: dayStart.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+                total: parseFloat(dayTotal.toFixed(2))
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                transactions,
+                last7Days
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 // @desc    Delete User
 // @route   DELETE /api/admin/users/:id
 // @access  Private (Admin)

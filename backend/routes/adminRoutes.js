@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const { login, getMe } = require('../controllers/adminAuthController');
-const { getStats, getAlerts } = require('../controllers/adminDashboardController');
-const { getUsers, manageKYC, toggleBlock, getPendingKyc, deleteUser } = require('../controllers/adminUserController');
+const { getStats, getAlerts, getEngagement } = require('../controllers/adminDashboardController');
+const { getUsers, manageKYC, toggleBlock, getPendingKyc, deleteUser, getUserTransactions } = require('../controllers/adminUserController');
 const { 
     createTask, getTasks, updateTask,
     deleteContent 
@@ -41,9 +41,11 @@ router.get('/auth/me', protectAdmin, getMe);
 // Dashboard Routes
 router.get('/dashboard/stats', protectAdmin, getStats);
 router.get('/dashboard/alerts', protectAdmin, getAlerts);
+router.get('/dashboard/engagement', protectAdmin, getEngagement);
 
 // User Management Routes
 router.get('/users', protectAdmin, getUsers);
+router.get('/users/:id/transactions', protectAdmin, getUserTransactions);
 router.put('/users/:id/kyc', protectAdmin, manageKYC);
 router.put('/users/:id/block', protectAdmin, toggleBlock);
 router.delete('/users/:id', protectAdmin, deleteUser);

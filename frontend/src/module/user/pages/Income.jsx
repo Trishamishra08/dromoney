@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import PaymentModal from '../components/PaymentModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { jsPDF } from 'jspdf';
 import {
     Share2, TrendingUp, CheckSquare, Trophy, Briefcase,
     Sparkles, ChevronRight, Lock, Loader2, ShieldCheck, Zap,
@@ -288,22 +289,146 @@ const Income = () => {
 
     const handleDownloadLogo = async () => {
         try {
-            // Pointing to the proxy download API which adds the Content-Disposition attachment header
-            const baseURL = api.defaults.baseURL || '';
-            const downloadUrl = `${baseURL}/public/content/download-logo`;
-            
             addNotification("Downloading!", "Starting logo download to your gallery...", "success");
             
-            // Create a temporary link element to trigger the download directly
+            // Get the logo URL directly from courseData
+            const logoUrl = courseData.page2.logoUrl || LogoImg;
+            
+            console.log("Logo URL:", logoUrl);
+            
+            // Use fetch to get the image as blob
+            const response = await fetch(logoUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const blob = await response.blob();
+            console.log("Blob created:", blob);
+            
+            // Create blob URL and trigger download
+            const blobUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.target = '_blank';
+            link.href = blobUrl;
+            link.download = 'dromoney_logo.png';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            
+            // Clean up
+            setTimeout(() => {
+                window.URL.revokeObjectURL(blobUrl);
+            }, 100);
+            
+            console.log("Download completed");
         } catch (err) {
-            console.error("Download fallback triggered:", err);
-            window.open(courseData.page2.logoUrl || LogoImg, '_blank');
+            console.error("Download error:", err);
+            addNotification("Error", "Failed to download logo. Please try again.", "error");
+        }
+    };
+
+    const handleDownloadCallingScript = () => {
+        try {
+            addNotification("Generating!", "Creating calling script PDF...", "success");
+            
+            // Create PDF document
+            const doc = new jsPDF();
+            
+            // Set font
+            doc.setFont("helvetica");
+            
+            // Title
+            doc.setFontSize(18);
+            doc.setTextColor(255, 140, 0); // Orange color
+            doc.text("DROMONEY - PROFESSIONAL CALLING SCRIPT", 20, 20);
+            
+            // Subtitle
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text("📞 CALLING SCRIPT FOR AFFILIATE MARKETING", 20, 30);
+            
+            // Line separator
+            doc.setDrawColor(200, 200, 200);
+            doc.line(20, 35, 190, 35);
+            
+            let yPosition = 45;
+            const lineHeight = 7;
+            const pageHeight = doc.internal.pageSize.height;
+            const margin = 20;
+            const maxWidth = 170;
+            
+            // Helper function to add text with auto page break
+            const addText = (text, fontSize = 10, isBold = false, color = [0, 0, 0]) => {
+                doc.setFontSize(fontSize);
+                doc.setTextColor(...color);
+                if (isBold) {
+                    doc.setFont("helvetica", "bold");
+                } else {
+                    doc.setFont("helvetica", "normal");
+                }
+                
+                const lines = doc.splitTextToSize(text, maxWidth);
+                lines.forEach((line) => {
+                    if (yPosition > pageHeight - margin) {
+                        doc.addPage();
+                        yPosition = margin;
+                    }
+                    doc.text(line, margin, yPosition);
+                    yPosition += lineHeight;
+                });
+            };
+            
+            // Content
+            addText("OPENING", 11, true, [255, 140, 0]);
+            addText('"नमस्ते! मैं Dromoney से बोल रहा हूँ। क्या आपके पास 2 मिनट हैं?"', 10);
+            yPosition += 3;
+            
+            addText("INTRODUCTION", 11, true, [255, 140, 0]);
+            addText('"Dromoney एक platform है जहाँ आप सीखकर कमा सकते हैं। बिना किसी investment के!"', 10);
+            yPosition += 3;
+            
+            addText("KEY BENEFITS", 11, true, [255, 140, 0]);
+            addText("✓ ₹200 per referral commission", 10);
+            addText("✓ 100% genuine payment", 10);
+            addText("✓ Direct bank transfer", 10);
+            addText("✓ No hidden charges", 10);
+            addText("✓ Flexible working hours", 10);
+            yPosition += 3;
+            
+            addText("OBJECTION HANDLING", 11, true, [255, 140, 0]);
+            
+            addText("Q: क्या यह genuine है?", 10, true);
+            addText('"हाँ, हम 100% genuine हैं। हजारों users पहले से earning कर रहे हैं।"', 10);
+            yPosition += 2;
+            
+            addText("Q: क्या investment लगेगी?", 10, true);
+            addText('"नहीं, बिल्कुल free है। सिर्फ 15 मिनट daily काम करना है।"', 10);
+            yPosition += 2;
+            
+            addText("Q: Payment कब मिलेगी?", 10, true);
+            addText('"7 दिन के अंदर आपके bank account में सीधा transfer हो जाएगी।"', 10);
+            yPosition += 3;
+            
+            addText("CLOSING", 11, true, [255, 140, 0]);
+            addText('"तो क्या आप आज ही शुरू करना चाहेंगे? मैं आपको registration में help कर दूँगा।"', 10);
+            yPosition += 3;
+            
+            addText("FOLLOW UP", 11, true, [255, 140, 0]);
+            addText('"अगर आपको कोई सवाल हो तो बेझिझक पूछें। मैं हमेशा आपकी मदद के लिए यहाँ हूँ।"', 10);
+            yPosition += 5;
+            
+            // Footer
+            doc.setFontSize(9);
+            doc.setTextColor(150, 150, 150);
+            doc.text(`Generated on: ${new Date().toLocaleDateString('hi-IN')}`, margin, pageHeight - 10);
+            doc.text("For more info: www.dromoney.com", margin, pageHeight - 5);
+            
+            // Save PDF
+            doc.save("Dromoney_Calling_Script.pdf");
+            
+            addNotification("Success!", "Calling script PDF downloaded!", "success");
+        } catch (err) {
+            console.error("PDF download error:", err);
+            addNotification("Error", "Failed to download script. Please try again.", "error");
         }
     };
 
@@ -574,14 +699,12 @@ const Income = () => {
                                             </h4>
                                             <p className="text-[12px] font-semibold leading-relaxed text-slate-600 font-sans">{courseData.page2.step5Details}</p>
                                             {courseData.page2.callScriptLink && (
-                                                <a
-                                                    href={courseData.page2.callScriptLink}
-                                                    target="_blank"
-                                                    rel="noreferrer"
+                                                <button
+                                                    onClick={handleDownloadCallingScript}
                                                     className="w-full mt-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black uppercase text-[10px] tracking-widest py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all text-center"
                                                 >
                                                     <Download size={14} /> View Calling Scripts (PDF)
-                                                </a>
+                                                </button>
                                             )}
                                         </div>
                                     )}

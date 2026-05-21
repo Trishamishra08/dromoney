@@ -110,18 +110,31 @@ export const taskStorage = {
 
         // Force update if tasks are missing or the list is old (less than 10 tasks)
         if (!currentTasks || currentTasks.length < 10) {
-            localStorage.setItem(TASKS_KEY, JSON.stringify(INITIAL_TASKS));
-            return INITIAL_TASKS;
+            const normalizedInitial = INITIAL_TASKS.map(t => ({
+                ...t,
+                id: t._id || t.id,
+                _id: t._id || t.id
+            }));
+            localStorage.setItem(TASKS_KEY, JSON.stringify(normalizedInitial));
+            return normalizedInitial;
         }
-        return currentTasks;
+        return currentTasks.map(t => ({
+            ...t,
+            id: t._id || t.id,
+            _id: t._id || t.id
+        }));
     },
     
     // Sync server tasks to local storage
     syncTasks: (serverTasks) => {
         if (!serverTasks || !Array.isArray(serverTasks)) return;
-        localStorage.setItem(TASKS_KEY, JSON.stringify(serverTasks));
+        const normalized = serverTasks.map(t => ({
+            ...t,
+            id: t._id || t.id,
+            _id: t._id || t.id
+        }));
+        localStorage.setItem(TASKS_KEY, JSON.stringify(normalized));
     },
-
     // Add a new task (Admin Side)
     saveTask: (task) => {
         const tasks = taskStorage.getTasks();

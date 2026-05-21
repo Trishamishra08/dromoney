@@ -29,7 +29,7 @@ const STATUS_COLORS = {
 const TabBtn = ({ active, onClick, icon: Icon, label }) => (
     <button
         onClick={onClick}
-        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all font-['Poppins'] ${
             active ? 'bg-sky-500 text-white shadow-lg shadow-sky-200' : 'text-slate-500 hover:bg-slate-50'
         }`}
     >
@@ -39,7 +39,7 @@ const TabBtn = ({ active, onClick, icon: Icon, label }) => (
 );
 
 const Toast = ({ msg, type }) => (
-    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl text-white text-[12px] font-black uppercase tracking-widest animate-in slide-in-from-bottom-4 duration-300 ${type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl text-white text-[12px] font-black uppercase tracking-widest animate-in slide-in-from-bottom-4 duration-300 font-['Poppins'] ${type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}`}>
         {type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
         {msg}
     </div>
@@ -53,7 +53,10 @@ const OverviewTab = ({ events, onUpdateEvent, onDeleteEvent, onShowToast }) => {
 
     const startEdit = (event) => {
         setEditingId(event.id);
-        setEditData({ ...event });
+        setEditData({ 
+            ...event, 
+            fee: Math.max(0, event.fee) // Ensure fee is never negative
+        });
     };
 
     const saveEdit = () => {
@@ -81,7 +84,7 @@ const OverviewTab = ({ events, onUpdateEvent, onDeleteEvent, onShowToast }) => {
                 const isEditing = editingId === event.id;
 
                 return (
-                    <div key={event.id} className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative group">
+                    <div key={event.id} className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative group font-['Poppins']">
                         {/* Delete Button on Hover */}
                         <button
                             onClick={() => {
@@ -109,9 +112,9 @@ const OverviewTab = ({ events, onUpdateEvent, onDeleteEvent, onShowToast }) => {
                                             className="text-[14px] font-black text-slate-800 border-b-2 border-sky-400 bg-transparent outline-none w-40"
                                         />
                                     ) : (
-                                        <h3 className="font-black text-slate-800 text-[14px] leading-none">{event.title}</h3>
+                                        <h3 className="font-black text-slate-800 text-[14px] leading-none font-['Poppins']">{event.title}</h3>
                                     )}
-                                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${TAG_COLORS[event.tag] || 'bg-slate-50 border-slate-100'}`}>
+                                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border font-['Poppins'] ${TAG_COLORS[event.tag] || 'bg-slate-50 border-slate-100'}`}>
                                         {event.tag}
                                     </span>
                                 </div>
@@ -128,7 +131,7 @@ const OverviewTab = ({ events, onUpdateEvent, onDeleteEvent, onShowToast }) => {
                                     <option value="Coming Soon">Coming Soon</option>
                                 </select>
                             ) : (
-                                <span className={`px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border ${STATUS_COLORS[event.status] || STATUS_COLORS.Inactive}`}>
+                                <span className={`px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border font-['Poppins'] ${STATUS_COLORS[event.status] || STATUS_COLORS.Inactive}`}>
                                     {event.status}
                                 </span>
                             )}
@@ -137,32 +140,32 @@ const OverviewTab = ({ events, onUpdateEvent, onDeleteEvent, onShowToast }) => {
                         {/* Stats */}
                         <div className="grid grid-cols-4 gap-2 mb-4">
                             {[
-                                { label: 'Entry', value: isEditing ? null : `${event.fee} Coins`, edit: <input type="number" value={editData.fee} onChange={e => setEditData(p => ({ ...p, fee: +e.target.value }))} className="w-14 border-b border-sky-300 text-center text-sm font-black outline-none bg-transparent" /> },
+                                { label: 'Entry', value: isEditing ? null : `${Math.max(0, event.fee)} Coins`, edit: <input type="number" min="0" value={editData.fee} onChange={e => setEditData(p => ({ ...p, fee: Math.max(0, +e.target.value) }))} className="w-14 border-b border-sky-300 text-center text-sm font-black outline-none bg-transparent" /> },
                                 { label: 'Prize', value: isEditing ? null : event.prize, edit: <input value={editData.prize} onChange={e => setEditData(p => ({ ...p, prize: e.target.value }))} className="w-16 border-b border-sky-300 text-center text-sm font-black outline-none bg-transparent" /> },
                                 { label: 'Joined', value: event.participantsCount || 0 },
                                 { label: 'Awarded', value: event.awardedCount || 0 },
                             ].map((stat, i) => (
-                                <div key={i} className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 text-center">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                                <div key={i} className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 text-center font-['Poppins']">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 font-['Poppins']">{stat.label}</p>
                                     {(i === 0 || i === 1) && isEditing
                                         ? <div className="flex justify-center">{stat.edit}</div>
-                                        : <p className="text-sm font-black text-slate-900">{stat.value}</p>
+                                        : <p className="text-sm font-black text-slate-900 font-['Poppins']">{stat.value}</p>
                                     }
                                 </div>
                             ))}
                         </div>
 
                         {/* Start Time */}
-                        <div className="mb-4">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Start Time</p>
+                        <div className="mb-4 font-['Poppins']">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 font-['Poppins']">Start Time</p>
                             {isEditing ? (
                                 <input
                                     value={editData.startTime}
                                     onChange={e => setEditData(p => ({ ...p, startTime: e.target.value }))}
-                                    className="text-sm font-black text-slate-700 border-b border-sky-300 outline-none bg-transparent w-full"
+                                    className="text-sm font-black text-slate-700 border-b border-sky-300 outline-none bg-transparent w-full font-['Poppins']"
                                 />
                             ) : (
-                                <p className="text-sm font-black text-slate-700">{event.startTime}</p>
+                                <p className="text-sm font-black text-slate-700 font-['Poppins']">{event.startTime}</p>
                             )}
                         </div>
 
@@ -170,19 +173,19 @@ const OverviewTab = ({ events, onUpdateEvent, onDeleteEvent, onShowToast }) => {
                         <div className="flex gap-2">
                             {isEditing ? (
                                 <>
-                                    <button onClick={saveEdit} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest bg-emerald-500 text-white active:scale-95 transition-all">
+                                    <button onClick={saveEdit} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest bg-emerald-500 text-white active:scale-95 transition-all font-['Poppins']">
                                         <Save size={13} /> Save
                                     </button>
-                                    <button onClick={() => setEditingId(null)} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest bg-slate-100 text-slate-500">
+                                    <button onClick={() => setEditingId(null)} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest bg-slate-100 text-slate-500 font-['Poppins']">
                                         <X size={13} /> Cancel
                                     </button>
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => startEdit(event)} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest bg-sky-50 text-sky-600 hover:bg-sky-100 transition-all">
+                                    <button onClick={() => startEdit(event)} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest bg-sky-50 text-sky-600 hover:bg-sky-100 transition-all font-['Poppins']">
                                         <Edit3 size={13} /> Edit
                                     </button>
-                                    <button onClick={() => toggleStatus(event)} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${event.status === 'Active' ? 'bg-rose-50 text-rose-600 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}>
+                                    <button onClick={() => toggleStatus(event)} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all font-['Poppins'] ${event.status === 'Active' ? 'bg-rose-50 text-rose-600 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}>
                                         {event.status === 'Active' ? <><Square size={13} /> Stop</> : <><Play size={13} /> Activate</>}
                                     </button>
                                 </>
@@ -315,12 +318,12 @@ const ContentTab = ({ events, onRefreshEvents, onShowToast }) => {
     if (!sel) return <div className="text-center py-12 text-slate-400">Please create an event first.</div>;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 font-['Poppins']">
             {/* Event Selector */}
             <div className="flex flex-wrap gap-2">
                 {events.map(ev => (
                     <button key={ev.id} onClick={() => setSelectedEventId(ev.id)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border transition-all ${selectedEventId === ev.id ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}`}>
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border transition-all font-['Poppins'] ${selectedEventId === ev.id ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}`}>
                         <span className={`w-2 h-2 rounded-full ${ev.status === 'Active' ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
                         {ev.title}
                     </button>
@@ -329,14 +332,14 @@ const ContentTab = ({ events, onRefreshEvents, onShowToast }) => {
 
             {/* Quiz Content */}
             {sel.tag === 'Quiz' && (
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 animate-in fade-in">
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 animate-in fade-in font-['Poppins']">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-[15px] font-black text-slate-800">Quiz Questions ({questions.length})</h3>
+                        <h3 className="text-[15px] font-black text-slate-800 font-['Poppins']">Quiz Questions ({questions.length})</h3>
                         <div className="flex gap-2">
-                            <button onClick={addQuestion} className="flex items-center gap-1.5 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-100 transition-all">
+                            <button onClick={addQuestion} className="flex items-center gap-1.5 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-100 transition-all font-['Poppins']">
                                 <Plus size={14} /> Add Question
                             </button>
-                            <button onClick={saveQuestions} className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-md">
+                            <button onClick={saveQuestions} className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-md font-['Poppins']">
                                 <Save size={14} /> Save All
                             </button>
                         </div>
@@ -380,14 +383,14 @@ const ContentTab = ({ events, onRefreshEvents, onShowToast }) => {
 
             {/* Lucky Draw Content */}
             {sel.tag === 'Draw' && (
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 animate-in fade-in">
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 animate-in fade-in font-['Poppins']">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-[15px] font-black text-slate-800">Draw Prizes ({prizes.length})</h3>
+                        <h3 className="text-[15px] font-black text-slate-800 font-['Poppins']">Draw Prizes ({prizes.length})</h3>
                         <div className="flex gap-2">
-                            <button onClick={addPrize} className="flex items-center gap-1.5 px-4 py-2 bg-purple-50 text-purple-600 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-purple-100 transition-all">
+                            <button onClick={addPrize} className="flex items-center gap-1.5 px-4 py-2 bg-purple-50 text-purple-600 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-purple-100 transition-all font-['Poppins']">
                                 <Plus size={14} /> Add Prize
                             </button>
-                            <button onClick={savePrizes} className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-md">
+                            <button onClick={savePrizes} className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-md font-['Poppins']">
                                 <Save size={14} /> Save All
                             </button>
                         </div>
@@ -399,11 +402,11 @@ const ContentTab = ({ events, onRefreshEvents, onShowToast }) => {
                                 <input value={p.label} onChange={e => updatePrize(idx, 'label', e.target.value)} className="flex-1 text-sm font-bold text-slate-800 bg-white border border-slate-200 rounded-lg px-3 py-1.5 outline-none" placeholder="Label (e.g. ₹500)" />
                                 <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1.5">
                                     <span className="text-[10px] text-slate-400 font-bold">Cash ₹</span>
-                                    <input type="number" value={p.cash} onChange={e => updatePrize(idx, 'cash', +e.target.value)} className="w-14 text-sm font-bold text-slate-800 outline-none text-center" />
+                                    <input type="number" min="0" value={p.cash} onChange={e => updatePrize(idx, 'cash', Math.max(0, +e.target.value))} className="w-14 text-sm font-bold text-slate-800 outline-none text-center" />
                                 </div>
                                 <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1.5">
                                     <Coins size={12} className="text-amber-500" />
-                                    <input type="number" value={p.coins} onChange={e => updatePrize(idx, 'coins', +e.target.value)} className="w-14 text-sm font-bold text-slate-800 outline-none text-center" />
+                                    <input type="number" min="0" value={p.coins} onChange={e => updatePrize(idx, 'coins', Math.max(0, +e.target.value))} className="w-14 text-sm font-bold text-slate-800 outline-none text-center" />
                                 </div>
                                 <button onClick={() => deletePrize(idx)} className="p-1.5 text-rose-400 hover:bg-rose-50 rounded-lg transition-all">
                                     <Trash2 size={14} />
@@ -417,19 +420,19 @@ const ContentTab = ({ events, onRefreshEvents, onShowToast }) => {
 
             {/* Memory Master Content */}
             {sel.tag === 'Brain' && (
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 animate-in fade-in">
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 animate-in fade-in font-['Poppins']">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-[15px] font-black text-slate-800">Card Symbols ({cards.length})</h3>
+                        <h3 className="text-[15px] font-black text-slate-800 font-['Poppins']">Card Symbols ({cards.length})</h3>
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                                <span className="text-[10px] font-black text-slate-400 uppercase">Peek (s)</span>
-                                <input type="number" step="0.5" value={peekTime} onChange={e => setPeekTime(e.target.value)} className="w-12 text-sm font-black text-slate-800 outline-none text-center bg-transparent" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase font-['Poppins']">Peek (s)</span>
+                                <input type="number" step="0.5" min="0" value={peekTime} onChange={e => setPeekTime(Math.max(0, e.target.value))} className="w-12 text-sm font-black text-slate-800 outline-none text-center bg-transparent font-['Poppins']" />
                             </div>
                             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                                <span className="text-[10px] font-black text-slate-400 uppercase">Game (s)</span>
-                                <input type="number" value={maxTime} onChange={e => setMaxTime(e.target.value)} className="w-12 text-sm font-black text-slate-800 outline-none text-center bg-transparent" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase font-['Poppins']">Game (s)</span>
+                                <input type="number" min="1" value={maxTime} onChange={e => setMaxTime(Math.max(1, e.target.value))} className="w-12 text-sm font-black text-slate-800 outline-none text-center bg-transparent font-['Poppins']" />
                             </div>
-                            <button onClick={saveMemoryGame} className="flex items-center gap-1.5 px-4 py-2 bg-indigo-500 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-md">
+                            <button onClick={saveMemoryGame} className="flex items-center gap-1.5 px-4 py-2 bg-indigo-500 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-md font-['Poppins']">
                                 <Save size={14} /> Save Config
                             </button>
                         </div>
@@ -927,6 +930,7 @@ const EventsAdmin = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [createLoading, setCreateLoading] = useState(false);
     const [toast, setToast] = useState(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newEventData, setNewEventData] = useState({
@@ -987,6 +991,7 @@ const EventsAdmin = () => {
 
     const handleAddEvent = async (e) => {
         e.preventDefault();
+        setCreateLoading(true);
         try {
             // Setup default config templates based on tag
             let defaultConfig = {};
@@ -1039,6 +1044,8 @@ const EventsAdmin = () => {
         } catch (err) {
             console.error(err);
             showToast("Failed to create event", "error");
+        } finally {
+            setCreateLoading(false);
         }
     };
 
@@ -1048,14 +1055,14 @@ const EventsAdmin = () => {
     };
 
     return (
-        <div className="p-6 animate-in fade-in duration-500">
+        <div className="p-6 animate-in fade-in duration-500 font-['Poppins']">
             {toast && <Toast msg={toast.msg} type={toast.type} />}
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <PageHeader title="Events & Contests" subtitle="Manage live events, content, and participants" />
                 <button
                     onClick={() => setIsAddModalOpen(true)}
-                    className="flex items-center gap-2 px-5 py-3 bg-sky-500 text-white rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-lg shadow-sky-200 hover:bg-sky-600 active:scale-95 transition-all"
+                    className="flex items-center gap-2 px-5 py-3 bg-sky-500 text-white rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-lg shadow-sky-200 hover:bg-sky-600 active:scale-95 transition-all font-['Poppins']"
                 >
                     <Plus size={16} /> Add Event
                 </button>
@@ -1089,36 +1096,36 @@ const EventsAdmin = () => {
             {/* Add Event Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                        <form onSubmit={handleAddEvent} className="p-8 relative space-y-6">
+                    <div className="bg-white w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 font-['Poppins']">
+                        <form onSubmit={handleAddEvent} className="p-8 relative space-y-6 font-['Poppins']">
                             <button type="button" onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
                                 <X size={20} />
                             </button>
 
                             <div>
-                                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Create New Event</h2>
-                                <p className="text-slate-400 font-bold text-xs mt-1">Configure event metadata and default parameters</p>
+                                <h2 className="text-2xl font-black text-slate-800 tracking-tight font-['Poppins']">Create New Event</h2>
+                                <p className="text-slate-400 font-bold text-xs mt-1 font-['Poppins']">Configure event metadata and default parameters</p>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-4 font-['Poppins']">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Event Title</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-['Poppins']">Event Title</label>
                                     <input
                                         required
                                         value={newEventData.title}
                                         onChange={e => setNewEventData(p => ({ ...p, title: e.target.value }))}
                                         placeholder="e.g. Daily Brain Quiz"
-                                        className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white transition-all"
+                                        className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white transition-all font-['Poppins']"
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Game Type</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-['Poppins']">Game Type</label>
                                         <select
                                             value={newEventData.tag}
                                             onChange={e => setNewEventData(p => ({ ...p, tag: e.target.value }))}
-                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white"
+                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white font-['Poppins']"
                                         >
                                             <option value="Quiz">Quiz Game</option>
                                             <option value="Draw">Lucky Draw</option>
@@ -1127,46 +1134,47 @@ const EventsAdmin = () => {
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Entry Fee (Coins)</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-['Poppins']">Entry Fee (Coins)</label>
                                         <input
                                             type="number"
+                                            min="0"
                                             required
                                             value={newEventData.fee}
-                                            onChange={e => setNewEventData(p => ({ ...p, fee: +e.target.value }))}
-                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white"
+                                            onChange={e => setNewEventData(p => ({ ...p, fee: Math.max(0, +e.target.value) }))}
+                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white font-['Poppins']"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pool Prize Description</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-['Poppins']">Pool Prize Description</label>
                                         <input
                                             required
                                             value={newEventData.prize}
                                             onChange={e => setNewEventData(p => ({ ...p, prize: e.target.value }))}
                                             placeholder="e.g. ₹500 Pool"
-                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white"
+                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white font-['Poppins']"
                                         />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Start Time</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-['Poppins']">Start Time</label>
                                         <input
                                             required
                                             value={newEventData.startTime}
                                             onChange={e => setNewEventData(p => ({ ...p, startTime: e.target.value }))}
-                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white"
+                                            className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white font-['Poppins']"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest font-['Poppins']">Status</label>
                                     <select
                                         value={newEventData.status}
                                         onChange={e => setNewEventData(p => ({ ...p, status: e.target.value }))}
-                                        className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white"
+                                        className="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-sky-400 focus:bg-white font-['Poppins']"
                                     >
                                         <option value="Active">Active</option>
                                         <option value="Inactive">Inactive</option>
@@ -1178,9 +1186,19 @@ const EventsAdmin = () => {
 
                             <button
                                 type="submit"
-                                className="w-full bg-sky-500 text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-xl shadow-sky-200 hover:bg-sky-600 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                disabled={createLoading}
+                                className="w-full bg-sky-500 disabled:bg-sky-300 text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-widest shadow-xl shadow-sky-200 hover:bg-sky-600 active:scale-95 transition-all flex items-center justify-center gap-2 font-['Poppins']"
                             >
-                                <Plus size={16} /> Create Event
+                                {createLoading ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <span className="font-['Poppins']">Creating...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Plus size={16} /> <span className="font-['Poppins']">Create Event</span>
+                                    </>
+                                )}
                             </button>
                         </form>
                     </div>

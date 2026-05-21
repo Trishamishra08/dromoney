@@ -29,6 +29,16 @@ exports.updateSettings = asyncHandler(async (req, res) => {
         businessPlans: req.body.businessPlans
     };
 
+    // Ensure referralCommission is never negative
+    if (updateData.referralCommission !== undefined) {
+        updateData.referralCommission = Math.max(0, Number(updateData.referralCommission) || 0);
+    }
+
+    // Ensure minWithdrawal is never negative
+    if (updateData.minWithdrawal !== undefined) {
+        updateData.minWithdrawal = Math.max(0, Number(updateData.minWithdrawal) || 0);
+    }
+
     if (!settings) {
         settings = await Settings.create(updateData);
     } else {

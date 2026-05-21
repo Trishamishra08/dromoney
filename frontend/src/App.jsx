@@ -5,7 +5,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import UserLayout from './module/user/UserLayout';
 import Home from './module/user/pages/Home';
 import Earn from './module/user/pages/Earn';
-import History from './module/user/pages/History';
 import Events from './module/user/pages/Events';
 import Profile from './module/user/pages/Profile';
 import Wallet from './module/user/pages/Wallet';
@@ -68,24 +67,19 @@ import { Loader2 } from 'lucide-react';
 
 // Protected Route Component
 const ProtectedUserRoute = ({ children }) => {
-  const { isAuthenticated, userData, loading, logout } = useUser();
+  const { isAuthenticated, userData, loading } = useUser();
 
-  if (!isAuthenticated) return <Navigate to="/user/auth/login" replace />;
-
-  // Show loader while fetching user profile on initial load
-  if (loading || !userData) {
+  // Still initializing — token exists but profile not yet loaded
+  // Show a neutral splash instead of redirecting to login
+  if (loading && !userData?.mongoId) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center gap-4">
-        <div className="relative">
-          <div className="w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-2 h-2 bg-sky-500 rounded-full animate-ping"></div>
-          </div>
-        </div>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">Syncing Securely...</p>
+      <div className="min-h-screen bg-[#0f1d3a] flex flex-col items-center justify-center gap-4">
+        <div className="w-10 h-10 border-4 border-white/10 border-t-white/60 rounded-full animate-spin"></div>
       </div>
     );
   }
+
+  if (!isAuthenticated) return <Navigate to="/user/auth/login" replace />;
 
   return children;
 };
@@ -108,6 +102,13 @@ const ProtectedAdminRoute = ({ children }) => {
   return children;
 };
 
+// Smart root redirect — goes to home if logged in, login if not
+const RootRedirect = () => {
+  const { isAuthenticated, loading } = useUser();
+  if (loading) return null; // wait silently
+  return <Navigate to={isAuthenticated ? '/user/home' : '/user/auth/login'} replace />;
+};
+
 function App() {
   const [showSplash, setShowSplash] = React.useState(true);
 
@@ -119,8 +120,8 @@ function App() {
         ) : (
           <Router>
           <Routes>
-            {/* Redirecting root to login */}
-            <Route path="/" element={<Navigate to="/user/auth/login" replace />} />
+            {/* Redirecting root to login or home based on auth */}
+            <Route path="/" element={<RootRedirect />} />
 
             {/* Auth Module Routes (Always Public) */}
             <Route path="/user/auth" element={<AuthLayout />}>
@@ -140,7 +141,7 @@ function App() {
               <Route path="income-info" element={<IncomeInfo />} />
               <Route path="marketing" element={<Marketing />} />
               <Route path="marketing-history" element={<MarketingHistory />} />
-              <Route path="history" element={<History />} />
+              <Route path="history" element={<Navigate to="/user/wallet" replace />} />
               <Route path="events" element={<Events />} />
               <Route path="wallet" element={<Wallet />} />
               <Route path="profile" element={<Profile />} />

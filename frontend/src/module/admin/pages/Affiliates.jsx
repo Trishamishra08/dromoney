@@ -48,10 +48,12 @@ const Affiliates = () => {
     }, []);
 
     const handleUpdateRate = async () => {
+        const safeRate = Math.max(0, parseFloat(tempRate) || 0);
         try {
-            const res = await api.put('/admin/settings', { referralCommission: parseFloat(tempRate) });
+            const res = await api.put('/admin/settings', { referralCommission: safeRate });
             if (res.success) {
-                setRate(tempRate);
+                setRate(safeRate);
+                setTempRate(safeRate);
                 setEditing(false);
                 alert('Commission rate updated successfully!');
             }
@@ -83,7 +85,7 @@ const Affiliates = () => {
     };
 
     return (
-        <div className="p-4 space-y-5 animate-in fade-in duration-500 bg-[#f9f6f1] min-h-screen pb-20 overflow-x-hidden">
+        <div className="p-4 space-y-5 animate-in fade-in duration-500 bg-[#f9f6f1] min-h-screen pb-20 overflow-x-hidden font-['Poppins']">
             <PageHeader title="Affiliate Management" subtitle="Monitor referral network and adjust commission rates" />
 
             {/* Stat Cards */}
@@ -99,22 +101,26 @@ const Affiliates = () => {
                 <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-sky-50 rounded-lg text-sky-600 shadow-inner flex items-center justify-center"><Share2 size={18} /></div>
                     <div>
-                        <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Registration Reward</h3>
+                        <h3 className="text-[9px] text-slate-400 uppercase tracking-widest leading-none mb-1.5">Registration Reward</h3>
                         {editing ? (
                             <div className="flex items-center gap-2">
-                                <span className="font-black text-slate-600 text-sm">₹</span>
+                                <span className=" text-slate-600 text-sm">₹</span>
                                 <input
                                     type="number"
+                                    min="0"
                                     value={tempRate}
-                                    onChange={(e) => setTempRate(e.target.value)}
-                                    className="w-16 bg-slate-50 border border-sky-200 rounded-lg px-2 py-1 text-sm font-black text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
+                                    onChange={(e) => {
+                                        const val = e.target.value === '' ? '' : Math.max(0, Number(e.target.value));
+                                        setTempRate(val);
+                                    }}
+                                    className="w-16 bg-slate-50 border border-sky-200 rounded-lg px-2 py-1 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-sky-500"
                                 />
-                                <button onClick={handleUpdateRate} className="bg-sky-500 text-white px-2 py-1 rounded-md font-black text-[9px] uppercase">Save</button>
-                                <button onClick={() => setEditing(false)} className="text-slate-400 text-[9px] font-black uppercase px-1">X</button>
+                                <button onClick={handleUpdateRate} className="bg-sky-500 text-white px-2 py-1 rounded-md text-[9px] uppercase">Save</button>
+                                <button onClick={() => setEditing(false)} className="text-slate-400 text-[9px] uppercase px-1">X</button>
                             </div>
                         ) : (
                             <div className="flex items-center gap-2">
-                                <p className="text-lg font-black text-slate-900 leading-none">₹{rate}</p>
+                                <p className="text-lg text-slate-900 leading-none">₹{rate}</p>
                                 <button onClick={() => { setTempRate(rate); setEditing(true); }} className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-md transition-all" title="Click to change commission">
                                     <Edit2 size={10} />
                                 </button>
@@ -130,7 +136,7 @@ const Affiliates = () => {
                     </div>
                     <div className="flex gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-100 shadow-inner">
                         {['All', 'Credited', 'Pending'].map(t => (
-                            <button key={t} onClick={() => { setFilter(t); setCurrentPage(1); }} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filter === t ? 'bg-[#0F172A] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>{t}</button>
+                            <button key={t} onClick={() => { setFilter(t); setCurrentPage(1); }} className={`px-4 py-2 rounded-lg text-[9px] uppercase tracking-widest transition-all ${filter === t ? 'bg-[#0F172A] text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>{t}</button>
                         ))}
                     </div>
                 </div>
@@ -142,11 +148,11 @@ const Affiliates = () => {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="text-left px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Referrer</th>
-                                <th className="text-left px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">New Joiner</th>
-                                <th className="text-left px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Reward</th>
-                                <th className="text-left px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Status</th>
-                                <th className="text-center px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Audit</th>
+                                <th className="text-left px-8 py-5 text-[10px] text-slate-400 uppercase tracking-[0.25em]">Referrer</th>
+                                <th className="text-left px-8 py-5 text-[10px] text-slate-400 uppercase tracking-[0.25em]">New Joiner</th>
+                                <th className="text-left px-8 py-5 text-[10px] text-slate-400 uppercase tracking-[0.25em]">Reward</th>
+                                <th className="text-left px-8 py-5 text-[10px] text-slate-400 uppercase tracking-[0.25em]">Status</th>
+                                <th className="text-center px-8 py-5 text-[10px] text-slate-400 uppercase tracking-[0.25em]">Audit</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -154,12 +160,12 @@ const Affiliates = () => {
                                 <tr key={r.id} className="hover:bg-slate-50/40 transition-colors group">
                                     <td className="px-8 py-5">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center text-sky-400 font-black text-[11px] shadow-sm">{r.referrer.charAt(0)}</div>
-                                            <span className="font-black text-slate-800 text-[13px] tracking-tight">{r.referrer}</span>
+                                            <div className="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center text-sky-400 text-[11px] shadow-sm">{r.referrer.charAt(0)}</div>
+                                            <span className=" text-slate-800 text-[13px] tracking-tight">{r.referrer}</span>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-5"><span className="font-black text-indigo-600 text-[13px] tracking-tight">{r.referredTo}</span></td>
-                                    <td className="px-8 py-5 font-black text-emerald-600 text-[14px]">{r.reward}</td>
+                                    <td className="px-8 py-5"><span className=" text-indigo-600 text-[13px] tracking-tight">{r.referredTo}</span></td>
+                                    <td className="px-8 py-5 text-emerald-600 text-[14px]">{r.reward}</td>
                                     <td className="px-8 py-5"><StatusBadge status={r.status} /></td>
                                     <td className="px-8 py-5">
                                         <div className="flex justify-center">
@@ -168,7 +174,7 @@ const Affiliates = () => {
                                     </td>
                                 </tr>
                             )) : (
-                                <tr><td colSpan="5" className="py-24 text-center"><p className="text-[11px] font-black uppercase tracking-widest text-slate-400">No records found</p></td></tr>
+                                <tr><td colSpan="5" className="py-24 text-center"><p className="text-[11px] uppercase tracking-widest text-slate-400">No records found</p></td></tr>
                             )}
                         </tbody>
                     </table>
@@ -176,14 +182,14 @@ const Affiliates = () => {
 
                 {/* Standardized Pagination Footer */}
                 <div className="px-8 py-5 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest order-2 sm:order-1 outline-none">
+                    <div className="text-[10px] text-slate-400 uppercase tracking-widest order-2 sm:order-1 outline-none">
                         Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filtered.length)} of {filtered.length} entries
                     </div>
                     <div className="flex items-center gap-2 order-1 sm:order-2">
                         <button
                             disabled={currentPage === 1}
                             onClick={() => setCurrentPage(prev => prev - 1)}
-                            className="px-4 py-2 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100 disabled:opacity-30 transition-all shadow-sm"
+                            className="px-4 py-2 bg-white border border-slate-100 rounded-xl text-[10px] uppercase text-slate-500 hover:bg-slate-100 disabled:opacity-30 transition-all shadow-sm"
                         >
                             Prev
                         </button>
@@ -192,7 +198,7 @@ const Affiliates = () => {
                                 <button
                                     key={i}
                                     onClick={() => setCurrentPage(i + 1)}
-                                    className={`w-9 h-9 rounded-xl text-[10px] font-black flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#0F172A] text-white shadow-lg' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`}
+                                    className={`w-9 h-9 rounded-xl text-[10px] flex items-center justify-center transition-all ${currentPage === i + 1 ? 'bg-[#0F172A] text-white shadow-lg' : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'}`}
                                 >
                                     {i + 1}
                                 </button>
@@ -201,7 +207,7 @@ const Affiliates = () => {
                         <button
                             disabled={currentPage === totalPages || totalPages === 0}
                             onClick={() => setCurrentPage(prev => prev + 1)}
-                            className="px-4 py-2 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100 disabled:opacity-30 transition-all shadow-sm"
+                            className="px-4 py-2 bg-white border border-slate-100 rounded-xl text-[10px] uppercase text-slate-500 hover:bg-slate-100 disabled:opacity-30 transition-all shadow-sm"
                         >
                             Next
                         </button>
@@ -216,8 +222,8 @@ const Affiliates = () => {
                     <div className="relative bg-white w-full max-w-[420px] rounded-[40px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
                         <div className="bg-[#0F172A] p-7 text-white flex justify-between items-center">
                             <div>
-                                <h3 className="text-xl font-black tracking-tight">Referral Audit</h3>
-                                <p className="text-[10px] text-sky-400 font-black uppercase tracking-[0.2em] mt-1">Audit ID: #990{selectedAudit.id}</p>
+                                <h3 className="text-xl tracking-tight">Referral Audit</h3>
+                                <p className="text-[10px] text-sky-400 uppercase tracking-[0.2em] mt-1">Audit ID: #990{selectedAudit.id}</p>
                             </div>
                             <button onClick={() => setIsAuditOpen(false)} className="text-white/40 hover:text-white transition-colors"><XCircle size={28} /></button>
                         </div>
@@ -226,29 +232,29 @@ const Affiliates = () => {
                             {/* Simplified Timeline */}
                             <div className="space-y-6 relative border-l-2 border-slate-100 ml-4 pl-8">
                                 <div className="relative">
-                                    <div className="absolute -left-[50px] top-0 w-[42px] h-[42px] bg-slate-900 rounded-2xl flex items-center justify-center text-sky-400 text-[14px] font-black shadow-lg">1</div>
-                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Registration</p>
-                                    <p className="text-[14px] font-black text-slate-800">{selectedAudit.date} at {selectedAudit.joinTime}</p>
+                                    <div className="absolute -left-[50px] top-0 w-[42px] h-[42px] bg-slate-900 rounded-2xl flex items-center justify-center text-sky-400 text-[14px] shadow-lg">1</div>
+                                    <p className="text-[11px] text-slate-400 uppercase tracking-widest mb-1">Registration</p>
+                                    <p className="text-[14px] text-slate-800">{selectedAudit.date} at {selectedAudit.joinTime}</p>
                                     <p className="text-[10px] font-bold text-slate-400 mt-1 italic">IP Address: {selectedAudit.ip}</p>
                                 </div>
 
                                 <div className="relative">
-                                    <div className="absolute -left-[50px] top-0 w-[42px] h-[42px] bg-sky-500 rounded-2xl flex items-center justify-center text-white text-[14px] font-black shadow-lg">2</div>
-                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Platform Fee Paid</p>
-                                    <p className="text-[14px] font-black text-slate-800 flex items-center gap-2">
+                                    <div className="absolute -left-[50px] top-0 w-[42px] h-[42px] bg-sky-500 rounded-2xl flex items-center justify-center text-white text-[14px] shadow-lg">2</div>
+                                    <p className="text-[11px] text-slate-400 uppercase tracking-widest mb-1">Platform Fee Paid</p>
+                                    <p className="text-[14px] text-slate-800 flex items-center gap-2">
                                         ₹499.00 <span className="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-md">VERIFIED</span>
                                     </p>
                                     <p className="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">Txn: {selectedAudit.txnId}</p>
                                 </div>
 
                                 <div className="relative">
-                                    <div className="absolute -left-[50px] top-0 w-[42px] h-[42px] bg-emerald-500 rounded-2xl flex items-center justify-center text-white text-[14px] font-black shadow-lg">3</div>
-                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">Commission Credit</p>
-                                    <p className="text-[16px] font-black text-emerald-600">₹200.00 <span className="text-[10px] text-slate-400 font-bold ml-1">Paid to {selectedAudit.referrer}</span></p>
+                                    <div className="absolute -left-[50px] top-0 w-[42px] h-[42px] bg-emerald-500 rounded-2xl flex items-center justify-center text-white text-[14px] shadow-lg">3</div>
+                                    <p className="text-[11px] text-slate-400 uppercase tracking-widest mb-1">Commission Credit</p>
+                                    <p className="text-[16px] text-emerald-600">₹200.00 <span className="text-[10px] text-slate-400 font-bold ml-1">Paid to {selectedAudit.referrer}</span></p>
                                 </div>
                             </div>
 
-                            <button onClick={() => setIsAuditOpen(false)} className="w-full bg-[#0F172A] text-white py-4 rounded-[22px] font-black text-[12px] uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all">Close Report</button>
+                            <button onClick={() => setIsAuditOpen(false)} className="w-full bg-[#0F172A] text-white py-4 rounded-[22px] text-[12px] uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all">Close Report</button>
                         </div>
                     </div>
                 </div>

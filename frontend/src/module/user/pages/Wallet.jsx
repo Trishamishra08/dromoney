@@ -33,6 +33,23 @@ const Wallet = () => {
     const [pendingWithdrawal, setPendingWithdrawal] = useState(null);
     const [recentWithdrawal, setRecentWithdrawal] = useState(null);
     const [cooldownRemaining, setCooldownRemaining] = useState(0);
+    const [bankErrors, setBankErrors] = useState({});
+
+    const [showLimitsModal, setShowLimitsModal] = useState(false);
+    const [showSecurityModal, setShowSecurityModal] = useState(false);
+
+    const handleSettingClick = (id) => {
+        if (id === 'withdraw') {
+            // Scroll to withdraw section smoothly
+            document.getElementById('withdraw-section')?.scrollIntoView({ behavior: 'smooth' });
+        } else if (id === 'refer') {
+            navigate('/user/marketing', { state: { showReferral: true } });
+        } else if (id === 'limits') {
+            setShowLimitsModal(true);
+        } else if (id === 'security') {
+            setShowSecurityModal(true);
+        }
+    };
 
     const showToast = (message, type = 'error') => {
         setToast({ message, type });
@@ -156,25 +173,40 @@ const Wallet = () => {
     };
 
     const submitWithdrawal = async () => {
-        if (!bankDetails.accountNumber || !bankDetails.ifscCode || !bankDetails.holderName || !bankDetails.bankName) {
-            addNotification("Missing Details", "Please fill all bank details.", "warning");
-            showToast("Please fill all bank details.", "warning");
-            return;
+        // Field-level validation
+        const errors = {};
+
+        if (!bankDetails.holderName.trim()) {
+            errors.holderName = 'Account holder name is required.';
+        } else if (/\d/.test(bankDetails.holderName)) {
+            errors.holderName = 'Name cannot contain numbers.';
+        } else if (bankDetails.holderName.trim().length < 3) {
+            errors.holderName = 'Name must be at least 3 characters.';
         }
 
-        if (bankDetails.accountNumber.length !== 16) {
-            addNotification("Invalid Account", "Account number must be exactly 16 digits.", "warning");
-            showToast("Account number must be exactly 16 digits.", "warning");
-            return;
+        if (!bankDetails.bankName.trim()) {
+            errors.bankName = 'Bank name is required.';
+        }
+
+        if (!bankDetails.accountNumber) {
+            errors.accountNumber = 'Account number is required.';
+        } else if (bankDetails.accountNumber.length !== 16) {
+            errors.accountNumber = 'Account number must be exactly 16 digits.';
         }
 
         const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
-        if (!ifscRegex.test(bankDetails.ifscCode)) {
-            addNotification("Invalid IFSC", "Please enter a valid 11-character IFSC code (e.g., SBIN0001234).", "warning");
-            showToast("Please enter a valid 11-character IFSC code.", "warning");
+        if (!bankDetails.ifscCode) {
+            errors.ifscCode = 'IFSC code is required.';
+        } else if (!ifscRegex.test(bankDetails.ifscCode)) {
+            errors.ifscCode = 'Enter a valid IFSC code (e.g. SBIN0001234).';
+        }
+
+        if (Object.keys(errors).length > 0) {
+            setBankErrors(errors);
             return;
         }
 
+        setBankErrors({});
         setIsSubmitting(true);
         try {
             const val = parseFloat(amount);
@@ -184,6 +216,7 @@ const Wallet = () => {
                 setIsBankModalOpen(false);
                 setAmount('');
                 setBankDetails({ accountNumber: '', ifscCode: '', holderName: '', bankName: '' });
+                setBankErrors({});
                 setIsSubmitting(false);
                 // Show success popup immediately
                 setIsSuccessModalOpen(true);
@@ -218,7 +251,7 @@ const Wallet = () => {
         });
 
     return (
-        <div className="flex flex-col gap-2.5 p-3 animate-in fade-in duration-700 min-h-screen bg-[#f8fafc] font-sans">
+        <div className="flex flex-col gap-2.5 p-3 animate-in fade-in duration-700 bg-[#f8fafc] font-['Poppins']">
             <UnlockModal isOpen={isUnlockOpen} onClose={() => setIsUnlockOpen(false)} />
 
             {/* Green Card: Waiting for Admin Confirmation */}
@@ -229,11 +262,11 @@ const Wallet = () => {
                             <Clock size={16} className="animate-spin" />
                         </div>
                         <div>
-                            <h4 className="text-[10px] font-black text-emerald-900 uppercase tracking-tight leading-none mb-1">waiting for the admin confirmation..</h4>
+                            <h4 className="text-[10px] text-emerald-900 uppercase tracking-tight leading-none mb-1">waiting for the admin confirmation..</h4>
                             <p className="text-[9px] font-bold text-emerald-600/70">Your withdrawal request of ₹{pendingWithdrawal.amount} is pending review.</p>
                         </div>
                     </div>
-                    <span className="bg-emerald-100 text-emerald-800 text-[8px] font-extrabold uppercase tracking-wider px-2 py-1 rounded-md shrink-0">
+                    <span className="bg-emerald-100 text-emerald-800 text-[8px] uppercase tracking-wider px-2 py-1 rounded-md shrink-0">
                         Pending
                     </span>
                 </div>
@@ -312,25 +345,25 @@ const Wallet = () => {
                         <Share2 size={20} />
                     </div>
                     <div>
-                        <h4 className="text-[12px] font-black text-emerald-900 uppercase tracking-tight leading-none mb-1">Refer & Earn</h4>
+                        <h4 className="text-[12px] text-emerald-900 uppercase tracking-tight leading-none mb-1">Refer & Earn</h4>
                         <p className="text-[9px] font-bold text-emerald-600/70">Get ₹200 for every friend!</p>
                     </div>
                 </div>
-                <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-widest">
                     Invite
                 </div>
             </div>
 
             {/* --- Withdrawal Section --- */}
             {activeTab === 'cash' && (
-                <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                <div id="withdraw-section" className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm flex flex-col gap-3">
                     {/* Header with Fee Information */}
                     <div className="flex items-center justify-between border-b border-slate-50 pb-2.5">
-                        <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                        <h3 className="text-[11px] text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                             <ArrowRightLeft size={14} className="text-blue-500" />
                             Withdraw Cash
                         </h3>
-                        <span className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider">
+                        <span className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full text-[8.5px] uppercase tracking-wider">
                             ₹5 Fee Added
                         </span>
                     </div>
@@ -346,7 +379,7 @@ const Wallet = () => {
                                 <span>Transaction Fee:</span>
                                 <span className="text-amber-600">+ ₹5.00</span>
                             </div>
-                            <div className="border-t border-slate-200/60 pt-1.5 flex justify-between items-center text-[11px] font-extrabold text-slate-800">
+                            <div className="border-t border-slate-200/60 pt-1.5 flex justify-between items-center text-[11px] text-slate-800">
                                 <span>Total Deducted from Wallet:</span>
                                 <span className="text-blue-600">₹{(parseFloat(amount) + 5).toFixed(2)}</span>
                             </div>
@@ -401,7 +434,7 @@ const Wallet = () => {
                         <button
                             onClick={handleWithdraw}
                             disabled={!!pendingWithdrawal || cooldownRemaining > 0}
-                            className={`w-full py-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all
+                            className={`w-full py-3.5 rounded-lg text-[10px] uppercase tracking-widest transition-all
                                 ${pendingWithdrawal 
                                     ? 'bg-amber-50 text-amber-400 border border-amber-100 cursor-not-allowed'
                                     : cooldownRemaining > 0
@@ -431,26 +464,26 @@ const Wallet = () => {
                 {[
                     { id: 'withdraw', title: 'Instant Withdrawals', subtitle: 'Transfer to bank', icon: <ArrowUpRight size={16} className="text-blue-500" /> },
                     { id: 'refer', title: 'Referral Rewards', subtitle: 'Earn commission', icon: <Share2 size={16} className="text-emerald-500" /> },
-                    { id: 'limits', title: 'Transfer Limits', subtitle: 'Daily cap', icon: <Filter size={16} className="text-indigo-500" />, check: true },
-                    { id: 'security', title: 'Security', subtitle: 'Encrypted', icon: <AlertCircle size={16} className="text-sky-500" />, check: true },
+                    { id: 'limits', title: 'Transfer Limits', subtitle: `Min ₹${minWithdrawal} · Daily cap`, icon: <Filter size={16} className="text-indigo-500" />, check: true },
+                    { id: 'security', title: 'Security', subtitle: 'Encrypted & protected', icon: <AlertCircle size={16} className="text-sky-500" />, check: true },
                 ].map((item) => (
-                    <div 
-                        key={item.id} 
-                        onClick={() => item.id === 'refer' ? navigate('/user/marketing') : null}
-                        className="bg-white border border-slate-100 rounded-lg p-2.5 flex items-center justify-between shadow-sm active:bg-slate-50 transition-all"
+                    <div
+                        key={item.id}
+                        onClick={() => handleSettingClick(item.id)}
+                        className="bg-white border border-slate-100 rounded-lg p-2.5 flex items-center justify-between shadow-sm active:bg-slate-50 transition-all cursor-pointer"
                     >
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-slate-50 rounded-md flex items-center justify-center">
                                 {item.icon}
                             </div>
                             <div>
-                                <h4 className="text-[12px] font-bold text-slate-800 leading-tight">{item.title}</h4>
-                                <p className="text-[9px] font-medium text-slate-400">{item.subtitle}</p>
+                                <h4 className="text-[12px] text-slate-800 leading-tight">{item.title}</h4>
+                                <p className="text-[9px] text-slate-400">{item.subtitle}</p>
                             </div>
                         </div>
                         {item.check ? (
-                            <div className="w-4.5 h-4.5 bg-emerald-500 rounded-full flex items-center justify-center">
-                                <CheckCircle2 size={10} className="text-white" />
+                            <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center shrink-0">
+                                <CheckCircle2 size={11} className="text-white" />
                             </div>
                         ) : (
                             <ChevronRight size={14} className="text-slate-300" />
@@ -527,13 +560,13 @@ const Wallet = () => {
                     <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="p-5 flex items-center justify-between border-b border-slate-100 bg-slate-50/50">
                             <div>
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                                <h3 className="text-sm text-slate-800 uppercase tracking-widest flex items-center gap-2">
                                     <Building size={16} className="text-blue-500" /> Bank Details
                                 </h3>
                                 <p className="text-[10px] text-slate-500 font-medium mt-0.5">Please provide accurate information</p>
                             </div>
                             <button 
-                                onClick={() => setIsBankModalOpen(false)}
+                                onClick={() => { setIsBankModalOpen(false); setBankErrors({}); }}
                                 className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 active:scale-95 transition-all"
                             >
                                 <X size={16} />
@@ -542,47 +575,86 @@ const Wallet = () => {
                         
                         <div className="p-5 flex flex-col gap-3.5 bg-white">
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Account Holder Name</label>
+                                <label className="block text-[10px] text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Account Holder Name</label>
                                 <input
                                     type="text"
                                     value={bankDetails.holderName}
-                                    onChange={(e) => setBankDetails({...bankDetails, holderName: e.target.value})}
-                                    placeholder="Enter full name"
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-lg py-3 px-3.5 text-xs font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all"
+                                    onChange={(e) => {
+                                        // Block digits from being typed
+                                        const val = e.target.value.replace(/[0-9]/g, '');
+                                        setBankDetails({...bankDetails, holderName: val});
+                                        if (bankErrors.holderName) setBankErrors({...bankErrors, holderName: ''});
+                                    }}
+                                    placeholder="Enter full name (letters only)"
+                                    className={`w-full bg-slate-50 border rounded-lg py-3 px-3.5 text-xs text-slate-800 placeholder:text-slate-300 focus:outline-none transition-all ${bankErrors.holderName ? 'border-rose-400 focus:border-rose-500' : 'border-slate-100 focus:border-blue-500'}`}
                                 />
+                                {bankErrors.holderName && (
+                                    <p className="text-[10px] text-rose-500 mt-1 ml-1 flex items-center gap-1">
+                                        <AlertCircle size={10} /> {bankErrors.holderName}
+                                    </p>
+                                )}
                             </div>
                             
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Bank Name</label>
+                                <label className="block text-[10px] text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Bank Name</label>
                                 <input
                                     type="text"
                                     value={bankDetails.bankName}
-                                    onChange={(e) => setBankDetails({...bankDetails, bankName: e.target.value})}
+                                    onChange={(e) => {
+                                        setBankDetails({...bankDetails, bankName: e.target.value});
+                                        if (bankErrors.bankName) setBankErrors({...bankErrors, bankName: ''});
+                                    }}
                                     placeholder="e.g. State Bank of India"
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-lg py-3 px-3.5 text-xs font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all"
+                                    className={`w-full bg-slate-50 border rounded-lg py-3 px-3.5 text-xs text-slate-800 placeholder:text-slate-300 focus:outline-none transition-all ${bankErrors.bankName ? 'border-rose-400 focus:border-rose-500' : 'border-slate-100 focus:border-blue-500'}`}
                                 />
+                                {bankErrors.bankName && (
+                                    <p className="text-[10px] text-rose-500 mt-1 ml-1 flex items-center gap-1">
+                                        <AlertCircle size={10} /> {bankErrors.bankName}
+                                    </p>
+                                )}
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Account Number</label>
+                                <label className="block text-[10px] text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Account Number</label>
                                 <input
                                     type="text"
                                     value={bankDetails.accountNumber}
-                                    onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value.replace(/\D/g, '').slice(0, 16)})}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, '').slice(0, 16);
+                                        setBankDetails({...bankDetails, accountNumber: val});
+                                        if (bankErrors.accountNumber) setBankErrors({...bankErrors, accountNumber: ''});
+                                    }}
                                     placeholder="Enter 16-digit account number"
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-lg py-3 px-3.5 text-xs font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all"
+                                    className={`w-full bg-slate-50 border rounded-lg py-3 px-3.5 text-xs text-slate-800 placeholder:text-slate-300 focus:outline-none transition-all ${bankErrors.accountNumber ? 'border-rose-400 focus:border-rose-500' : 'border-slate-100 focus:border-blue-500'}`}
                                 />
+                                {bankErrors.accountNumber && (
+                                    <p className="text-[10px] text-rose-500 mt-1 ml-1 flex items-center gap-1">
+                                        <AlertCircle size={10} /> {bankErrors.accountNumber}
+                                    </p>
+                                )}
+                                {bankDetails.accountNumber && !bankErrors.accountNumber && (
+                                    <p className="text-[10px] text-slate-400 mt-1 ml-1">{bankDetails.accountNumber.length}/16 digits</p>
+                                )}
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">IFSC Code</label>
+                                <label className="block text-[10px] text-slate-500 uppercase tracking-widest mb-1.5 ml-1">IFSC Code</label>
                                 <input
                                     type="text"
                                     value={bankDetails.ifscCode}
-                                    onChange={(e) => setBankDetails({...bankDetails, ifscCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11)})}
+                                    onChange={(e) => {
+                                        const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
+                                        setBankDetails({...bankDetails, ifscCode: val});
+                                        if (bankErrors.ifscCode) setBankErrors({...bankErrors, ifscCode: ''});
+                                    }}
                                     placeholder="e.g. SBIN0001234"
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-lg py-3 px-3.5 text-xs font-bold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-blue-500 transition-all uppercase"
+                                    className={`w-full bg-slate-50 border rounded-lg py-3 px-3.5 text-xs text-slate-800 placeholder:text-slate-300 focus:outline-none transition-all uppercase ${bankErrors.ifscCode ? 'border-rose-400 focus:border-rose-500' : 'border-slate-100 focus:border-blue-500'}`}
                                 />
+                                {bankErrors.ifscCode && (
+                                    <p className="text-[10px] text-rose-500 mt-1 ml-1 flex items-center gap-1">
+                                        <AlertCircle size={10} /> {bankErrors.ifscCode}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -590,7 +662,7 @@ const Wallet = () => {
                             <button
                                 onClick={submitWithdrawal}
                                 disabled={isSubmitting}
-                                className={`w-full py-3.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all flex justify-center items-center gap-2 ${
+                                className={`w-full py-3.5 rounded-lg text-[11px] uppercase tracking-widest transition-all flex justify-center items-center gap-2 ${
                                     isSubmitting
                                         ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                                         : 'bg-[#1a233b] hover:bg-black text-white shadow-md active:scale-95 cursor-pointer'
@@ -630,7 +702,7 @@ const Wallet = () => {
                                 </div>
                             </div>
 
-                            <h3 className="text-[16px] font-black text-slate-800 tracking-tight mb-1">Request Submitted! 🎉</h3>
+                            <h3 className="text-[16px] text-slate-800 tracking-tight mb-1">Request Submitted! 🎉</h3>
                             <p className="text-[13px] font-bold text-amber-600 mb-3 tracking-wide">Waiting for Admin Approval</p>
 
                             <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5 text-left mb-3">
@@ -644,19 +716,19 @@ const Wallet = () => {
                                 <p className="text-[9.5px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">What happens next?</p>
                                 <div className="flex items-start gap-2 mb-1.5">
                                     <div className="w-4 h-4 bg-amber-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-                                        <span className="text-[8px] font-black text-amber-600">1</span>
+                                        <span className="text-[8px] text-amber-600">1</span>
                                     </div>
                                     <p className="text-[9.5px] font-medium text-slate-500">Admin reviews your request</p>
                                 </div>
                                 <div className="flex items-start gap-2 mb-1.5">
                                     <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-                                        <span className="text-[8px] font-black text-blue-600">2</span>
+                                        <span className="text-[8px] text-blue-600">2</span>
                                     </div>
                                     <p className="text-[9.5px] font-medium text-slate-500">Amount deducted after approval</p>
                                 </div>
                                 <div className="flex items-start gap-2">
                                     <div className="w-4 h-4 bg-emerald-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-                                        <span className="text-[8px] font-black text-emerald-600">3</span>
+                                        <span className="text-[8px] text-emerald-600">3</span>
                                     </div>
                                     <p className="text-[9.5px] font-medium text-slate-500">Transfer to your bank account</p>
                                 </div>
@@ -671,7 +743,7 @@ const Wallet = () => {
                         <div className="p-4">
                             <button
                                 onClick={() => setIsSuccessModalOpen(false)}
-                                className="w-full py-3.5 rounded-xl text-[11px] font-black uppercase tracking-widest bg-gradient-to-r from-[#1a233b] to-[#2a3a5c] hover:from-black hover:to-slate-800 text-white shadow-lg active:scale-95 transition-all cursor-pointer"
+                                className="w-full py-3.5 rounded-xl text-[11px] uppercase tracking-widest bg-gradient-to-r from-[#1a233b] to-[#2a3a5c] hover:from-black hover:to-slate-800 text-white shadow-lg active:scale-95 transition-all cursor-pointer"
                             >
                                 Got It, Thanks!
                             </button>
@@ -690,7 +762,7 @@ const Wallet = () => {
                         {toast.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
                     </div>
                     <div className="flex-1 text-left">
-                        <p className="text-[11px] font-black text-slate-800 uppercase tracking-wider">
+                        <p className="text-[11px] text-slate-800 uppercase tracking-wider">
                             {toast.type === 'success' ? 'Success' : toast.type === 'warning' ? 'Warning' : 'Error'}
                         </p>
                         <p className="text-[10px] text-slate-500 font-bold mt-0.5 leading-snug">{toast.message}</p>
@@ -698,6 +770,102 @@ const Wallet = () => {
                     <button onClick={() => setToast(null)} className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-50">
                         <X size={14} />
                     </button>
+                </div>
+            )}
+
+            {/* Transfer Limits Modal */}
+            {showLimitsModal && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white w-full max-w-xs rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="bg-indigo-600 px-5 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <Filter size={16} className="text-white" />
+                                <h3 className="text-white text-[13px] uppercase tracking-widest">Transfer Limits</h3>
+                            </div>
+                            <button onClick={() => setShowLimitsModal(false)} className="text-white/60 hover:text-white transition-colors cursor-pointer">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="p-5 space-y-3">
+                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-center justify-between">
+                                <div>
+                                    <p className="text-[9px] text-indigo-400 uppercase tracking-widest mb-1">Minimum Withdrawal</p>
+                                    <p className="text-[20px] text-indigo-700">₹{minWithdrawal}</p>
+                                </div>
+                                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                                    <Filter size={18} className="text-indigo-500" />
+                                </div>
+                            </div>
+                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-2.5">
+                                {[
+                                    { label: 'Daily Withdrawals', value: '1 per 24 hours' },
+                                    { label: 'Transaction Fee', value: '₹5 per withdrawal' },
+                                    { label: 'Processing Time', value: '1–3 business days' },
+                                    { label: 'Payment Method', value: 'Bank Transfer only' },
+                                ].map((row, i) => (
+                                    <div key={i} className="flex items-center justify-between">
+                                        <span className="text-[10px] text-slate-400">{row.label}</span>
+                                        <span className="text-[11px] text-slate-700">{row.value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => setShowLimitsModal(false)}
+                                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] uppercase tracking-widest transition-all cursor-pointer"
+                            >
+                                Got It
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Security Modal */}
+            {showSecurityModal && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white w-full max-w-xs rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="bg-sky-600 px-5 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <AlertCircle size={16} className="text-white" />
+                                <h3 className="text-white text-[13px] uppercase tracking-widest">Security</h3>
+                            </div>
+                            <button onClick={() => setShowSecurityModal(false)} className="text-white/60 hover:text-white transition-colors cursor-pointer">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="p-5 space-y-3">
+                            <div className="bg-sky-50 border border-sky-100 rounded-xl p-4 flex items-center gap-3">
+                                <div className="w-10 h-10 bg-sky-100 rounded-xl flex items-center justify-center shrink-0">
+                                    <CheckCircle2 size={20} className="text-sky-500" />
+                                </div>
+                                <div>
+                                    <p className="text-[12px] text-sky-700">Your account is secured</p>
+                                    <p className="text-[9px] text-sky-400 uppercase tracking-widest mt-0.5">End-to-end encrypted</p>
+                                </div>
+                            </div>
+                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-2.5">
+                                {[
+                                    { label: 'Data Encryption', value: 'AES-256' },
+                                    { label: 'Bank Details', value: 'Stored securely' },
+                                    { label: 'Transactions', value: 'SSL protected' },
+                                    { label: 'Withdrawals', value: 'Admin verified' },
+                                ].map((row, i) => (
+                                    <div key={i} className="flex items-center justify-between">
+                                        <span className="text-[10px] text-slate-400">{row.label}</span>
+                                        <span className="text-[11px] text-emerald-600 flex items-center gap-1">
+                                            <CheckCircle2 size={10} /> {row.value}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => setShowSecurityModal(false)}
+                                className="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-[11px] uppercase tracking-widest transition-all cursor-pointer"
+                            >
+                                Got It
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

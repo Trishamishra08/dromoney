@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect, useRef } from 'react';
 import api from '../../shared/services/api';
+import { io as socketIO } from 'socket.io-client';
+import { BASE_URL } from '../../shared/services/api';
 
 const AdminContext = React.createContext();
 
@@ -9,6 +11,43 @@ export const AdminProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('dromoney_admin_token'));
+    const socketRef = useRef(null);
+
+    // ── Socket connection for real-time admin alerts ──
+    useEffect(() => {
+        if (!isAuthenticated) return;
+
+        const socket = socketIO(BASE_URL, { transports: ['websocket', 'polling'] });
+        socketRef.current = socket;
+
+        socket.on('connect', () => {
+            console.log('[Admin Socket] Connected:', socket.id);
+        });
+
+        socket.on('new_report', (data) => {
+            const id = Date.now();
+            const preview = data.message.length > 60
+                ? data.message.slice(0, 60) + '...'
+                : data.message;
+            setNotifications(prev => [{
+                id,
+                title: '🚨 New Problem Report',
+                message: `${data.userName} submitted: "${preview}"`,
+                type: 'error'
+            }, ...prev]);
+            setTimeout(() => {
+                setNotifications(prev => prev.filter(n => n.id !== id));
+            }, 8000);
+        });
+
+        socket.on('disconnect', () => {
+            console.log('[Admin Socket] Disconnected');
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, [isAuthenticated]);
 
     useEffect(() => {
         if (isAuthenticated) {
